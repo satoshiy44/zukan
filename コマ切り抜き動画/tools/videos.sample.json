@@ -1,0 +1,19 @@
+[
+  {
+    "no": "001",
+    "title": "作品名 / 作者・レーベル",
+    "top_img": "../素材/001_作品名/上.png",
+    "bottom_img": "../素材/001_作品名/下.png",
+    "question": "どっちが本命？",
+    "top_text": "（上コマのセリフ）",
+    "bottom_text": "（下コマのセリフ）",
+    "hook": "この後どうなる…？",
+    "bg": "星空",
+    "reveal_sec": 4,
+    "hold_sec": 0.8,
+    "goal": "バズ",
+    "link": "https://（FANZA作品ページ）",
+    "note": "",
+    "ok": ""
+  }
+]
