@@ -3,3 +3,9 @@
 
 # Claude Code のローカル設定（端末固有なので共有しない）
 .claude/settings.local.json
+
+# 生成物・作業ファイル（共有不要）
+コマ切り抜き動画/出力動画/
+コマ切り抜き動画/tools/videos.json
+コマ切り抜き動画/素材/_*/
+*.mp4
