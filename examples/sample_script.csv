@@ -1,0 +1,4 @@
+text,speaker,speed,se,subtitle,post_gap
+こんにちは、ずんだもんなのだ。,3,1.0,,,0.35
+CSV でも簡単な台本なら書けるのだ。,3,1.0,assets/se/pon.wav,,0.35
+細かい設定が要るときは YAML を使うといいのだ。,3,1.05,,,0.4

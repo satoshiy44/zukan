@@ -1,0 +1,47 @@
+# zukan 台本サンプル
+# 使い方:  python -m zukan build examples/sample_script.yaml
+#          python -m zukan build examples/sample_script.yaml --dry-run   # 確認だけ
+
+title: "音声パイプラインのデモ"
+output: "output/sample.mp4"        # 拡張子で出力形式が決まる(.mp4 / .wav / .mp3)
+
+# 全行に効く既定パラメータ(行側で個別に上書き可)
+defaults:
+  speaker: 3        # 3 = ずんだもん(ノーマル)。ID一覧は `python -m zukan speakers`
+  speed: 1.0
+  post_gap: 0.35    # 各行の後ろに入れる無音(秒)
+
+# 出力動画の設定
+video:
+  width: 1920
+  height: 1080
+  fps: 30
+  background: "#101820"           # 単色。画像/動画パスも指定可(例: assets/bg.png)
+  tail: 1.0                        # 最後の発話後に足す尺(秒)
+
+# 字幕(ASS で焼き込み)
+subtitle:
+  font: "Noto Sans CJK JP"
+  font_size: 64
+  primary_color: "#FFFFFF"
+  outline_color: "#101820"
+  outline: 4
+  margin_v: 90
+
+# BGM(任意)。短縮記法 `bgm: "assets/bgm.mp3"` も可
+bgm:
+  path: "assets/bgm.mp3"
+  volume: 0.12
+  loop: true
+  fade_out: 1.5
+
+# 台本本体
+lines:
+  - text: "こんにちは、ずんだもんなのだ。"
+  - text: "今日は、YAML から動画を作るパイプラインを紹介するのだ。"
+    se: "assets/se/pon.wav"        # 行頭で鳴らす効果音(任意)
+  - text: "台本を書いて実行するだけで、音声合成から字幕の焼き込みまで一気に終わるのだ。"
+    speed: 1.05
+  - text: "それでは、はじめるのだ！"
+    speaker: 1                      # この行だけ別の話者(四国めたん など)
+    subtitle: "それでは、はじめる！"  # 字幕だけ別テキストにもできる

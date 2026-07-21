@@ -3,3 +3,16 @@
 
 # Claude Code のローカル設定（端末固有なので共有しない）
 .claude/settings.local.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+build/
+dist/
+
+# zukan の中間/出力ファイル・ローカル設定
+.zukan_work/
+output/
+config.yaml

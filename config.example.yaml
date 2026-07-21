@@ -1,0 +1,9 @@
+# 接続・環境設定のサンプル。config.yaml にコピーして使う。
+# (環境変数 VOICEVOX_URL / FFMPEG_BIN 等があればそちらが優先されます)
+
+voicevox_url: "http://127.0.0.1:50021"   # VOICEVOX エンジンのURL
+default_speaker: 3                        # 台本で話者未指定時のデフォルトID
+work_dir: ".zukan_work"                   # 中間ファイル(合成wav/字幕)の置き場
+ffmpeg: "ffmpeg"                          # ffmpeg 実行ファイル(フルパス可)
+ffprobe: "ffprobe"
+timeout: 60                               # VOICEVOX HTTP タイムアウト(秒)
