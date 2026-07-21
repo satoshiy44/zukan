@@ -1,0 +1,20 @@
+# 生成物（コミットしない）
+__pycache__/
+*.pyc
+
+# 生成された VOICEVOX 音声（VOICEVOX で再生成される）
+sample_project/audio/*.wav
+
+# 中間ファイル・音声キャッシュ
+sample_project/cache/*
+!sample_project/cache/.gitkeep
+
+# 完成動画・字幕・レポート・投稿用テキスト
+sample_project/output/*
+!sample_project/output/.gitkeep
+
+# 生成される動画ファイル全般
+*.mp4
+
+# 注: sample_project/bgm/bgm_sample.wav と sample_project/sfx/impact.wav は
+#     サンプルを動かすための著作権フリーの生成音（サイン波）なので追跡します。

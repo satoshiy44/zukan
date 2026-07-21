@@ -1,0 +1,4 @@
+id,section,role,character,voicevox_name,voicevox_style,text,image,motion,effect,sfx,duration_override,subtitle,notes
+001,hook,narrator,ナレーター,青山龍星,ノーマル,自由すぎる職場の上司との昼休憩が気持ち良すぎた。,001.png,zoom_in,flash,impact.wav,,,冒頭フック
+002,intro,male,主人公,白上虎太郎,ふつう,先輩、ここで何をするんですか？,002.png,pan_right,none,,,,
+003,development,female,女性,四国めたん,あまあま,いいから、早くこっちに来て。,003.png,zoom_in,soft_glow,heartbeat.wav,,,少し小声
