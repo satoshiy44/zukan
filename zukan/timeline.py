@@ -26,6 +26,8 @@ class Segment:
     voice_path: str  # 合成済み WAV のパス
     se: str | None = None  # 行頭 SE パス
     se_volume: float = 1.0
+    speaker_name: str | None = None  # 字幕の名前表示用(cast のキャラ名)
+    color: str | None = None  # 字幕文字色(#RRGGBB, cast/行から)
 
     @property
     def duration(self) -> float:
@@ -73,6 +75,8 @@ def build_timeline(
                 voice_path=path,
                 se=line.se,
                 se_volume=line.se_volume,
+                speaker_name=line.speaker_name,
+                color=line.color,
             )
         )
     return segments, round(cursor, 3)

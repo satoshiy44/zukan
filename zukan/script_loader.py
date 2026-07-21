@@ -15,6 +15,7 @@ import yaml
 from .config import Config
 from .models import (
     Bgm,
+    CastMember,
     Line,
     Script,
     SubtitleStyle,
@@ -60,10 +61,46 @@ def _voice_from(data: dict[str, Any], defaults: VoiceParams) -> VoiceParams:
     )
 
 
+def _cast_from(data: Any, config: Config | None) -> dict[str, CastMember]:
+    """cast セクション(キャラ名→声/色)を解決する。
+
+    記法は2通り:
+      cast:
+        ずんだもん: 3               # 名前 → 話者ID だけ
+        めたん:                      # 名前 → 声パラメータ + 字幕色
+          speaker: 2
+          speed: 1.05
+          color: "#FF6699"
+    """
+    if not data:
+        return {}
+    if not isinstance(data, dict):
+        raise ScriptError("cast は 名前→設定 のマップである必要があります")
+    base = VoiceParams(speaker=_default_speaker(config))
+    cast: dict[str, CastMember] = {}
+    for name, spec in data.items():
+        if isinstance(spec, int):  # ずんだもん: 3
+            member = CastMember(name=str(name), voice=VoiceParams(speaker=int(spec)))
+        elif isinstance(spec, dict):
+            if "speaker" not in spec:
+                raise ScriptError(f"cast '{name}' に speaker がありません")
+            member = CastMember(
+                name=str(name),
+                voice=_voice_from(spec, base),
+                color=spec.get("color"),
+            )
+        else:
+            raise ScriptError(f"cast '{name}' の形式が不正です: {spec!r}")
+        cast[str(name)] = member
+    return cast
+
+
 def _from_dict(data: dict[str, Any], config: Config | None, source: Path) -> Script:
     raw_lines = data.get("lines")
     if not raw_lines:
         raise ScriptError("台本に 'lines' がありません(最低1行必要です)")
+
+    cast = _cast_from(data.get("cast"), config)
 
     # defaults セクション: 全行に効く既定パラメータ
     defaults_data = data.get("defaults", {}) or {}
@@ -81,15 +118,35 @@ def _from_dict(data: dict[str, Any], config: Config | None, source: Path) -> Scr
         text = item.get("text")
         if not text or not str(text).strip():
             raise ScriptError(f"lines[{i}] に text がありません")
+
+        # speaker がキャラ名(文字列)なら cast から声・色を継承する
+        speaker_name: str | None = None
+        member_color: str | None = None
+        line_base = base_voice
+        speaker_val = item.get("speaker")
+        if isinstance(speaker_val, str):
+            member = cast.get(speaker_val)
+            if member is None:
+                raise ScriptError(
+                    f"lines[{i}] の話者 '{speaker_val}' が cast に定義されていません"
+                )
+            speaker_name = member.name
+            member_color = member.color
+            line_base = member.voice
+            # speaker はキャラ名なので、_voice_from に数値として渡さない
+            item = {k: v for k, v in item.items() if k != "speaker"}
+
         lines.append(
             Line(
                 text=str(text),
-                voice=_voice_from(item, base_voice),
+                voice=_voice_from(item, line_base),
                 subtitle=item.get("subtitle"),
                 pre_gap=float(item.get("pre_gap", default_pre_gap)),
                 post_gap=float(item.get("post_gap", default_post_gap)),
                 se=item.get("se"),
                 se_volume=float(item.get("se_volume", 1.0)),
+                speaker_name=speaker_name,
+                color=item.get("color", member_color),
             )
         )
 
@@ -104,6 +161,7 @@ def _from_dict(data: dict[str, Any], config: Config | None, source: Path) -> Scr
         title=title,
         output=output,
         lines=lines,
+        cast=cast,
         bgm=bgm,
         video=video,
         subtitle_style=style,

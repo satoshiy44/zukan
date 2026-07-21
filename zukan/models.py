@@ -28,6 +28,15 @@ class VoiceParams:
 
 
 @dataclass
+class CastMember:
+    """登場キャラクター1人。台本では ID ではなくこの名前で話者を指定できる。"""
+
+    name: str  # 台本内で使う呼び名(例: ずんだもん)
+    voice: VoiceParams = field(default_factory=VoiceParams)  # 既定の声(話者ID含む)
+    color: Optional[str] = None  # 字幕の文字色(#RRGGBB, 未指定なら全体設定を使う)
+
+
+@dataclass
 class Line:
     """台本の1行(=1発話)。"""
 
@@ -38,6 +47,8 @@ class Line:
     post_gap: float = 0.3  # この行の後に挿入する無音(秒)
     se: Optional[str] = None  # 行頭で鳴らす効果音ファイルのパス
     se_volume: float = 1.0  # SE の音量倍率
+    speaker_name: Optional[str] = None  # cast で解決したキャラ名(字幕色/名前表示用)
+    color: Optional[str] = None  # この行の字幕色(cast から継承 or 行で上書き)
 
     @property
     def caption(self) -> str:
@@ -88,6 +99,7 @@ class Script:
     title: str
     output: str  # 出力ファイルパス(.mp4 / .wav)
     lines: list[Line]
+    cast: dict[str, CastMember] = field(default_factory=dict)  # キャラ名→設定
     bgm: Optional[Bgm] = None
     video: VideoConfig = field(default_factory=VideoConfig)
     subtitle_style: SubtitleStyle = field(default_factory=SubtitleStyle)
