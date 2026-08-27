@@ -1,10 +1,10 @@
-# さぼこウェーブのBGM置き場
+# さぼこしゅーてぃんぐのBGM置き場
 
 ここに音楽ファイルを置いて、次を実行するとBGMが差し替わります。
 
 ```
-node saboko-wave/tools/build-audio.mjs
-node saboko-wave/tools/bundle.mjs
+node saboko-shooting/tools/build-audio.mjs
+node saboko-shooting/tools/bundle.mjs
 ```
 
 - ファイル名は `bgm.mp3` が基本ですが、**曲が1つだけなら曲名のままでも使われます**

@@ -1,9 +1,9 @@
 /* さぼこの元画像から、シューティング用のスプライトを書き出す。
  *
- *   node saboko-wave/tools/build-sprites.mjs
+ *   node saboko-shooting/tools/build-sprites.mjs
  *
  * 入力 : assets/src/saboko_*.PNG（スイカゲームと共用。重複して持たない）
- * 出力 : saboko-wave/assets/sprites.js
+ * 出力 : saboko-shooting/assets/sprites.js
  *
  * こちらのゲームは当たり判定を矩形で取るので、輪郭の多角形は要らない。
  * 透明な余白を落として、画面に出る最大サイズぶんまで縮めるだけ。 */
@@ -102,9 +102,9 @@ for (let i = 1; i <= COUNT; i++) {
 
 fs.writeFileSync(
   OUT_FILE,
-  `/* saboko-wave/tools/build-sprites.mjs が生成。直接編集しないでください。 */\n` +
+  `/* saboko-shooting/tools/build-sprites.mjs が生成。直接編集しないでください。 */\n` +
   `window.WAVE_SPRITES = [\n${out.join('\n')}\n];\n`
 );
-console.log('saboko-wave/assets/sprites.js を書き出しました');
+console.log('saboko-shooting/assets/sprites.js を書き出しました');
 console.log(report.join('\n'));
 console.log(`  合計 ${Math.round(fs.statSync(OUT_FILE).size / 1024)}KB`);

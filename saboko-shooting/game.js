@@ -1,4 +1,4 @@
-/* さぼこウェーブ — 前へ走りながら、迫るさぼこを撃ち倒す疑似3Dシューティング
+/* さぼこしゅーてぃんぐ — 前へ走りながら、迫るさぼこを撃ち倒す疑似3Dシューティング
  *
  * 3Dライブラリは使わず Canvas 2D だけで奥行きを出している。
  * 世界の座標は (x, z) の2つだけ。x が左右、z が奥行き。描くときに
@@ -23,7 +23,7 @@
   const LANE = 178;       // 手前(z=0)での左右の広さ
   const PLAYER_LIMIT = 152;
   const RUN_SPEED = 190;  // 自分が前に進む速さ。敵はこれに自分の足を足して迫る。
-  const MAX_ENEMIES = 120;
+  const MAX_ENEMIES = 170;
   const TAU = Math.PI * 2;
 
   const scaleAt = (z) => FOCAL / (FOCAL + Math.max(0, z));
@@ -52,12 +52,13 @@
   const BOSS_ORDER = ['boss1', 'boss2', 'boss3', 'dog'];
 
   const WAVES = [
-    { at: 0,   pool: ['walkerA', 'walkerB'] },
-    { at: 18,  pool: ['walkerA', 'walkerB', 'walkerC', 'hood'] },
-    { at: 40,  pool: ['walkerA', 'walkerB', 'walkerC', 'hood', 'runner'] },
-    { at: 70,  pool: ['walkerA', 'walkerC', 'hood', 'runner', 'runner', 'tank'] },
-    { at: 110, pool: ['walkerA', 'walkerC', 'hood', 'runner', 'runner', 'tank', 'tank', 'wall'] },
-    { at: 160, pool: ['walkerC', 'hood', 'runner', 'runner', 'tank', 'tank', 'wall', 'wall'] },
+    { at: 0,  pool: ['walkerA', 'walkerB'] },
+    { at: 9,  pool: ['walkerA', 'walkerB', 'walkerC', 'hood'] },
+    { at: 20, pool: ['walkerA', 'walkerB', 'walkerC', 'hood', 'runner'] },
+    { at: 32, pool: ['walkerA', 'walkerC', 'hood', 'runner', 'runner', 'tank'] },
+    { at: 50, pool: ['walkerA', 'walkerC', 'hood', 'runner', 'runner', 'tank', 'tank', 'wall'] },
+    { at: 75, pool: ['walkerC', 'hood', 'runner', 'runner', 'tank', 'tank', 'wall', 'wall'] },
+    { at: 110, pool: ['hood', 'runner', 'runner', 'tank', 'tank', 'tank', 'wall', 'wall', 'wall'] },
   ];
 
   // ---------------------------------------------------------------- ゲート
@@ -85,6 +86,7 @@
   const scoreEl = document.getElementById('score');
   const bestEl = document.getElementById('best');
   const overEl = document.getElementById('gameover');
+  // 名前を変える前からの保存値。変えるとベストスコアが消えるので据え置き。
   const BEST_KEY = 'saboko-wave-best';
 
   // ---------------------------------------------------------------- 状態
@@ -113,14 +115,14 @@
     player = {
       x: 0, hp: 8, maxHp: 8,
       fireInterval: 0.2, fireTimer: 0,
-      damage: 1, bullets: 2, pierce: 0,
+      damage: 1, bullets: 3, pierce: 0,
       moveSpeed: 320, bulletSpeed: 950,
       flash: 0, muzzle: 0, stride: 0,
     };
     enemies = []; bullets = []; barrels = []; gates = []; effects = []; numbers = [];
     elapsed = 0; score = 0; kills = 0; distance = 0;
-    nextSpawn = 0.5; nextHorde = 16; nextGate = 5; nextBarrel = 13;
-    nextBossAt = 45; bossIndex = 0;
+    nextSpawn = 0.4; nextHorde = 9; nextGate = 5; nextBarrel = 13;
+    nextBossAt = 20; bossIndex = 0;
     activeBoss = null;
     groanTimer = 2;
     shake = 0;
@@ -182,7 +184,7 @@
     // ぱらぱらと湧く分
     nextSpawn -= dt;
     if (nextSpawn <= 0) {
-      nextSpawn = Math.max(0.16, 0.7 - elapsed * 0.004) * (0.7 + Math.random() * 0.6);
+      nextSpawn = Math.max(0.1, 0.5 - elapsed * 0.0035) * (0.7 + Math.random() * 0.6);
       if (enemies.length < MAX_ENEMIES) {
         const pool = currentPool();
         spawnEnemy(pool[Math.floor(Math.random() * pool.length)]);
@@ -192,9 +194,9 @@
     // 群れ。横に広がった塊でまとめて来る。
     nextHorde -= dt;
     if (nextHorde <= 0) {
-      nextHorde = Math.max(7, 15 - elapsed * 0.04);
+      nextHorde = Math.max(5.5, 12 - elapsed * 0.04);
       const pool = currentPool();
-      const count = Math.min(34, 8 + Math.floor(elapsed / 7));
+      const count = Math.min(52, 12 + Math.floor(elapsed / 5));
       for (let i = 0; i < count && enemies.length < MAX_ENEMIES; i++) {
         spawnEnemy(
           pool[Math.floor(Math.random() * pool.length)],
@@ -206,7 +208,7 @@
     }
 
     nextGate -= dt;
-    if (nextGate <= 0) { nextGate = 8.5 + Math.random() * 3; spawnGate(); }
+    if (nextGate <= 0) { nextGate = 7.5 + Math.random() * 2.5; spawnGate(); }
 
     nextBarrel -= dt;
     if (nextBarrel <= 0) { nextBarrel = 8 + Math.random() * 6; spawnBarrel(); }
@@ -218,7 +220,7 @@
     if (elapsed >= nextBossAt) {
       spawnEnemy(BOSS_ORDER[Math.min(bossIndex, BOSS_ORDER.length - 1)], 0);
       bossIndex++;
-      nextBossAt = elapsed + 60;
+      nextBossAt = elapsed + 45;
     }
   }
 

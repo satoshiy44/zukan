@@ -1,8 +1,8 @@
-/* saboko-wave/assets/audio/ に置いた音声ファイルを埋め込み形式に変換する。
+/* saboko-shooting/assets/audio/ に置いた音声ファイルを埋め込み形式に変換する。
  *
- *   node saboko-wave/tools/build-audio.mjs
+ *   node saboko-shooting/tools/build-audio.mjs
  *
- * 出力 : saboko-wave/assets/sounds.js
+ * 出力 : saboko-shooting/assets/sounds.js
  * 置いていないものは audio.js が合成音で代わりを鳴らす。 */
 
 import fs from 'node:fs';
@@ -56,10 +56,10 @@ for (const [slot, label] of Object.entries(SLOTS)) {
 
 fs.writeFileSync(
   OUT_FILE,
-  `/* saboko-wave/tools/build-audio.mjs が生成。直接編集しないでください。 */\n` +
+  `/* saboko-shooting/tools/build-audio.mjs が生成。直接編集しないでください。 */\n` +
   `window.WAVE_SOUNDS = {\n${entries.join('\n')}\n};\n`
 );
-console.log('saboko-wave/assets/sounds.js を書き出しました');
+console.log('saboko-shooting/assets/sounds.js を書き出しました');
 console.log(report.join('\n'));
 console.log(`  合計 ${Math.round(fs.statSync(OUT_FILE).size / 1024)}KB`);
 if (warnings.length) {

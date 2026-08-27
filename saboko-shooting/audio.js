@@ -1,4 +1,4 @@
-/* さぼこウェーブの音。
+/* さぼこしゅーてぃんぐの音。
  *
  * 効果音とうなり声は WebAudio で合成する。撃つ音は毎秒5発鳴るので、
  * ファイル再生より合成のほうが軽くて遅延も出ない。
@@ -8,6 +8,7 @@
 window.WaveAudio = (() => {
   'use strict';
 
+  // 名前を変える前からの保存値。変えるとミュート設定が戻ってしまうので据え置き。
   const MUTE_KEY = 'saboko-wave-muted';
   const FILE_BGM_VOLUME = 0.16;
 
