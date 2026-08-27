@@ -1,7 +1,7 @@
 # さぼこ落としゲーム
 
 さぼこを落として、同じ段階同士をくっつけて育てる落ちものパズルのプロトタイプです。
-全8段階。`index.html` をブラウザで開くだけで動きます（サーバ不要・オフライン可）。
+全11段階。`index.html` をブラウザで開くだけで動きます（サーバ不要・オフライン可）。
 
 **当たり判定は絵の形そのまま**です。丸ではないので、横長の子は横に転がり、
 でこぼこした子は引っかかって積み上がります。
@@ -20,15 +20,17 @@
 index.html               画面（この1枚を開けば動く）
 style.css                見た目
 game.js                  ゲーム本体
+audio.js                 効果音とBGM（WebAudioで合成。音声ファイルは持たない）
 assets/src/*.png         さぼこの元画像を置く場所
 assets/shapes.js         元画像から生成した「形」と画像データ（自動生成）
 tools/build-assets.mjs   src の画像から shapes.js を作るツール
+tools/bundle.mjs         全部を1枚のHTMLにまとめる（dist/saboko-drop.html）
 vendor/                  Matter.js と poly-decomp（どちらも MIT・同梱済み）
 ```
 
 ## 素材の入れかた
 
-`assets/src/` に `saboko_1.png` 〜 `saboko_8.png` を置いて、
+`assets/src/` に `saboko_1.png` 〜 `saboko_11.png` を置いて、
 
 ```
 npm install          # 最初の1回だけ
@@ -51,17 +53,24 @@ npm run build:assets
 
 | 変数 | 内容 |
 |---|---|
-| `TIERS` | 8段階の大きさ（`size` = 絵の長辺px）・色・名前 |
+| `TIERS` | 11段階の大きさ（`r` = 面積の基準になる半径）・色・名前 |
 | `POINTS` / `CLEAR_BONUS` | 合体時の得点 |
-| `SPAWN_TIERS` | 落ちてくるさぼこの種類数（現在は上位4種） |
+| `SPAWN_TIERS` | 落ちてくるさぼこの種類数（現在は小さいほうから5種） |
 | `DEATH_Y` / `OVER_LIMIT` / `OVER_GRACE` | ゲームオーバーの厳しさ |
 | `DROP_COOLDOWN` | 連続で落とせる間隔 |
 | `W` / `H` | 盤面の広さ |
 
 物理の手触り（跳ね返り・摩擦）は `makeBall()` の `restitution` / `friction` あたりです。
 
+## 音
+
+効果音もBGMもWebAudioでその場で合成しています。音声ファイルを持たないので、
+配布用の1枚HTMLが重くならず、素材の権利も発生しません。
+画面右上のボタンで消せます（設定はブラウザに残ります）。
+
+音の内容は `audio.js` の先頭（BPM・コード進行・合体音の音階）で変えられます。
+
 ## 未実装（プロトタイプの範囲外）
 
-- 効果音・BGM
 - タイトル画面、演出、リザルト共有
 - スコアのオンラインランキング

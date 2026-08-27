@@ -27,12 +27,13 @@ const ALPHA_THRESHOLD = 64;  // これ未満のピクセルは「無い」もの
 const TRACE_MAX = 140;       // 輪郭をたどるときの解像度（長辺）
 const MAX_VERTS = 22;        // 単純化後の頂点数の上限
 
-// game.js の TIERS[].size と同じ並び。画面に出る大きさが分かれば、
-// 書き出す画像もその2.5倍程度で足りる（＝ファイルを無駄に大きくしない）。
+// game.js の TIERS[].r（面積の基準になる半径）と同じ並び。
+// 画面に出る最大の長さは概ね 3r なので、その2倍を書き出し解像度の上限にする。
 // ずれても描画時に伸縮されるだけなので、影響は見た目の精細さだけ。
-const TIER_SIZES = [34, 46, 60, 78, 100, 128, 164, 210];
-const TIER_COUNT = TIER_SIZES.length;
-const PIXEL_RATIO = 2.5;
+const TIER_RADII = [13, 17, 21, 26, 32, 40, 49, 60, 73, 89, 108];
+const TIER_COUNT = TIER_RADII.length;
+const PIXEL_RATIO = 2;
+const MAX_EXPORT = 512;
 
 // ---------------------------------------------------------------- マスク
 function toMask(png) {
@@ -231,7 +232,8 @@ function buildTier(file, tierIndex) {
       '背景が透明になっていない可能性が高く、このままだと当たり判定が長方形になります'
     );
   }
-  const cropped = shrinkPng(cropPng(png, box), Math.round(TIER_SIZES[tierIndex] * PIXEL_RATIO));
+  const exportMax = Math.min(MAX_EXPORT, Math.round(TIER_RADII[tierIndex] * 3 * PIXEL_RATIO));
+  const cropped = shrinkPng(cropPng(png, box), exportMax);
 
   // 輪郭は切り抜き後のマスクからたどる
   const croppedMask = { mask: new Uint8Array(box.w * box.h), w: box.w, h: box.h };

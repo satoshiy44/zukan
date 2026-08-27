@@ -41,7 +41,28 @@ h1 {
   letter-spacing: .04em;
 }
 
-.scores { display: flex; gap: 14px; }
+.scores {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.mute {
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  font-size: 14px;
+  line-height: 1;
+  background: transparent;
+  border: 1.5px solid var(--line);
+  color: inherit;
+  box-shadow: none;
+  align-self: center;
+}
+
+.mute:active { transform: none; }
+
+.mute[aria-pressed="true"] { opacity: .45; }
 
 .score {
   display: flex;

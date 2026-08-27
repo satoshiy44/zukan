@@ -11,6 +11,7 @@
     <header class="head">
       <h1>さぼこ落としゲーム</h1>
       <div class="scores">
+        <button id="mute" class="mute" type="button" aria-label="音を消す">🔊</button>
         <div class="score"><span class="label">SCORE</span><span id="score">0</span></div>
         <div class="score"><span class="label">BEST</span><span id="best">0</span></div>
       </div>
@@ -33,6 +34,7 @@
     </div>
   </div>
 
+  <script src="audio.js"></script>
   <script src="vendor/matter.min.js"></script>
   <script src="vendor/poly-decomp.min.js"></script>
   <!-- tools/build-assets.mjs が生成。無くても仮の丸で遊べる -->

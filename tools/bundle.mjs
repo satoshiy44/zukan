@@ -21,6 +21,7 @@ const safe = (js) => js.replace(/<\/script>/gi, '<\\/script>');
 
 const css = read('style.css');
 const scripts = [
+  'audio.js',
   'vendor/matter.min.js',
   'vendor/poly-decomp.min.js',
   'assets/shapes.js',

@@ -23,23 +23,33 @@
   const OVER_LIMIT = 2000;   // ラインを超え続けて何msで終了か
   const TAU = Math.PI * 2;
 
-  // ---- 8段階のさぼこ ----
-  // size: その段階の大きさ（画像の長いほうの辺が何pxになるか）
+  // ---- 11段階のさぼこ ----
+  // r: その段階の「大きさの基準」となる半径。絵の面積が円 πr² と釣り合うように拡縮する。
   // color: 素材がまだ無いときに描く仮の丸の色
+  // scale: 自動計算の結果を手で微調整したいときの倍率（省略=1）
   const TIERS = [
-    { name: 'たねさぼこ',       size: 34,  color: '#f4aec2' },
-    { name: 'ちびさぼこ',       size: 46,  color: '#f6c99a' },
-    { name: 'こさぼこ',         size: 60,  color: '#e8d98b' },
-    { name: 'さぼこ',           size: 78,  color: '#b6db94' },
-    { name: 'おおさぼこ',       size: 100, color: '#8fd0cd' },
-    { name: 'だいさぼこ',       size: 128, color: '#9db8e6' },
-    { name: 'キングさぼこ',     size: 164, color: '#c3a5e2' },
-    { name: 'でんせつのさぼこ', size: 210, color: '#ef8f8f' },
+    { name: 'たねさぼこ',       r: 13,  color: '#f4aec2' },
+    { name: 'ちびさぼこ',       r: 17,  color: '#f6c99a' },
+    { name: 'こさぼこ',         r: 21,  color: '#e8d98b' },
+    { name: 'さぼこ',           r: 26,  color: '#b6db94' },
+    { name: 'おおさぼこ',       r: 32,  color: '#8fd0cd' },
+    { name: 'どあっぷさぼこ',   r: 40,  color: '#9db8e6' },
+    { name: 'オムライスさぼこ', r: 49,  color: '#e8b98b' },
+    { name: 'だいさぼこ',       r: 60,  color: '#c3a5e2' },
+    { name: 'スーパーさぼこ',   r: 73,  color: '#8fb8a0' },
+    { name: 'キングさぼこ',     r: 89,  color: '#e6a2b8' },
+    { name: 'でんせつのさぼこ', r: 108, color: '#ef8f8f' },
   ];
+
+  // 「大きさ」の体感は長辺ではなく面積で決まる。長辺をそろえる方式だと、
+  // 横長で隙間の多い絵（4番のギター）は幅こそ広いのに小さく見えてしまう。
+  // なので面積を πr² にそろえる。ただし1枚が盤面を埋め尽くさないよう上限だけ設ける。
+  const MAX_SPAN = 320;    // 1個の絵が取れる長辺の上限(px)
+
   const MAX_TIER = TIERS.length - 1;
-  const POINTS = [1, 3, 6, 10, 15, 21, 28, 36]; // 合体でもらえる点
+  const POINTS = [1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66]; // 合体でもらえる点
   const CLEAR_BONUS = 100;                      // 最大サイズ同士を合体させたとき
-  const SPAWN_TIERS = 4;                        // 落ちてくるのは小さいほうから4種類
+  const SPAWN_TIERS = 5;                        // 落ちてくるのは小さいほうから5種類
 
   // ---- DOM ----
   const canvas = document.getElementById('game');
@@ -66,6 +76,15 @@
   const pops = [];        // 合体エフェクト
 
   // ---------------------------------------------------------------- 形の準備
+  function polyArea(v) {
+    let a = 0;
+    for (let i = 0; i < v.length; i++) {
+      const p = v[i], q = v[(i + 1) % v.length];
+      a += p.x * q.y - q.x * p.y;
+    }
+    return Math.abs(a) / 2;
+  }
+
   // shapes.js の多角形（0〜1に正規化済み）を段階ごとの実寸に直し、
   // 物理ボディを1個試作して「重心から見た画像の位置」を測っておく。
   // 重心の位置は凸分割の結果で決まるので、計算で出すより実測が確実。
@@ -73,17 +92,22 @@
     const shapes = window.SABOKO_SHAPES || [];
     TIERS.forEach((t, i) => {
       // 素材が無い段階は丸で代用する
-      const half = t.size / 2;
       t.verts = null;
       t.image = null;
-      t.ox = -half; t.oy = -half; t.dw = t.size; t.dh = t.size;
+      t.ox = -t.r; t.oy = -t.r; t.dw = t.r * 2; t.dh = t.r * 2;
 
       const raw = shapes[i];
       if (!raw) return;
 
-      const k = t.size / Math.max(raw.w, raw.h);
-      const verts = raw.poly.map(([px, py]) => ({ x: px * raw.w * k, y: py * raw.h * k }));
-      const probe = Bodies.fromVertices(0, 0, [verts], {}, true, true, 0.01, 0.01);
+      const unit = raw.poly.map(([px, py]) => ({ x: px * raw.w, y: py * raw.h }));
+      const xs = unit.map((p) => p.x), ys = unit.map((p) => p.y);
+      const maxDim = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
+
+      const kArea = Math.sqrt(Math.PI * t.r * t.r / polyArea(unit));
+      const k = Math.min(kArea, MAX_SPAN / maxDim) * (t.scale || 1);
+
+      const verts = unit.map((p) => ({ x: p.x * k, y: p.y * k }));
+      const probe = makeShapeBody(verts, 0, 0, {});
       if (!probe || !probe.parts.length) return;  // 分割に失敗したら丸のまま
 
       t.verts = verts;
@@ -96,6 +120,15 @@
       img.addEventListener('load', () => { t.image = img; renderChain(); });
       img.src = raw.src;
     });
+  }
+
+  // Bodies.fromVertices は、凹形状の分割結果がちょうど1個になったときだけ
+  // 指定座標を無視してポリゴン自身の重心にボディを置いてしまう。
+  // 生成後に必ず座標を入れ直して、どの形でも同じ意味になるようにする。
+  function makeShapeBody(verts, x, y, options) {
+    const body = Bodies.fromVertices(x, y, [verts], options, true, true, 0.01, 0.01);
+    if (body) Body.setPosition(body, { x, y });
+    return body;
   }
 
   // ---------------------------------------------------------------- 物理まわり
@@ -129,8 +162,8 @@
   function makeBall(tier, x, y) {
     const t = TIERS[tier];
     const body = t.verts
-      ? Bodies.fromVertices(x, y, [t.verts], BALL_OPTS, true, true, 0.01, 0.01)
-      : Bodies.circle(x, y, t.size / 2, BALL_OPTS);
+      ? makeShapeBody(t.verts, x, y, BALL_OPTS)
+      : Bodies.circle(x, y, t.r, BALL_OPTS);
     body.plugin = { tier, bornAt: performance.now(), merged: false };
     return body;
   }
@@ -166,12 +199,14 @@
       if (tier === MAX_TIER) {
         // 最大同士は消滅してボーナス
         addScore(CLEAR_BONUS);
-        pops.push({ x, y, r: TIERS[tier].size * 0.75, color: '#e08a5b', life: 1 });
+        SabokoAudio.clear();
+        pops.push({ x, y, r: TIERS[tier].r * 1.5, color: '#e08a5b', life: 1 });
       } else {
+        SabokoAudio.merge(tier + 1);
         const grown = makeBall(tier + 1, x, y);
         Body.setVelocity(grown, { x: 0, y: -1.2 }); // ぽこっと持ち上がる感じ
         Composite.add(world, grown);
-        pops.push({ x, y, r: TIERS[tier + 1].size / 2, color: TIERS[tier + 1].color, life: 1 });
+        pops.push({ x, y, r: TIERS[tier + 1].r, color: TIERS[tier + 1].color, life: 1 });
       }
     }
 
@@ -218,6 +253,7 @@
     if (!playing || !canDrop) return;
     canDrop = false;
     Composite.add(world, makeBall(heldTier, clampX(heldX, heldTier), DROP_Y));
+    SabokoAudio.drop();
     heldTier = nextTier;
     nextTier = randomTier();
     setTimeout(() => { canDrop = true; }, DROP_COOLDOWN);
@@ -225,6 +261,7 @@
 
   function endGame() {
     playing = false;
+    SabokoAudio.gameOver();
     finalEl.textContent = score;
     overlay.classList.remove('hidden');
   }
@@ -252,16 +289,35 @@
   }
 
   canvas.addEventListener('pointermove', (ev) => { heldX = pointerX(ev); });
-  canvas.addEventListener('pointerdown', (ev) => { heldX = pointerX(ev); ev.preventDefault(); });
+  canvas.addEventListener('pointerdown', (ev) => {
+    SabokoAudio.unlock();
+    heldX = pointerX(ev);
+    ev.preventDefault();
+  });
   canvas.addEventListener('pointerup', (ev) => { heldX = pointerX(ev); drop(); });
 
   window.addEventListener('keydown', (ev) => {
+    SabokoAudio.unlock();
     if (ev.key === 'ArrowLeft') { heldX -= 12; ev.preventDefault(); }
     else if (ev.key === 'ArrowRight') { heldX += 12; ev.preventDefault(); }
     else if (ev.key === ' ' || ev.key === 'ArrowDown' || ev.key === 'Enter') { drop(); ev.preventDefault(); }
   });
 
   document.getElementById('retry').addEventListener('click', reset);
+
+  const muteBtn = document.getElementById('mute');
+  function paintMute() {
+    const off = SabokoAudio.isMuted();
+    muteBtn.textContent = off ? '🔇' : '🔊';
+    muteBtn.setAttribute('aria-label', off ? '音を出す' : '音を消す');
+    muteBtn.setAttribute('aria-pressed', String(off));
+  }
+  muteBtn.addEventListener('click', () => {
+    SabokoAudio.unlock();
+    SabokoAudio.toggle();
+    paintMute();
+  });
+  paintMute();
 
   // ---------------------------------------------------------------- 描画
   // g を引数に取るので、盤面にも進化表の小さい canvas にも同じ絵を描ける
@@ -277,7 +333,7 @@
       g.drawImage(t.image, t.ox, t.oy, t.dw, t.dh);
     } else {
       // 素材が無いときの仮の顔
-      const r = t.size / 2;
+      const r = t.r;
       const grad = g.createRadialGradient(-r * 0.3, -r * 0.35, r * 0.1, 0, 0, r);
       grad.addColorStop(0, '#ffffff');
       grad.addColorStop(0.35, t.color);
