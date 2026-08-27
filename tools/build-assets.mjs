@@ -30,7 +30,7 @@ const MAX_VERTS = 22;        // 単純化後の頂点数の上限
 // game.js の TIERS[].r（面積の基準になる半径）と同じ並び。
 // 画面に出る最大の長さは概ね 3r なので、その2倍を書き出し解像度の上限にする。
 // ずれても描画時に伸縮されるだけなので、影響は見た目の精細さだけ。
-const TIER_RADII = [13, 17, 21, 26, 32, 40, 49, 60, 73, 89, 108];
+const TIER_RADII = [13, 17, 21, 26, 32, 40, 49, 60, 73, 89, 108, 140];
 const TIER_COUNT = TIER_RADII.length;
 const PIXEL_RATIO = 2;
 const MAX_EXPORT = 512;
