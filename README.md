@@ -1,7 +1,10 @@
 # さぼこ落としゲーム
 
-さぼこを落として、同じ大きさ同士をくっつけて育てる落ちものパズルのプロトタイプです。
-全8段階。ビルド不要、`index.html` をブラウザで開くだけで動きます。
+さぼこを落として、同じ段階同士をくっつけて育てる落ちものパズルのプロトタイプです。
+全8段階。`index.html` をブラウザで開くだけで動きます（サーバ不要・オフライン可）。
+
+**当たり判定は絵の形そのまま**です。丸ではないので、横長の子は横に転がり、
+でこぼこした子は引っかかって積み上がります。
 
 ## 遊び方
 
@@ -14,17 +17,33 @@
 ## ファイル構成
 
 ```
-index.html          画面（この1枚を開けば動く）
-style.css           見た目
-game.js             ゲーム本体
-vendor/matter.min.js  物理エンジン Matter.js（MIT / 同梱済み・オフラインで動く）
-assets/             さぼこの画像を置く場所（→ assets/README.md）
+index.html               画面（この1枚を開けば動く）
+style.css                見た目
+game.js                  ゲーム本体
+assets/src/*.png         さぼこの元画像を置く場所
+assets/shapes.js         元画像から生成した「形」と画像データ（自動生成）
+tools/build-assets.mjs   src の画像から shapes.js を作るツール
+vendor/                  Matter.js と poly-decomp（どちらも MIT・同梱済み）
 ```
 
-## 素材
+## 素材の入れかた
 
-`assets/saboko_1.png` 〜 `saboko_8.png` を置くと自動で差し替わります。
-無い間は仮の丸を描くので、絵の完成を待たずに調整できます。詳しい仕様は `assets/README.md` を参照。
+`assets/src/` に `saboko_1.png` 〜 `saboko_8.png` を置いて、
+
+```
+npm install          # 最初の1回だけ
+npm run build:assets
+```
+
+背景が透明な PNG なら、正方形でなくても余白があっても構いません。
+透明部分の切り落とし・輪郭の抽出・縮小はビルドが全部やります。
+素材が無い段階は仮の丸のままなので、1枚ずつ差し替えていけます。
+
+詳しい条件は `assets/README.md` を参照。
+
+## 当たり判定の確認
+
+`index.html?debug` で開くと、当たり判定の輪郭がオレンジで重なって表示されます。
 
 ## 調整するときに触る場所
 
@@ -32,7 +51,7 @@ assets/             さぼこの画像を置く場所（→ assets/README.md）
 
 | 変数 | 内容 |
 |---|---|
-| `TIERS` | 8段階の半径・色・名前 |
+| `TIERS` | 8段階の大きさ（`size` = 絵の長辺px）・色・名前 |
 | `POINTS` / `CLEAR_BONUS` | 合体時の得点 |
 | `SPAWN_TIERS` | 落ちてくるさぼこの種類数（現在は上位4種） |
 | `DEATH_Y` / `OVER_LIMIT` / `OVER_GRACE` | ゲームオーバーの厳しさ |

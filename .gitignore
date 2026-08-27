@@ -3,3 +3,6 @@
 
 # Claude Code のローカル設定（端末固有なので共有しない）
 .claude/settings.local.json
+
+# npm
+node_modules/

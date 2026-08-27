@@ -148,10 +148,7 @@ button:active { transform: translateY(2px); box-shadow: none; }
 }
 
 .chain .dot {
-  border-radius: 50%;
-  border: 1.5px solid rgba(74, 63, 53, .18);
-  background-size: cover;
-  background-position: center;
+  display: block;
 }
 
 .chain .arrow {

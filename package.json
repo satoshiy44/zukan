@@ -1,0 +1,13 @@
+{
+  "name": "saboko-drop",
+  "private": true,
+  "version": "0.1.0",
+  "description": "さぼこ落としゲーム",
+  "type": "module",
+  "scripts": {
+    "build:assets": "node tools/build-assets.mjs"
+  },
+  "devDependencies": {
+    "pngjs": "^7.0.0"
+  }
+}
