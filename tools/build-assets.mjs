@@ -215,6 +215,16 @@ function buildTier(file) {
   if (!blob) throw new Error(`${path.basename(file)}: 不透明なピクセルが見つかりません`);
 
   const box = bbox(blob);
+
+  // 背景が透明になっていない画像は、輪郭がただの長方形になってしまう。
+  // 絵の形で当たり判定を作るのが売りなので、ここで気づけるように警告を出す。
+  const fill = blob.size / (box.w * box.h);
+  if (fill > 0.95) {
+    warnings.push(
+      `${path.basename(file)}: 不透明部分が矩形の ${Math.round(fill * 100)}% を占めています。` +
+      '背景が透明になっていない可能性が高く、このままだと当たり判定が長方形になります'
+    );
+  }
   const cropped = shrinkPng(cropPng(png, box), 512);
 
   // 輪郭は切り抜き後のマスクからたどる
@@ -246,6 +256,7 @@ function buildTier(file) {
 
 const tiers = [];
 const report = [];
+const warnings = [];
 for (let i = 1; i <= TIER_COUNT; i++) {
   const file = path.join(SRC_DIR, `saboko_${i}.png`);
   if (!fs.existsSync(file)) {
@@ -269,3 +280,7 @@ fs.writeFileSync(OUT_FILE, `/* tools/build-assets.mjs が生成。直接編集�
 console.log('assets/shapes.js を書き出しました');
 console.log(report.join('\n'));
 console.log(`  合計 ${Math.round(fs.statSync(OUT_FILE).size / 1024)}KB`);
+if (warnings.length) {
+  console.log('\n注意:');
+  for (const w of warnings) console.log(`  - ${w}`);
+}
