@@ -159,20 +159,3 @@ button:active { transform: translateY(2px); box-shadow: none; }
   opacity: .6;
   text-align: center;
 }
-
-.chain {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.chain .dot {
-  display: block;
-}
-
-.chain .arrow {
-  font-size: 9px;
-  opacity: .35;
-}

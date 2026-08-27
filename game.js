@@ -59,7 +59,6 @@
   const bestEl = document.getElementById('best');
   const finalEl = document.getElementById('final-score');
   const overlay = document.getElementById('overlay');
-  const chainEl = document.getElementById('chain');
   const BEST_KEY = 'saboko-drop-best';
 
   // index.html?debug を付けると当たり判定の形を重ねて表示する（素材の調整用）
@@ -118,7 +117,7 @@
       t.dh = probe.bounds.max.y - probe.bounds.min.y;
 
       const img = new Image();
-      img.addEventListener('load', () => { t.image = img; renderChain(); });
+      img.addEventListener('load', () => { t.image = img; });
       img.src = raw.src;
     });
   }
@@ -460,48 +459,6 @@
     }
   }
 
-  // 下の「1 ▶ 2 ▶ …」の進化表。盤面と同じ描画関数を使うので見た目が揃う
-  function renderChain() {
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    chainEl.innerHTML = '';
-    TIERS.forEach((t, i) => {
-      if (i > 0) {
-        const arrow = document.createElement('span');
-        arrow.className = 'arrow';
-        arrow.textContent = '▶';
-        chainEl.appendChild(arrow);
-      }
-      const box = Math.round(14 + i * 3);
-      const dot = document.createElement('canvas');
-      dot.className = 'dot';
-      dot.title = t.name;
-      dot.width = box * dpr;
-      dot.height = box * dpr;
-      dot.style.width = dot.style.height = `${box}px`;
-      const g = dot.getContext('2d');
-      g.setTransform(dpr, 0, 0, dpr, 0, 0);
-      paintSaboko(g, i, box / 2, box / 2, 0, box / Math.max(t.dw, t.dh));
-      chainEl.appendChild(dot);
-    });
-  }
-
-  // 当たり判定の輪郭を重ねて描く。画像とズレていないかの確認用。
-  function drawHitboxes() {
-    ctx.save();
-    ctx.strokeStyle = 'rgba(224,138,91,.9)';
-    ctx.lineWidth = 1;
-    for (const body of Composite.allBodies(world)) {
-      if (body.label !== 'saboko') continue;
-      for (const part of body.parts.length > 1 ? body.parts.slice(1) : body.parts) {
-        ctx.beginPath();
-        part.vertices.forEach((v, i) => (i ? ctx.lineTo(v.x, v.y) : ctx.moveTo(v.x, v.y)));
-        ctx.closePath();
-        ctx.stroke();
-      }
-    }
-    ctx.restore();
-  }
-
   // ---------------------------------------------------------------- ループ
   function fitCanvas() {
     const dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -548,6 +505,5 @@
   bestEl.textContent = best;
   heldTier = randomTier();
   nextTier = randomTier();
-  renderChain();
   requestAnimationFrame(loop);
 })();
