@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>さぼこ落としゲーム</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="head">
+      <h1>さぼこ落としゲーム</h1>
+      <div class="scores">
+        <div class="score"><span class="label">SCORE</span><span id="score">0</span></div>
+        <div class="score"><span class="label">BEST</span><span id="best">0</span></div>
+      </div>
+    </header>
+
+    <div class="stage">
+      <canvas id="game" width="400" height="600"></canvas>
+      <div id="overlay" class="overlay hidden">
+        <div class="panel">
+          <p class="over-title">ゲームオーバー</p>
+          <p class="over-score">スコア <strong id="final-score">0</strong></p>
+          <button id="retry" type="button">もう一度</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="side">
+      <p class="hint">左右に動かしてクリック／タップで落とす（←→ と スペース でも操作可）</p>
+      <div class="chain" id="chain"></div>
+    </div>
+  </div>
+
+  <script src="vendor/matter.min.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

@@ -1,0 +1,160 @@
+:root {
+  --bg: #f7f2e8;
+  --ink: #4a3f35;
+  --line: #d9cbb5;
+  --accent: #e08a5b;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Hiragino Maru Gothic ProN", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none;
+}
+
+.app {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 12px 24px;
+}
+
+.head {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: .04em;
+}
+
+.scores { display: flex; gap: 14px; }
+
+.score {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.score .label {
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: .14em;
+  opacity: .55;
+}
+
+.stage {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: none;
+  border-radius: 14px;
+  background: #fffdf8;
+  box-shadow: 0 6px 24px rgba(74, 63, 53, .12);
+  cursor: pointer;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(74, 63, 53, .38);
+  border-radius: 14px;
+  backdrop-filter: blur(3px);
+}
+
+.overlay.hidden { display: none; }
+
+.panel {
+  text-align: center;
+  padding: 26px 34px 28px;
+  border-radius: 16px;
+  background: #fffdf8;
+  box-shadow: 0 10px 30px rgba(74, 63, 53, .25);
+}
+
+.over-title {
+  margin: 0 0 6px;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.over-score {
+  margin: 0 0 16px;
+  font-size: 15px;
+}
+
+.over-score strong {
+  font-size: 26px;
+  font-variant-numeric: tabular-nums;
+}
+
+button {
+  font: inherit;
+  font-weight: 700;
+  padding: 10px 26px;
+  border: none;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, .12);
+}
+
+button:active { transform: translateY(2px); box-shadow: none; }
+
+.side {
+  width: 100%;
+  max-width: 400px;
+}
+
+.hint {
+  margin: 2px 0 10px;
+  font-size: 11px;
+  opacity: .6;
+  text-align: center;
+}
+
+.chain {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.chain .dot {
+  border-radius: 50%;
+  border: 1.5px solid rgba(74, 63, 53, .18);
+  background-size: cover;
+  background-position: center;
+}
+
+.chain .arrow {
+  font-size: 9px;
+  opacity: .35;
+}
