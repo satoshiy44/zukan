@@ -10,7 +10,7 @@ window.SabokoAudio = (() => {
   'use strict';
 
   const MUTE_KEY = 'saboko-drop-muted';
-  const FILE_BGM_VOLUME = 0.35;   // 用意されたBGMファイルの音量
+  const FILE_BGM_VOLUME = 0.16;   // 用意されたBGMファイルの音量（効果音より控えめに）
   const BPM = 96;
   const BEAT = 60 / BPM;
   const STEP = BEAT / 2;          // 8分音符

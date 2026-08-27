@@ -31,12 +31,23 @@ const MIME = {
   '.wav': 'audio/wav',
 };
 
+function audioFiles() {
+  if (!fs.existsSync(SRC_DIR)) return [];
+  return fs.readdirSync(SRC_DIR).filter((n) => MIME[path.extname(n).toLowerCase()]);
+}
+
 function findFile(slot) {
-  if (!fs.existsSync(SRC_DIR)) return null;
-  const names = fs.readdirSync(SRC_DIR);
+  const names = audioFiles();
   for (const ext of Object.keys(MIME)) {
     const hit = names.find((n) => n.toLowerCase() === slot + ext);
     if (hit) return path.join(SRC_DIR, hit);
+  }
+  // bgm だけは、決まった名前のファイルが無くても、名前が合わない曲が1つだけなら
+  // それを使う。曲名のまま置いても動くようにするため。
+  if (slot === 'bgm') {
+    const known = Object.keys(SLOTS);
+    const leftover = names.filter((n) => !known.includes(path.basename(n, path.extname(n)).toLowerCase()));
+    if (leftover.length === 1) return path.join(SRC_DIR, leftover[0]);
   }
   return null;
 }

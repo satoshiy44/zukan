@@ -374,38 +374,9 @@
     return `rgb(${ch[0]},${ch[1]},${ch[2]})`;
   }
 
-  // 盤面の下地。毎フレーム作り直すと重いので一度だけ用意する。
-  let fieldFill = null, dots = null, glow = null;
-  function buildFieldStyles() {
-    fieldFill = ctx.createLinearGradient(0, 0, 0, H);
-    fieldFill.addColorStop(0, '#fffdf8');
-    fieldFill.addColorStop(1, '#fbf4e7');
-
-    // 小さな水玉。色はパレットの線色とアクセントのみ。
-    const tile = document.createElement('canvas');
-    tile.width = tile.height = 26;
-    const tg = tile.getContext('2d');
-    tg.fillStyle = 'rgba(217,203,181,.32)';
-    tg.beginPath(); tg.arc(6.5, 6.5, 1.9, 0, TAU); tg.fill();
-    tg.beginPath(); tg.arc(19.5, 19.5, 1.9, 0, TAU); tg.fill();
-    tg.fillStyle = 'rgba(224,138,91,.2)';
-    tg.beginPath(); tg.arc(19.5, 6.5, 1.2, 0, TAU); tg.fill();
-    tg.beginPath(); tg.arc(6.5, 19.5, 1.2, 0, TAU); tg.fill();
-    dots = ctx.createPattern(tile, 'repeat');
-
-    // 底のほんのりした温かみ
-    glow = ctx.createRadialGradient(W / 2, H + 30, 10, W / 2, H + 30, W * 0.95);
-    glow.addColorStop(0, 'rgba(224,138,91,.11)');
-    glow.addColorStop(1, 'rgba(224,138,91,0)');
-  }
-
   function drawField() {
     ctx.clearRect(0, 0, W, H);
-    ctx.fillStyle = fieldFill;
-    ctx.fillRect(0, 0, W, H);
-    ctx.fillStyle = dots;
-    ctx.fillRect(0, 0, W, H);
-    ctx.fillStyle = glow;
+    ctx.fillStyle = '#fffdf8';
     ctx.fillRect(0, 0, W, H);
 
     // 手持ちゾーンの薄い帯
@@ -528,7 +499,6 @@
 
   // ---------------------------------------------------------------- 起動
   fitCanvas();
-  buildFieldStyles();
   window.addEventListener('resize', fitCanvas);
   setupWorld();
   prepareTiers();
