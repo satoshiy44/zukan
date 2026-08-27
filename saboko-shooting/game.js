@@ -85,7 +85,6 @@
     { label: '体力 +1',  good: 2, apply: (p) => { p.maxHp += 1; p.hp += 1; } },
     { label: '弾数 −1',  good: -2, bad: true, apply: (p) => { p.bullets = Math.max(1, p.bullets - 1); } },
     { label: '威力 −1',  good: -2, bad: true, apply: (p) => { p.damage = Math.max(1, p.damage - 1); } },
-    { label: '連射 −',   good: -2, bad: true, apply: (p) => { p.fireInterval = Math.min(0.6, p.fireInterval * 1.25); } },
   ];
 
   // ---------------------------------------------------------------- DOM
@@ -122,11 +121,11 @@
 
   function reset() {
     player = {
-      x: 0, hp: 8, maxHp: 8,
-      fireInterval: 0.2, fireTimer: 0,
+      x: 0, hp: 10, maxHp: 10,
+      fireInterval: 0.18, fireTimer: 0,
       damage: 1, bullets: 3, pierce: 0,
       moveSpeed: 320, bulletSpeed: 950,
-      flash: 0, muzzle: 0, stride: 0,
+      flash: 0, muzzle: 0, stride: 0, invuln: 0,
     };
     enemies = []; bullets = []; barrels = []; gates = []; effects = []; numbers = [];
     elapsed = 0; score = 0; kills = 0; distance = 0;
@@ -153,7 +152,7 @@
     const kind = KINDS[kindName];
     const sprite = sprites[kind.sprite];
     if (!sprite) return null;
-    const tough = kind.boss ? 1 + bossIndex * 0.15 : 1 + elapsed / 150;
+    const tough = kind.boss ? 1 + bossIndex * 0.12 : 1 + elapsed / 220;
     const h = kind.h;
     const w = h * (sprite.w / sprite.h);
     const e = {
@@ -215,9 +214,9 @@
     // 群れ。横に広がった塊でまとめて来る。
     nextHorde -= dt;
     if (nextHorde <= 0) {
-      nextHorde = Math.max(5.5, 12 - elapsed * 0.04);
+      nextHorde = Math.max(6.5, 13 - elapsed * 0.035);
       const pool = currentPool();
-      const count = Math.min(52, 12 + Math.floor(elapsed / 5));
+      const count = Math.min(40, 10 + Math.floor(elapsed / 6));
       for (let i = 0; i < count && enemies.length < MAX_ENEMIES; i++) {
         spawnEnemy(
           pool[Math.floor(Math.random() * pool.length)],
@@ -229,7 +228,7 @@
     }
 
     nextGate -= dt;
-    if (nextGate <= 0) { nextGate = 7.5 + Math.random() * 2.5; spawnGate(); }
+    if (nextGate <= 0) { nextGate = 6.5 + Math.random() * 2; spawnGate(); }
 
     nextBarrel -= dt;
     if (nextBarrel <= 0) { nextBarrel = 8 + Math.random() * 6; spawnBarrel(); }
@@ -300,7 +299,12 @@
     WaveAudio.kill(b.x / LANE);
   }
 
+  // 群れが同時に到達すると一瞬で削り切られてしまうので、被弾後しばらく無敵にする。
+  const INVULN = 1.0;
+
   function hurt(amount) {
+    if (player.invuln > 0) return;
+    player.invuln = INVULN;
     player.hp -= amount;
     player.flash = 0.35;
     shake = 0.4;
@@ -326,6 +330,7 @@
     player.x = Math.max(-PLAYER_LIMIT, Math.min(PLAYER_LIMIT, player.x));
     player.flash = Math.max(0, player.flash - dt);
     player.muzzle = Math.max(0, player.muzzle - dt);
+    player.invuln = Math.max(0, player.invuln - dt);
     player.stride += dt * 11;
 
     player.fireTimer -= dt;
@@ -378,7 +383,8 @@
         if (e === activeBoss) activeBoss = null;
         if (e.kind.heal) continue;
         // 横にずれていれば脇を通り抜けるだけ。避ける操作に意味を持たせる。
-        if (Math.abs(e.x - player.x) < e.halfHit + 26) {
+        // 判定は見た目より狭くしてある。少し避ければ抜けられるように。
+        if (Math.abs(e.x - player.x) < e.halfHit * 0.9) {
           hurt(e.kind.boss ? 3 : 1);
           if (state === 'over') return;
         }
@@ -392,7 +398,7 @@
       b.flash = Math.max(0, b.flash - dt);
       if (b.z <= 0) {
         barrels.splice(i, 1);
-        if (Math.abs(b.x - player.x) < 52) {
+        if (Math.abs(b.x - player.x) < 42) {
           hurt(1);
           if (state === 'over') return;
         }
@@ -601,6 +607,7 @@
     const swing = Math.sin(player.stride) * 9;
     ctx.save();
     ctx.translate(x, y);
+    if (player.invuln > 0) ctx.globalAlpha = 0.45 + 0.55 * Math.abs(Math.sin(player.invuln * 26));
 
     if (player.muzzle > 0) {
       ctx.save();
