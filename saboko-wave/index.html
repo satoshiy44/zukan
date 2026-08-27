@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>さぼこウェーブ</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="head">
+      <h1>さぼこウェーブ</h1>
+      <div class="meta">
+        <button id="mute" class="mute" type="button" aria-label="音を消す">🔊</button>
+        <div class="stat"><span class="label">SCORE</span><span id="score">0</span></div>
+        <div class="stat"><span class="label">BEST</span><span id="best">0</span></div>
+      </div>
+    </header>
+
+    <div class="stage">
+      <canvas id="game" width="400" height="640"></canvas>
+
+      <div id="gameover" class="overlay hidden">
+        <div class="panel">
+          <p class="panel-title">やられた</p>
+          <dl class="result">
+            <dt>スコア</dt><dd id="final-score">0</dd>
+            <dt>生存</dt><dd id="final-time">0:00</dd>
+            <dt>撃破</dt><dd id="final-kills">0</dd>
+          </dl>
+          <button id="retry" type="button">もう一度</button>
+        </div>
+      </div>
+    </div>
+
+    <p class="hint">左右に動かしてゲートを選ぶ。弾は自動で出ます（←→ でも操作可）</p>
+  </div>
+
+  <!-- スイカゲーム側のBGMを共用している -->
+  <script src="../assets/sounds.js"></script>
+  <script src="assets/sprites.js"></script>
+  <script src="audio.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

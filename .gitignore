@@ -9,3 +9,6 @@ node_modules/
 
 # ビルド成果物
 dist/
+
+# ビルド成果物
+saboko-wave/dist/
