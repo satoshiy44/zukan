@@ -6,14 +6,12 @@
  *   saboko-wave/dist/saboko-wave.html  … 単体で動く。これ1枚を渡せば遊べる
  *   saboko-wave/dist/artifact.html     … Artifact 公開用（外枠タグ無し）
  *
- * BGMはスイカゲーム側の assets/sounds.js を共用しているので、
- * 音源ファイルを二重に持たずに済んでいる。 */
+ * BGMを差し替えていなければ sounds.js は空で、合成したループが鳴る。 */
 
 import fs from 'node:fs';
 import path from 'node:path';
 
 const HERE = path.resolve(import.meta.dirname, '..');
-const ROOT = path.resolve(HERE, '..');
 const DIST = path.join(HERE, 'dist');
 
 const read = (p) => fs.readFileSync(p, 'utf8');
@@ -21,7 +19,7 @@ const safe = (js) => js.replace(/<\/script>/gi, '<\\/script>');
 
 const css = read(path.join(HERE, 'style.css'));
 const scripts = [
-  path.join(ROOT, 'assets', 'sounds.js'),
+  path.join(HERE, 'assets', 'sounds.js'),
   path.join(HERE, 'assets', 'sprites.js'),
   path.join(HERE, 'audio.js'),
   path.join(HERE, 'game.js'),

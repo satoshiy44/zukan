@@ -35,9 +35,12 @@
 index.html                  画面
 style.css                   見た目
 game.js                     ゲーム本体
-audio.js                    効果音（WebAudioで合成）
+audio.js                    効果音・うなり声・合成BGM（すべてWebAudio）
 assets/sprites.js           さぼこのスプライト（自動生成）
-tools/build-sprites.mjs     ../assets/src の画像から sprites.js を作る
+assets/audio/               BGMを置く場所（→ assets/audio/README.md）
+assets/sounds.js            BGMを埋め込んだもの（自動生成）
+tools/build-sprites.mjs     ../../assets/src の画像から sprites.js を作る
+tools/build-audio.mjs       assets/audio の音源から sounds.js を作る
 tools/bundle.mjs            全部を1枚のHTMLにまとめる
 ```
 
@@ -47,12 +50,22 @@ tools/bundle.mjs            全部を1枚のHTMLにまとめる
 画像を差し替えたら、リポジトリのルートで次を実行してください。
 
 ```
-node saboko-wave/tools/build-sprites.mjs
-node saboko-wave/tools/bundle.mjs
+npm run wave:build
 ```
 
-BGMも `../assets/sounds.js` を共用しています。効果音のほうは、撃つ音が
-毎秒何発も鳴るためファイル再生ではなくWebAudioで合成しています。
+## 音
+
+BGMは `assets/audio/` に曲を置いて `npm run wave:audio` を実行すると差し替わります。
+置かなければ `audio.js` が合成したループ（Aマイナーの押し続ける感じ）を鳴らします。
+スイカゲームとは別管理なので、こちらだけ違う曲にできます。
+
+効果音とうなり声はすべてWebAudioで合成しています。撃つ音は毎秒5発鳴るので
+ファイル再生には向かず、うなり声は毎回音程と揺れを変えたいためです。
+
+うなり声は、低いノコギリ波をゆっくり下げつつLFOで揺らし、息づかいのノイズを
+重ねて作っています。**一番近い敵との距離で音量が変わり、その敵の左右位置から
+聞こえます**。群れが湧いたときは4声重ねています。質感は `audio.js` の
+`groanAt()` の `base`（基本の高さ）と `lfo.frequency`（揺れの速さ）で変えられます。
 
 ## 敵の割り当て
 
@@ -73,7 +86,7 @@ BGMも `../assets/sounds.js` を共用しています。効果音のほうは、
 |---|---|
 | `FOCAL` / `ZFAR` / `HORIZON` | 遠近の効き方と湧く距離 |
 | `RUN_SPEED` | 前へ進む速さ |
-| `KINDS` | 敵の性能 |
+| `KINDS` | 敵の性能（弱い敵ほど小さく速く、強い敵ほど大きく遅い） |
 | `WAVES` | 時間ごとに出てくる種類 |
 | `GATE_OPTIONS` | ゲートの強化内容 |
 | `spawnTick()` | 湧く間隔・群れの人数・ボスの周期 |

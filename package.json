@@ -10,7 +10,8 @@
     "build": "node tools/build-assets.mjs && node tools/build-audio.mjs && node tools/bundle.mjs",
     "wave:sprites": "node saboko-wave/tools/build-sprites.mjs",
     "wave:bundle": "node saboko-wave/tools/bundle.mjs",
-    "wave:build": "node saboko-wave/tools/build-sprites.mjs && node saboko-wave/tools/bundle.mjs"
+    "wave:audio": "node saboko-wave/tools/build-audio.mjs",
+    "wave:build": "node saboko-wave/tools/build-sprites.mjs && node saboko-wave/tools/build-audio.mjs && node saboko-wave/tools/bundle.mjs"
   },
   "devDependencies": {
     "pngjs": "^7.0.0"
