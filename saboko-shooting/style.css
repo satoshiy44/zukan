@@ -132,6 +132,15 @@ canvas {
   opacity: .55;
 }
 
+.goal-img {
+  display: block;
+  width: 100%;
+  max-height: 190px;
+  margin: 0 auto 14px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
 .result {
   display: grid;
   grid-template-columns: auto auto;
@@ -149,7 +158,8 @@ canvas {
   font-variant-numeric: tabular-nums;
 }
 
-#retry {
+#retry,
+#clear-retry {
   font: inherit;
   font-weight: 700;
   padding: 10px 26px;
@@ -161,7 +171,8 @@ canvas {
   box-shadow: 0 3px 0 rgba(0, 0, 0, .12);
 }
 
-#retry:active { transform: translateY(2px); box-shadow: none; }
+#retry:active,
+#clear-retry:active { transform: translateY(2px); box-shadow: none; }
 
 .hint {
   margin: 2px 0 0;

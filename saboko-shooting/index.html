@@ -20,6 +20,20 @@
     <div class="stage">
       <canvas id="game" width="400" height="640"></canvas>
 
+      <div id="clear" class="overlay hidden">
+        <div class="panel">
+          <p class="panel-title">ゲームクリア！</p>
+          <p class="panel-sub">海に到着！</p>
+          <img id="goal-image" class="goal-img" alt="">
+          <dl class="result">
+            <dt>スコア</dt><dd id="clear-score">0</dd>
+            <dt>タイム</dt><dd id="clear-time">0:00</dd>
+            <dt>撃破</dt><dd id="clear-kills">0</dd>
+          </dl>
+          <button id="clear-retry" type="button">もう一度</button>
+        </div>
+      </div>
+
       <div id="gameover" class="overlay hidden">
         <div class="panel">
           <p class="panel-title">やられた</p>

@@ -24,6 +24,14 @@
   const PLAYER_LIMIT = 152;
   const RUN_SPEED = 190;  // 自分が前に進む速さ。敵はこれに自分の足を足して迫る。
   const MAX_ENEMIES = 170;
+
+  // ゴールまでの距離。world の1単位を何メートルとみなすかで所要時間が決まる。
+  // RUN_SPEED 190 / UNITS_PER_METER 14 = 約13.6m/s なので、2000m はおよそ2分半。
+  const GOAL_METERS = 2000;
+  const UNITS_PER_METER = 14;
+  const CALM_METERS = 70;            // 残りこの距離を切ったら新しく湧かせない
+  const BOSS_AT_METERS = [1500, 1050, 600, 220];  // 残り距離で出るボス
+  const GOAL_FALLBACK_SPRITE = 1;    // goal.png が無いときに出す画像
   const TAU = Math.PI * 2;
 
   const scaleAt = (z) => FOCAL / (FOCAL + Math.max(0, z));
@@ -86,14 +94,15 @@
   const scoreEl = document.getElementById('score');
   const bestEl = document.getElementById('best');
   const overEl = document.getElementById('gameover');
+  const clearEl = document.getElementById('clear');
   // 名前を変える前からの保存値。変えるとベストスコアが消えるので据え置き。
   const BEST_KEY = 'saboko-wave-best';
 
   // ---------------------------------------------------------------- 状態
   const sprites = [];
   let player, enemies, bullets, barrels, gates, effects, numbers;
-  let elapsed, score, kills, distance;
-  let nextSpawn, nextHorde, nextGate, nextBarrel, nextBossAt, bossIndex;
+  let elapsed, score, kills, distance, metersLeft;
+  let nextSpawn, nextHorde, nextGate, nextBarrel, bossIndex;
   let activeBoss = null;
   let state = 'play';
   let shake = 0;
@@ -121,14 +130,16 @@
     };
     enemies = []; bullets = []; barrels = []; gates = []; effects = []; numbers = [];
     elapsed = 0; score = 0; kills = 0; distance = 0;
+    metersLeft = GOAL_METERS;
     nextSpawn = 0.4; nextHorde = 9; nextGate = 5; nextBarrel = 13;
-    nextBossAt = 20; bossIndex = 0;
+    bossIndex = 0;
     activeBoss = null;
     groanTimer = 2;
     shake = 0;
     state = 'play';
     scoreEl.textContent = '0';
     overEl.classList.add('hidden');
+    clearEl.classList.add('hidden');
   }
 
   // ---------------------------------------------------------------- 湧き
@@ -181,6 +192,16 @@
   }
 
   function spawnTick(dt) {
+    // ボスは時間ではなく残り距離で出す。走った距離が進行そのものなので、
+    // ここを距離基準にしておくと「どこまで来たか」と手応えが一致する。
+    while (bossIndex < BOSS_AT_METERS.length && metersLeft <= BOSS_AT_METERS[bossIndex]) {
+      spawnEnemy(BOSS_ORDER[Math.min(bossIndex, BOSS_ORDER.length - 1)], 0);
+      bossIndex++;
+    }
+
+    // ゴール手前は湧かせない。最後の数秒を駆け抜ける時間にする。
+    if (metersLeft <= CALM_METERS) return;
+
     // ぱらぱらと湧く分
     nextSpawn -= dt;
     if (nextSpawn <= 0) {
@@ -217,11 +238,6 @@
       spawnEnemy('omurice');
     }
 
-    if (elapsed >= nextBossAt) {
-      spawnEnemy(BOSS_ORDER[Math.min(bossIndex, BOSS_ORDER.length - 1)], 0);
-      bossIndex++;
-      nextBossAt = elapsed + 45;
-    }
   }
 
   // ---------------------------------------------------------------- 更新
@@ -295,6 +311,8 @@
   function update(dt) {
     elapsed += dt;
     distance += RUN_SPEED * dt;
+    metersLeft = Math.max(0, GOAL_METERS - distance / UNITS_PER_METER);
+    if (metersLeft <= 0) return reachGoal();
     spawnTick(dt);
 
     // 自機
@@ -651,28 +669,42 @@
     for (let i = 0; i < player.maxHp; i++) {
       ctx.fillStyle = i < player.hp ? '#d4544a' : 'rgba(255,255,255,.18)';
       ctx.beginPath();
-      ctx.arc(16 + i * 15, 18, 5, 0, TAU);
+      ctx.arc(14 + i * 10, 17, 3.6, 0, TAU);
       ctx.fill();
     }
 
     ctx.fillStyle = 'rgba(255,245,232,.75)';
     ctx.textAlign = 'right';
-    ctx.font = '700 14px system-ui, sans-serif';
-    ctx.fillText(timeText(elapsed), W - 14, 23);
+    ctx.font = '11px system-ui, sans-serif';
+    ctx.fillText(timeText(elapsed), W - 14, 17);
     ctx.font = '10px system-ui, sans-serif';
     ctx.fillStyle = 'rgba(255,245,232,.5)';
-    ctx.fillText(`弾 ${player.bullets} × 威力 ${player.damage}`, W - 14, 38);
+    ctx.fillText(`弾 ${player.bullets} × 威力 ${player.damage}`, W - 14, 31);
+
+    // 残り距離。ゴールが近いほど強調する。
+    const near = metersLeft <= 300;
+    ctx.textAlign = 'center';
+    ctx.fillStyle = near ? '#ffd08a' : 'rgba(255,245,232,.9)';
+    ctx.font = `700 ${near ? 26 : 22}px system-ui, sans-serif`;
+    ctx.fillText(`${Math.ceil(metersLeft)}m`, W / 2, 27);
+
+    // 進み具合のバー
+    const done = 1 - metersLeft / GOAL_METERS;
+    ctx.fillStyle = 'rgba(255,255,255,.12)';
+    ctx.fillRect(W / 2 - 70, 33, 140, 3);
+    ctx.fillStyle = near ? '#ffd08a' : '#e08a5b';
+    ctx.fillRect(W / 2 - 70, 33, 140 * done, 3);
 
     if (activeBoss) {
       const bw = W - 80;
       ctx.fillStyle = 'rgba(255,245,232,.85)';
       ctx.font = '11px system-ui, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(activeBoss.kind.name, W / 2, 46);
+      ctx.fillText(activeBoss.kind.name, W / 2, 52);
       ctx.fillStyle = 'rgba(0,0,0,.45)';
-      ctx.fillRect(40, 54, bw, 7);
+      ctx.fillRect(40, 60, bw, 7);
       ctx.fillStyle = '#d4544a';
-      ctx.fillRect(40, 54, bw * Math.max(0, activeBoss.hp / activeBoss.maxHp), 7);
+      ctx.fillRect(40, 60, bw * Math.max(0, activeBoss.hp / activeBoss.maxHp), 7);
     }
   }
 
@@ -707,6 +739,19 @@
       ctx.fillStyle = `rgba(212,84,74,${player.flash * 0.5})`;
       ctx.fillRect(0, 0, W, H);
     }
+  }
+
+  function reachGoal() {
+    state = 'clear';
+    // 走りきった時点で残っている敵ぶんのボーナス
+    addScore(Math.round(200 + kills * 5));
+    WaveAudio.levelUp();
+    const goal = window.WAVE_GOAL || (window.WAVE_SPRITES || [])[GOAL_FALLBACK_SPRITE];
+    if (goal) document.getElementById('goal-image').src = goal.src;
+    document.getElementById('clear-score').textContent = score;
+    document.getElementById('clear-time').textContent = timeText(elapsed);
+    document.getElementById('clear-kills').textContent = kills;
+    clearEl.classList.remove('hidden');
   }
 
   function gameOver() {
@@ -744,7 +789,9 @@
     if (ev.key === 'ArrowRight') keys.right = false;
   });
 
-  document.getElementById('retry').addEventListener('click', () => { WaveAudio.unlock(); reset(); });
+  for (const id of ['retry', 'clear-retry']) {
+    document.getElementById(id).addEventListener('click', () => { WaveAudio.unlock(); reset(); });
+  }
 
   const muteBtn = document.getElementById('mute');
   function paintMute() {

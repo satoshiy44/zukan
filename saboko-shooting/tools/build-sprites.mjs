@@ -88,6 +88,19 @@ function findSource(i) {
   return hit ? path.join(SRC_DIR, hit) : null;
 }
 
+// ゴール画面に出す画像。assets/src/goal.png（jpg/webpも可）があればそれを使う。
+// こちらは写真を想定しているので、透明部分の切り落としも縮小もせずそのまま埋める。
+const GOAL_MIME = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp' };
+
+function buildGoal() {
+  const hit = fs.readdirSync(SRC_DIR)
+    .find((n) => path.basename(n, path.extname(n)).toLowerCase() === 'goal' && GOAL_MIME[path.extname(n).toLowerCase()]);
+  if (!hit) return null;
+  const buf = fs.readFileSync(path.join(SRC_DIR, hit));
+  const mime = GOAL_MIME[path.extname(hit).toLowerCase()];
+  return { file: hit, src: `data:${mime};base64,${buf.toString('base64')}`, kb: Math.round(buf.length / 1024) };
+}
+
 const out = [];
 const report = [];
 for (let i = 1; i <= COUNT; i++) {
@@ -100,10 +113,17 @@ for (let i = 1; i <= COUNT; i++) {
   report.push(`  ${i}. ${path.basename(file)} → ${small.width}x${small.height} / ${Math.round(buf.length / 1024)}KB`);
 }
 
+const goal = buildGoal();
+report.push(goal ? `  ${goal.file} → ${goal.kb}KB` : '  goal.png (なし) — 既定の1枚を使います');
+if (goal && goal.kb > 800) {
+  report.push(`     注意: ${goal.kb}KB あります。1枚HTMLがその1.33倍ぶん重くなるので、長辺1000px程度に縮めると快適です`);
+}
+
 fs.writeFileSync(
   OUT_FILE,
   `/* saboko-shooting/tools/build-sprites.mjs が生成。直接編集しないでください。 */\n` +
-  `window.WAVE_SPRITES = [\n${out.join('\n')}\n];\n`
+  `window.WAVE_SPRITES = [\n${out.join('\n')}\n];\n` +
+  `window.WAVE_GOAL = ${goal ? `{ src: '${goal.src}' }` : 'null'};\n`
 );
 console.log('saboko-shooting/assets/sprites.js を書き出しました');
 console.log(report.join('\n'));
