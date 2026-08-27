@@ -11,6 +11,17 @@ html, body {
   margin: 0;
   height: 100%;
   background: var(--bg);
+}
+
+/* 無地だと寂しいので、同じ色みのまま大きく淡いにじみを重ねる。
+   色は既存のパレット（クリームとテラコッタ）だけで作っている。 */
+body {
+  background:
+    radial-gradient(720px 520px at 10% -10%, rgba(224, 138, 91, .11), transparent 62%),
+    radial-gradient(620px 480px at 94% 6%, rgba(217, 203, 181, .5), transparent 64%),
+    radial-gradient(820px 600px at 52% 110%, rgba(224, 138, 91, .09), transparent 60%),
+    var(--bg);
+  background-attachment: fixed;
   color: var(--ink);
   font-family: "Hiragino Maru Gothic ProN", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
   -webkit-text-size-adjust: 100%;

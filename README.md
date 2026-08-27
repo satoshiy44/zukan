@@ -20,10 +20,13 @@
 index.html               画面（この1枚を開けば動く）
 style.css                見た目
 game.js                  ゲーム本体
-audio.js                 効果音とBGM（WebAudioで合成。音声ファイルは持たない）
+audio.js                 効果音とBGM
 assets/src/*.png         さぼこの元画像を置く場所
+assets/audio/*.mp3       BGM・効果音を置く場所（→ assets/audio/README.md）
+assets/sounds.js         音声ファイルを埋め込んだもの（自動生成）
 assets/shapes.js         元画像から生成した「形」と画像データ（自動生成）
 tools/build-assets.mjs   src の画像から shapes.js を作るツール
+tools/build-audio.mjs    audio の音声から sounds.js を作るツール
 tools/bundle.mjs         全部を1枚のHTMLにまとめる（dist/saboko-drop.html）
 vendor/                  Matter.js と poly-decomp（どちらも MIT・同梱済み）
 ```
@@ -36,6 +39,8 @@ vendor/                  Matter.js と poly-decomp（どちらも MIT・同梱�
 npm install          # 最初の1回だけ
 npm run build:assets
 ```
+
+素材・音・配布ファイルをまとめて作り直すなら `npm run build` です。
 
 背景が透明な PNG なら、正方形でなくても余白があっても構いません。
 透明部分の切り落とし・輪郭の抽出・縮小はビルドが全部やります。
@@ -64,11 +69,14 @@ npm run build:assets
 
 ## 音
 
-効果音もBGMもWebAudioでその場で合成しています。音声ファイルを持たないので、
-配布用の1枚HTMLが重くならず、素材の権利も発生しません。
-画面右上のボタンで消せます（設定はブラウザに残ります）。
+`assets/audio/` に音声ファイルを置いて `npm run build:audio` を走らせると、
+それが鳴ります。置いていないぶんはWebAudioで合成した音で代用するので、
+ファイルが1つも無くても音は出ます（BGMだけ差し替える、も可）。
 
-音の内容は `audio.js` の先頭（BPM・コード進行・合体音の音階）で変えられます。
+ファイル名と容量の目安は `assets/audio/README.md` を参照。
+合成音のほうを変えたい場合は `audio.js` の先頭（BPM・コード進行・合体音の音階）です。
+
+画面右上のボタンで消せます（設定はブラウザに残ります）。
 
 ## 画面に出さないもの
 

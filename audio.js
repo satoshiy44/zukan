@@ -1,7 +1,8 @@
 /* さぼこ落としゲームの音まわり。
  *
- * 音声ファイルは持たず、WebAudio で全部その場で合成する。
- * 配布用の1枚HTMLに素材を抱えずに済み、権利関係も発生しない。
+ * assets/audio/ に音声ファイルを置いて tools/build-audio.mjs を走らせると、
+ * assets/sounds.js 経由でそれを鳴らす。置いていないぶんは WebAudio で合成した
+ * 音で代用するので、ファイルが1つも無くても音は出る。
  *
  * ブラウザは操作なしに音を鳴らさせてくれないので、最初のクリック／キー入力で
  * unlock() を呼んでから鳴らし始める。 */
@@ -9,6 +10,7 @@ window.SabokoAudio = (() => {
   'use strict';
 
   const MUTE_KEY = 'saboko-drop-muted';
+  const FILE_BGM_VOLUME = 0.35;   // 用意されたBGMファイルの音量
   const BPM = 96;
   const BEAT = 60 / BPM;
   const STEP = BEAT / 2;          // 8分音符
@@ -27,8 +29,12 @@ window.SabokoAudio = (() => {
   // 合体音は段階が上がるほど高くする。ペンタトニックに乗せると音痴に聞こえない。
   const MERGE_NOTES = [60, 62, 64, 67, 69, 72, 74, 76, 79, 81, 84];
 
+  const FILES = window.SABOKO_SOUNDS || {};
+
   let ctx = null;
   let master, bgmGain, sfxGain;
+  let bgmEl = null;               // BGMがファイルのときの <audio>
+  const seBuffers = Object.create(null);
   let muted = localStorage.getItem(MUTE_KEY) === '1';
   let schedulerId = null;
   let nextStepTime = 0;
@@ -51,6 +57,36 @@ window.SabokoAudio = (() => {
     sfxGain = ctx.createGain();
     sfxGain.gain.value = 0.5;
     sfxGain.connect(master);
+
+    for (const name of ['drop', 'merge', 'clear', 'gameover']) loadSe(name);
+    return true;
+  }
+
+  // ---- 音声ファイルを使う場合 ----
+  function dataUriToBuffer(uri) {
+    const bin = atob(uri.slice(uri.indexOf(',') + 1));
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return bytes.buffer;
+  }
+
+  function loadSe(name) {
+    if (!FILES[name]) return;
+    // decodeAudioData は fetch を挟まないので file:// でも通る
+    ctx.decodeAudioData(dataUriToBuffer(FILES[name]))
+      .then((buf) => { seBuffers[name] = buf; })
+      .catch(() => { /* 壊れたファイルなら合成音のまま */ });
+  }
+
+  // 鳴らせたら true。false のときは呼び出し側が合成音を鳴らす。
+  function playSe(name, rate) {
+    const buf = seBuffers[name];
+    if (!buf) return false;
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    if (rate) src.playbackRate.value = rate;
+    src.connect(sfxGain);
+    src.start();
     return true;
   }
 
@@ -110,6 +146,15 @@ window.SabokoAudio = (() => {
   }
 
   function startBgm() {
+    if (FILES.bgm) {
+      if (!bgmEl) {
+        bgmEl = new Audio(FILES.bgm);
+        bgmEl.loop = true;
+        bgmEl.volume = muted ? 0 : FILE_BGM_VOLUME;
+      }
+      bgmEl.play().catch(() => { /* 再生を断られたら次の操作でまた試す */ });
+      return;
+    }
     if (schedulerId !== null) return;
     nextStepTime = ctx.currentTime + 0.1;
     step = 0;
@@ -135,17 +180,20 @@ window.SabokoAudio = (() => {
       muted = !muted;
       localStorage.setItem(MUTE_KEY, muted ? '1' : '0');
       if (ctx) master.gain.setTargetAtTime(muted ? 0 : 1, ctx.currentTime, 0.02);
+      if (bgmEl) bgmEl.volume = muted ? 0 : FILE_BGM_VOLUME;
       return muted;
     },
 
     drop() {
       if (!ready()) return;
-      const t = ctx.currentTime;
-      tone(sfxGain, 320, t, 0.1, 'sine', 0.25);
+      if (playSe('drop')) return;
+      tone(sfxGain, 320, ctx.currentTime, 0.1, 'sine', 0.25);
     },
 
     merge(tier) {
       if (!ready()) return;
+      // ファイルを使う場合も、段階が上がるほど少しだけ高くして育つ感じを出す
+      if (playSe('merge', Math.pow(2, (tier - 5) / 36))) return;
       const t = ctx.currentTime;
       const note = MERGE_NOTES[Math.min(tier, MERGE_NOTES.length - 1)];
       thud(t);
@@ -156,6 +204,7 @@ window.SabokoAudio = (() => {
     // 最大同士を消したとき
     clear() {
       if (!ready()) return;
+      if (playSe('clear')) return;
       const t = ctx.currentTime;
       [0, 4, 7, 12, 16].forEach((n, i) => {
         tone(sfxGain, hz(72 + n), t + i * 0.07, 0.35, 'triangle', 0.4);
@@ -164,6 +213,7 @@ window.SabokoAudio = (() => {
 
     gameOver() {
       if (!ready()) return;
+      if (playSe('gameover')) return;
       const t = ctx.currentTime;
       [69, 65, 62, 57].forEach((n, i) => {
         tone(sfxGain, hz(n), t + i * 0.16, 0.5, 'sine', 0.45);

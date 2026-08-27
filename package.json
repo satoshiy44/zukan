@@ -5,7 +5,9 @@
   "description": "さぼこ落としゲーム",
   "type": "module",
   "scripts": {
-    "build:assets": "node tools/build-assets.mjs"
+    "build:assets": "node tools/build-assets.mjs",
+    "build:audio": "node tools/build-audio.mjs",
+    "build": "node tools/build-assets.mjs && node tools/build-audio.mjs && node tools/bundle.mjs"
   },
   "devDependencies": {
     "pngjs": "^7.0.0"
