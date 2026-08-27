@@ -45,28 +45,32 @@
   const KINDS = {
     walkerA: { sprite: 0,  h: 118, hp: 4,  speed: 14,  score: 10 },
     walkerB: { sprite: 1,  h: 116, hp: 4,  speed: 12,  score: 10 },
-    walkerC: { sprite: 8,  h: 126, hp: 5,  speed: 10,  score: 12 },
     hood:    { sprite: 2,  h: 112, hp: 4,  speed: 22,  score: 12 },
     runner:  { sprite: 4,  h: 96,  hp: 3,  speed: 68,  score: 18 },
+    elite:   { sprite: 8,  h: 168, hp: 14, speed: -45, score: 45 },
     tank:    { sprite: 3,  h: 170, hp: 22, speed: -55, score: 30 },
     wall:    { sprite: 5,  h: 205, hp: 38, speed: -85, score: 45 },
     omurice: { sprite: 6,  h: 105, hp: 3,  speed: 0,   score: 0, heal: true },
-    boss1:   { sprite: 7,  h: 285, hp: 110, speed: -70,  score: 300,  boss: true, name: 'さぼこ（自撮り）' },
-    boss2:   { sprite: 9,  h: 300, hp: 180, speed: -80,  score: 500,  boss: true, name: 'さぼこ（夜ふかし）' },
-    boss3:   { sprite: 10, h: 275, hp: 260, speed: -85,  score: 800,  boss: true, name: 'さぼこ（就寝）' },
-    dog:     { sprite: 11, h: 355, hp: 420, speed: -105, score: 1500, boss: true, name: 'ラスボス犬' },
+    // ボスの体力が桁違いなのは、終盤の火力が桁違いに伸びるため。
+    // ゲートを通り続けると毎秒1000発ぶんのダメージが出るので、
+    // 数百程度だと出た瞬間に溶けて「ボスが出た」と気づけない。
+    boss1:   { sprite: 7,  h: 285, hp: 260,  speed: -80,  score: 300,  boss: true, name: 'さぼこ（自撮り）' },
+    boss2:   { sprite: 9,  h: 300, hp: 800,  speed: -105, score: 900,  boss: true, name: 'さぼこ（夜ふかし）' },
+    boss3:   { sprite: 10, h: 275, hp: 1800, speed: -120, score: 1800, boss: true, name: 'さぼこ（就寝）' },
+    dog:     { sprite: 11, h: 355, hp: 4000, speed: -145, score: 5000, boss: true, name: 'ラスボス犬' },
   };
 
   const BOSS_ORDER = ['boss1', 'boss2', 'boss3', 'dog'];
 
+  // elite は硬くて大きいので、混ぜる数を絞る。多いと中盤で一気に手が回らなくなる。
   const WAVES = [
     { at: 0,  pool: ['walkerA', 'walkerB'] },
-    { at: 9,  pool: ['walkerA', 'walkerB', 'walkerC', 'hood'] },
-    { at: 20, pool: ['walkerA', 'walkerB', 'walkerC', 'hood', 'runner'] },
-    { at: 32, pool: ['walkerA', 'walkerC', 'hood', 'runner', 'runner', 'tank'] },
-    { at: 50, pool: ['walkerA', 'walkerC', 'hood', 'runner', 'runner', 'tank', 'tank', 'wall'] },
-    { at: 75, pool: ['walkerC', 'hood', 'runner', 'runner', 'tank', 'tank', 'wall', 'wall'] },
-    { at: 110, pool: ['hood', 'runner', 'runner', 'tank', 'tank', 'tank', 'wall', 'wall', 'wall'] },
+    { at: 9,  pool: ['walkerA', 'walkerB', 'hood'] },
+    { at: 20, pool: ['walkerA', 'walkerB', 'hood', 'runner'] },
+    { at: 32, pool: ['walkerA', 'walkerA', 'walkerB', 'hood', 'hood', 'runner', 'runner', 'tank', 'elite'] },
+    { at: 50, pool: ['walkerA', 'walkerB', 'hood', 'hood', 'runner', 'runner', 'tank', 'tank', 'elite', 'wall'] },
+    { at: 75, pool: ['walkerA', 'hood', 'hood', 'runner', 'runner', 'tank', 'tank', 'elite', 'elite', 'wall'] },
+    { at: 110, pool: ['hood', 'runner', 'runner', 'runner', 'tank', 'tank', 'elite', 'elite', 'wall', 'wall'] },
   ];
 
   // ---------------------------------------------------------------- ゲート
