@@ -23,10 +23,16 @@ const ROOT = path.resolve(import.meta.dirname, '..');
 const SRC_DIR = path.join(ROOT, 'assets', 'src');
 const OUT_FILE = path.join(ROOT, 'assets', 'shapes.js');
 
-const TIER_COUNT = 8;
 const ALPHA_THRESHOLD = 64;  // これ未満のピクセルは「無い」ものとして扱う
 const TRACE_MAX = 140;       // 輪郭をたどるときの解像度（長辺）
 const MAX_VERTS = 22;        // 単純化後の頂点数の上限
+
+// game.js の TIERS[].size と同じ並び。画面に出る大きさが分かれば、
+// 書き出す画像もその2.5倍程度で足りる（＝ファイルを無駄に大きくしない）。
+// ずれても描画時に伸縮されるだけなので、影響は見た目の精細さだけ。
+const TIER_SIZES = [34, 46, 60, 78, 100, 128, 164, 210];
+const TIER_COUNT = TIER_SIZES.length;
+const PIXEL_RATIO = 2.5;
 
 // ---------------------------------------------------------------- マスク
 function toMask(png) {
@@ -209,7 +215,7 @@ function shrinkPng(png, maxSide) {
 }
 
 // ---------------------------------------------------------------- 本体
-function buildTier(file) {
+function buildTier(file, tierIndex) {
   const png = PNG.sync.read(fs.readFileSync(file));
   const blob = largestBlob(toMask(png));
   if (!blob) throw new Error(`${path.basename(file)}: 不透明なピクセルが見つかりません`);
@@ -225,7 +231,7 @@ function buildTier(file) {
       '背景が透明になっていない可能性が高く、このままだと当たり判定が長方形になります'
     );
   }
-  const cropped = shrinkPng(cropPng(png, box), 512);
+  const cropped = shrinkPng(cropPng(png, box), Math.round(TIER_SIZES[tierIndex] * PIXEL_RATIO));
 
   // 輪郭は切り抜き後のマスクからたどる
   const croppedMask = { mask: new Uint8Array(box.w * box.h), w: box.w, h: box.h };
@@ -250,25 +256,38 @@ function buildTier(file) {
     h: box.h,
     poly,
     src: 'data:image/png;base64,' + PNG.sync.write(cropped).toString('base64'),
-    _stats: { verts: poly.length, crop: `${box.w}x${box.h}`, kb: Math.round(PNG.sync.write(cropped).length / 1024) },
+    _stats: {
+      verts: poly.length,
+      crop: `${box.w}x${box.h}`,
+      out: `${cropped.width}x${cropped.height}`,
+      kb: Math.round(PNG.sync.write(cropped).length / 1024),
+    },
   };
+}
+
+// 拡張子の大文字小文字は問わない（GitHub からのアップロードで .PNG になることがある）
+function findSource(i) {
+  if (!fs.existsSync(SRC_DIR)) return null;
+  const want = `saboko_${i}.png`;
+  const hit = fs.readdirSync(SRC_DIR).find((name) => name.toLowerCase() === want);
+  return hit ? path.join(SRC_DIR, hit) : null;
 }
 
 const tiers = [];
 const report = [];
 const warnings = [];
 for (let i = 1; i <= TIER_COUNT; i++) {
-  const file = path.join(SRC_DIR, `saboko_${i}.png`);
-  if (!fs.existsSync(file)) {
+  const file = findSource(i);
+  if (!file) {
     tiers.push(null);
     report.push(`  ${i}. (なし) — assets/src/saboko_${i}.png を置くと仮の丸から差し替わります`);
     continue;
   }
-  const tier = buildTier(file);
+  const tier = buildTier(file, i - 1);
   const stats = tier._stats;
   delete tier._stats;
   tiers.push(tier);
-  report.push(`  ${i}. ${stats.crop} → 頂点 ${stats.verts} / ${stats.kb}KB`);
+  report.push(`  ${i}. ${path.basename(file)} ${stats.crop} → ${stats.out} / 頂点 ${stats.verts} / ${stats.kb}KB`);
 }
 
 const body = tiers
