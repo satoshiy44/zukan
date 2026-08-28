@@ -62,17 +62,70 @@
     return body;
   }
 
+  // 高さ y のところで、輪郭が左右どこまで広がっているかを測る。
+  // 多角形の辺と水平線の交点を全部見るので、頂点が無い高さでも正しく出る。
+  function widthAtY(poly, y) {
+    let min = Infinity, max = -Infinity;
+    for (let i = 0; i < poly.length; i++) {
+      const a = poly[i], b = poly[(i + 1) % poly.length];
+      if ((a.y - y) * (b.y - y) > 0) continue;   // 同じ側なら交差しない
+      if (a.y === b.y) continue;
+      const x = a.x + (b.x - a.x) * (y - a.y) / (b.y - a.y);
+      if (x < min) min = x;
+      if (x > max) max = x;
+    }
+    return min === Infinity ? null : [min, max];
+  }
+
+  // シルエットそのままだと凸凹が噛み合わず、いくら置いても積み上がらない。
+  // 上下が平行な台形に置き換えると、接する面が必ず水平になって積める。
+  // 幅は絵の実際の輪郭から測るので、見た目と当たり判定の差は小さい。
+  const TOP_SAMPLE = 0.18, BOTTOM_SAMPLE = 0.86;
+  const MIN_EDGE_RATIO = 0.55;   // 上下の辺が細くなりすぎると乗せる場所が無くなる
+
+  function trapezoidFor(poly, w, h) {
+    const full = [0, w];
+    const top = widthAtY(poly, h * TOP_SAMPLE) || full;
+    const bottom = widthAtY(poly, h * BOTTOM_SAMPLE) || full;
+
+    const widen = (edge) => {
+      const width = edge[1] - edge[0];
+      const need = w * MIN_EDGE_RATIO;
+      if (width >= need) return edge;
+      const c = (edge[0] + edge[1]) / 2;
+      return [c - need / 2, c + need / 2];
+    };
+    const t = widen(top), b = widen(bottom);
+
+    return [
+      { x: t[0], y: 0 },
+      { x: t[1], y: 0 },
+      { x: b[1], y: h },
+      { x: b[0], y: h },
+    ];
+  }
+
   function prepareShapes() {
     (window.SABOKO_SHAPES || []).forEach((raw) => {
       if (!raw) return;
       const unit = raw.poly.map(([px, py]) => ({ x: px * raw.w, y: py * raw.h }));
+      const trap = trapezoidFor(unit, raw.w, raw.h);
+
       // 面積をそろえる。どれを引いても積みやすさが極端に変わらないように。
-      const k = Math.sqrt(Math.PI * PIECE_R * PIECE_R / polyArea(unit));
-      const verts = unit.map((p) => ({ x: p.x * k, y: p.y * k }));
+      const k = Math.sqrt(Math.PI * PIECE_R * PIECE_R / polyArea(trap));
+      const verts = trap.map((p) => ({ x: p.x * k, y: p.y * k }));
       const probe = makeShapeBody(verts, 0, 0, {});
       if (!probe || !probe.parts.length) return;
+
+      // 絵は台形ではなく元の外接矩形いっぱいに描く。台形の左上が
+      // ボディ座標のどこに来たかを測って、そこから逆算する。
+      const trapMinX = Math.min(...trap.map((p) => p.x)) * k;
       const shape = {
         verts,
+        imgX: probe.bounds.min.x - trapMinX,
+        imgY: probe.bounds.min.y,
+        imgW: raw.w * k,
+        imgH: raw.h * k,
         ox: probe.bounds.min.x,
         oy: probe.bounds.min.y,
         dw: probe.bounds.max.x - probe.bounds.min.x,
@@ -145,7 +198,7 @@
 
   function clampX(x, shape) {
     if (!shape) return x;
-    return Math.min(W - shape.ox - shape.dw, Math.max(-shape.ox, x));
+    return Math.min(W - shape.imgX - shape.imgW, Math.max(-shape.imgX, x));
   }
 
   function drop() {
@@ -248,7 +301,7 @@
     g.translate(x, y);
     g.rotate(angle);
     if (shape.image) {
-      g.drawImage(shape.image, shape.ox, shape.oy, shape.dw, shape.dh);
+      g.drawImage(shape.image, shape.imgX, shape.imgY, shape.imgW, shape.imgH);
     } else {
       g.fillStyle = '#9fb8c6';
       g.beginPath();
@@ -315,7 +368,7 @@
     ctx.strokeStyle = 'rgba(53,65,74,.2)';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(x, holdY + held.oy + held.dh);
+    ctx.moveTo(x, holdY + held.imgY + held.imgH);
     ctx.lineTo(x, H);
     ctx.stroke();
     ctx.restore();
@@ -395,6 +448,23 @@
     }
   }
 
+  const DEBUG = new URLSearchParams(location.search).has('debug');
+
+  function drawHitboxes() {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(212,105,90,.9)';
+    ctx.lineWidth = 1;
+    for (const b of pieces) {
+      for (const part of b.parts.length > 1 ? b.parts.slice(1) : b.parts) {
+        ctx.beginPath();
+        part.vertices.forEach((v, i) => (i ? ctx.lineTo(v.x, v.y + camera) : ctx.moveTo(v.x, v.y + camera)));
+        ctx.closePath();
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
   function render() {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     drawSky();
@@ -402,6 +472,7 @@
     for (const b of pieces) {
       paint(ctx, b.plugin.shape, b.position.x, b.position.y + camera, b.angle);
     }
+    if (DEBUG) drawHitboxes();
     for (const p of puffs) {
       ctx.save();
       ctx.globalAlpha = p.life * 0.5;
