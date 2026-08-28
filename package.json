@@ -11,7 +11,9 @@
     "wave:sprites": "node saboko-shooting/tools/build-sprites.mjs",
     "wave:bundle": "node saboko-shooting/tools/bundle.mjs",
     "wave:audio": "node saboko-shooting/tools/build-audio.mjs",
-    "wave:build": "node saboko-shooting/tools/build-sprites.mjs && node saboko-shooting/tools/build-audio.mjs && node saboko-shooting/tools/bundle.mjs"
+    "wave:build": "node saboko-shooting/tools/build-sprites.mjs && node saboko-shooting/tools/build-audio.mjs && node saboko-shooting/tools/bundle.mjs",
+    "tower:audio": "node saboko-tower/tools/build-audio.mjs",
+    "tower:build": "node saboko-tower/tools/build-audio.mjs && node saboko-tower/tools/bundle.mjs"
   },
   "devDependencies": {
     "pngjs": "^7.0.0"
