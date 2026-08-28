@@ -38,6 +38,7 @@
   let pieces, held, heldX, canDrop;
   let camera, cameraTarget, topScreenY, holdY;
   let count, heightCm, lives, state, lastFallAt;
+  let starPop = null;   // 消えた星の演出 { index, t }
   let best = Number(localStorage.getItem(BEST_KEY) || 0);
   let pointerX = null;
   const keys = { left: false, right: false };
@@ -130,6 +131,7 @@
     camera = 0; cameraTarget = 0;
     topScreenY = PLATFORM_TOP; holdY = HOLD_MIN_Y;
     count = 0; heightCm = 0; lives = LIVES; lastFallAt = -9999;
+    starPop = null;
     canDrop = true;
     state = 'play';
     heightEl.textContent = '0';
@@ -167,6 +169,7 @@
     if (now - lastFallAt < 1200) return;
     lastFallAt = now;
     lives--;
+    starPop = { index: lives, t: 0 };
     if (lives <= 0) gameOver();
   }
 
@@ -226,6 +229,11 @@
     // 落とすことになり、その衝撃だけで土台が崩れてしまう。
     topScreenY = top + camera;
     holdY = Math.max(HOLD_MIN_Y, Math.min(topScreenY - HOLD_GAP, H * 0.42));
+
+    if (starPop) {
+      starPop.t += dt / 0.55;
+      if (starPop.t >= 1) starPop = null;
+    }
 
     for (let i = puffs.length - 1; i >= 0; i--) {
       puffs[i].life -= dt / 0.4;
@@ -314,14 +322,55 @@
     paint(ctx, held, x, holdY, 0, canDrop ? 1 : 0.25);
   }
 
+  function starPath(g, x, y, r) {
+    g.beginPath();
+    for (let i = 0; i < 10; i++) {
+      const rad = i % 2 === 0 ? r : r * 0.45;
+      const a = -Math.PI / 2 + i * Math.PI / 5;
+      const px = x + Math.cos(a) * rad;
+      const py = y + Math.sin(a) * rad;
+      if (i) g.lineTo(px, py); else g.moveTo(px, py);
+    }
+    g.closePath();
+  }
+
+  const STAR_X = 26, STAR_Y = 27, STAR_R = 13, STAR_GAP = 31;
+
+  function drawStars() {
+    for (let i = 0; i < LIVES; i++) {
+      const x = STAR_X + i * STAR_GAP;
+      starPath(ctx, x, STAR_Y, STAR_R);
+      if (i < lives) {
+        ctx.fillStyle = '#f2b134';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(120,80,10,.55)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      } else {
+        ctx.strokeStyle = 'rgba(53,65,74,.28)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+    }
+
+    // 失った星は、その場で大きくなりながら消える
+    if (starPop) {
+      const x = STAR_X + starPop.index * STAR_GAP;
+      ctx.save();
+      ctx.globalAlpha = 1 - starPop.t;
+      ctx.translate(x, STAR_Y);
+      ctx.scale(1 + starPop.t * 1.4, 1 + starPop.t * 1.4);
+      ctx.rotate(starPop.t * 0.9);
+      starPath(ctx, 0, 0, STAR_R);
+      ctx.fillStyle = '#f2b134';
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
   function drawHud() {
     ctx.textAlign = 'left';
-    for (let i = 0; i < LIVES; i++) {
-      ctx.fillStyle = i < lives ? '#d4695a' : 'rgba(53,65,74,.18)';
-      ctx.beginPath();
-      ctx.arc(16 + i * 15, 18, 5, 0, TAU);
-      ctx.fill();
-    }
+    drawStars();
     ctx.textAlign = 'right';
     ctx.fillStyle = 'rgba(53,65,74,.75)';
     ctx.font = '700 20px system-ui, sans-serif';
