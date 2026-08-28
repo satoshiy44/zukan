@@ -23,7 +23,15 @@
   const PIECE_R = 38;           // 面積をそろえる基準（円の半径に相当）
   const PX_PER_CM = 4;          // 見た目の高さを cm 表記に直す係数
   const DROP_COOLDOWN = 620;
-  const LIVES = 3;
+  const START_LIVES = 3;
+  const MAX_LIVES = 5;
+  const COMBO_FOR_STAR = 4;     // これだけ続けて良い置き方をすると星が1つ戻る
+  // 揺れと風は高さで強くなる。高いほど難しい、を素直な形で作る。
+  const SWING_START_CM = 25;
+  const SWING_MAX = 74;
+  const WIND_START_CM = 120;
+  const PERFECT_PX = 11;        // 真下の中心からこれだけ以内なら PERFECT
+  const GOOD_PX = 26;
   const TAU = Math.PI * 2;
 
   const canvas = document.getElementById('game');
@@ -35,10 +43,14 @@
 
   const SHAPES = [];            // 段階ごとではなく、積む部品として全種類を使う
   let engine, world, platform;
-  let pieces, held, heldX, canDrop;
+  let pieces, held, canDrop;
   let camera, cameraTarget, topScreenY, holdY;
   let count, heightCm, lives, state, lastFallAt;
+  let craneX, swingPhase, swingAmp, combo, bestCombo;
+  let windDir, windTimer, windPower;
+  let judgeText = null;   // { text, sub, color, t }
   let starPop = null;   // 消えた星の演出 { index, t }
+  let starGain = null;  // 増えた星の演出 { index, t }
   let best = Number(localStorage.getItem(BEST_KEY) || 0);
   let pointerX = null;
   const keys = { left: false, right: false };
@@ -184,8 +196,12 @@
     puffs.length = 0;
     camera = 0; cameraTarget = 0;
     topScreenY = PLATFORM_TOP; holdY = HOLD_MIN_Y;
-    count = 0; heightCm = 0; lives = LIVES; lastFallAt = -9999;
-    starPop = null;
+    count = 0; heightCm = 0; lives = START_LIVES; lastFallAt = -9999;
+    craneX = W / 2; swingPhase = 0; swingAmp = 0;
+    combo = 0; bestCombo = 0;
+    windDir = 1; windTimer = 3; windPower = 0;
+    judgeText = null;
+    starPop = null; starGain = null;
     canDrop = true;
     state = 'play';
     heightEl.textContent = '0';
@@ -202,12 +218,34 @@
     return Math.min(W - shape.imgX - shape.imgW, Math.max(-shape.imgX, x));
   }
 
+  // 吊っているさぼこの、いま実際にある位置。craneX を中心に左右へ揺れる。
+  function heldXNow() {
+    return craneX + Math.sin(swingPhase) * swingAmp;
+  }
+
+  function swingSpeed() {
+    return 1.5 + Math.min(1.6, heightCm * 0.004);
+  }
+
+  // いま一番上にある積み木の中心。置く目標であり、判定の基準にもなる。
+  function towerTopX() {
+    let top = null;
+    for (const b of pieces) {
+      if (!b.plugin.landed) continue;
+      if (!top || b.bounds.min.y < top.bounds.min.y) top = b;
+    }
+    return top ? top.position.x : W / 2;
+  }
+
   function drop() {
     if (state !== 'play' || !canDrop || !held) return;
     canDrop = false;
     const shape = held;
-    const body = makeShapeBody(shape.verts, clampX(heldX, shape), holdY - camera, PIECE_OPTS);
-    body.plugin = { shape, landed: false };
+    const x = clampX(heldXNow(), shape);
+    const body = makeShapeBody(shape.verts, x, holdY - camera, PIECE_OPTS);
+    // 揺れの勢いをそのまま横向きの速度として渡す。端で離すほど流れていく。
+    Body.setVelocity(body, { x: Math.cos(swingPhase) * swingAmp * swingSpeed() / 60, y: 0 });
+    body.plugin = { shape, landed: false, judged: false, targetX: towerTopX(), settle: 0 };
     Composite.add(world, body);
     pieces.push(body);
     TowerAudio.drop();
@@ -227,24 +265,94 @@
     if (lives <= 0) gameOver();
   }
 
+  // 止まったところで、真下の中心からどれだけずれたかを見る。
+  // ずれの小ささがそのまま評価になり、続けるほど星が戻る。
+  function judgePiece(b) {
+    const dx = Math.abs(b.position.x - b.plugin.targetX);
+    b.plugin.judged = true;
+
+    if (dx < PERFECT_PX) {
+      combo++;
+      judgeText = { text: 'PERFECT', sub: `${combo} れんぞく`, color: '#f2b134', t: 0 };
+      // ごほうびに姿勢を少し起こす。丁寧に置くと塔がまっすぐ育っていく。
+      Body.setAngularVelocity(b, 0);
+      if (Math.abs(b.angle) < 0.3) Body.setAngle(b, b.angle * 0.35);
+      TowerAudio.record();
+    } else if (dx < GOOD_PX) {
+      combo++;
+      judgeText = { text: 'GOOD', sub: `${combo} れんぞく`, color: '#5b93b8', t: 0 };
+      Body.setAngularVelocity(b, b.angularVelocity * 0.4);
+    } else {
+      if (combo >= 2) judgeText = { text: 'ざんねん', sub: 'れんぞく とぎれた', color: '#8a97a0', t: 0 };
+      combo = 0;
+      return;
+    }
+
+    if (combo > bestCombo) bestCombo = combo;
+    if (combo % COMBO_FOR_STAR === 0 && lives < MAX_LIVES) {
+      lives++;
+      starGain = { index: lives - 1, t: 0 };
+      judgeText = { text: '星が もどった', sub: `★ ${lives}`, color: '#f2b134', t: 0 };
+    }
+  }
+
   function gameOver() {
     state = 'over';
     TowerAudio.over();
     document.getElementById('final-height').textContent = heightCm;
     document.getElementById('final-count').textContent = count;
+    document.getElementById('final-combo').textContent = bestCombo;
     overEl.classList.remove('hidden');
   }
 
   // ---------------------------------------------------------------- 更新
   function update(dt) {
-    let target = heldX;
+    let target = craneX;
     if (pointerX !== null) target = pointerX;
-    if (keys.left) target = heldX - 999;
-    if (keys.right) target = heldX + 999;
-    const dx = target - heldX;
+    if (keys.left) target = craneX - 999;
+    if (keys.right) target = craneX + 999;
+    const dx = target - craneX;
     const step = 420 * dt;
-    heldX += Math.abs(dx) <= step ? dx : Math.sign(dx) * step;
-    heldX = Math.max(10, Math.min(W - 10, heldX));
+    craneX += Math.abs(dx) <= step ? dx : Math.sign(dx) * step;
+    craneX = Math.max(30, Math.min(W - 30, craneX));
+
+    // 高くなるほど大きく揺れる。低いうちは揺れないので序盤は素直に置ける。
+    swingAmp = Math.min(SWING_MAX, Math.max(0, heightCm - SWING_START_CM) * 0.3);
+    swingPhase += dt * swingSpeed();
+
+    // 高所の風。向きが時々変わり、積み上がった塔を横から押す。
+    if (heightCm > WIND_START_CM) {
+      windTimer -= dt;
+      if (windTimer <= 0) {
+        windTimer = 4 + Math.random() * 5;
+        windDir = Math.random() < 0.5 ? -1 : 1;
+      }
+      windPower = Math.min(1, (heightCm - WIND_START_CM) / 260);
+      const f = windDir * windPower * 0.00021;
+      for (const b of pieces) {
+        if (!b.plugin.landed) continue;
+        Body.applyForce(b, b.position, { x: f * b.mass, y: 0 });
+      }
+    } else {
+      windPower = 0;
+    }
+
+    // 速度が十分落ちた状態がしばらく続いたら「置けた」とみなして判定する。
+    for (const b of pieces) {
+      if (b.plugin.judged || !b.plugin.landed) continue;
+      const still = Math.hypot(b.velocity.x, b.velocity.y) < 0.4 && Math.abs(b.angularVelocity) < 0.02;
+      b.plugin.settle = still ? b.plugin.settle + dt : 0;
+      if (b.plugin.settle > 0.35) judgePiece(b);
+    }
+
+    if (judgeText) {
+      judgeText.t += dt / 1.1;
+      if (judgeText.t >= 1) judgeText = null;
+    }
+    if (starGain) {
+      starGain.t += dt / 0.55;
+      if (starGain.t >= 1) starGain = null;
+    }
 
     // 落ちたものを片付ける。
     // 画面の下端で判定すると、カメラが上がったときに土台付近の積み木まで
@@ -365,16 +473,33 @@
 
   function drawHeld() {
     if (state !== 'play' || !held) return;
-    const x = clampX(heldX, held);
-    ctx.save();
-    ctx.setLineDash([3, 6]);
-    ctx.strokeStyle = 'rgba(53,65,74,.2)';
+    const x = clampX(heldXNow(), held);
+
+    // 吊り具のレールと紐。揺れているのが見て分かるように。
+    ctx.strokeStyle = 'rgba(53,65,74,.35)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(0, 44);
+    ctx.lineTo(W, 44);
+    ctx.stroke();
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(x, holdY + held.imgY + held.imgH);
-    ctx.lineTo(x, H);
+    ctx.moveTo(craneX, 44);
+    ctx.lineTo(x, holdY + held.imgY);
+    ctx.stroke();
+
+    // 真下にある積み木の中心。ここに合わせるほど良い判定になる。
+    const tx = towerTopX();
+    ctx.save();
+    ctx.setLineDash([2, 5]);
+    ctx.strokeStyle = 'rgba(242,177,52,.75)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(tx, holdY);
+    ctx.lineTo(tx, H);
     ctx.stroke();
     ctx.restore();
+
     paint(ctx, held, x, holdY, 0, canDrop ? 1 : 0.25);
   }
 
@@ -393,7 +518,8 @@
   const STAR_X = 26, STAR_Y = 27, STAR_R = 13, STAR_GAP = 31;
 
   function drawStars() {
-    for (let i = 0; i < LIVES; i++) {
+    const slots = Math.max(START_LIVES, lives);
+    for (let i = 0; i < slots; i++) {
       const x = STAR_X + i * STAR_GAP;
       starPath(ctx, x, STAR_Y, STAR_R);
       if (i < lives) {
@@ -407,6 +533,20 @@
         ctx.lineWidth = 1.5;
         ctx.stroke();
       }
+    }
+
+    // 増えた星は、小さく飛び出してから収まる
+    if (starGain) {
+      const x = STAR_X + starGain.index * STAR_GAP;
+      ctx.save();
+      ctx.globalAlpha = 1 - starGain.t * 0.6;
+      ctx.translate(x, STAR_Y);
+      ctx.scale(1 + (1 - starGain.t) * 1.1, 1 + (1 - starGain.t) * 1.1);
+      starPath(ctx, 0, 0, STAR_R);
+      ctx.strokeStyle = '#f2b134';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
     }
 
     // 失った星は、その場で大きくなりながら消える
@@ -424,9 +564,62 @@
     }
   }
 
+  function drawWind() {
+    if (windPower <= 0) return;
+    // 吊り具のレールと重ならないよう、右寄せの一段下に置く
+    const y = 70;
+    const cx = W - 62;
+    ctx.save();
+    ctx.globalAlpha = 0.35 + windPower * 0.5;
+    ctx.strokeStyle = '#5b93b8';
+    ctx.lineWidth = 2;
+    const n = 1 + Math.round(windPower * 3);
+    for (let i = 0; i < n; i++) {
+      const len = 16 + i * 4;
+      const ox = cx + windDir * (i * 13 - n * 6);
+      ctx.beginPath();
+      ctx.moveTo(ox - windDir * len / 2, y);
+      ctx.lineTo(ox + windDir * len / 2, y);
+      ctx.moveTo(ox + windDir * len / 2, y);
+      ctx.lineTo(ox + windDir * (len / 2 - 6), y - 4);
+      ctx.moveTo(ox + windDir * len / 2, y);
+      ctx.lineTo(ox + windDir * (len / 2 - 6), y + 4);
+      ctx.stroke();
+    }
+    ctx.restore();
+    ctx.fillStyle = 'rgba(91,147,184,.75)';
+    ctx.font = '9px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('かぜ', cx, y + 18);
+  }
+
+  function drawJudge() {
+    if (!judgeText) return;
+    const t = judgeText.t;
+    const y = 150 - t * 26;
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, (1 - t) * 2.2);
+    ctx.textAlign = 'center';
+    ctx.fillStyle = judgeText.color;
+    ctx.font = `700 ${Math.round(30 - t * 4)}px system-ui, sans-serif`;
+    ctx.fillText(judgeText.text, W / 2, y);
+    ctx.font = '12px system-ui, sans-serif';
+    ctx.fillStyle = 'rgba(53,65,74,.65)';
+    ctx.fillText(judgeText.sub, W / 2, y + 18);
+    ctx.restore();
+  }
+
   function drawHud() {
     ctx.textAlign = 'left';
     drawStars();
+    drawWind();
+    drawJudge();
+    if (combo >= 2) {
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#f2b134';
+      ctx.font = '700 15px system-ui, sans-serif';
+      ctx.fillText(`${combo} れんぞく`, 16, 70);
+    }
     ctx.textAlign = 'right';
     ctx.fillStyle = 'rgba(53,65,74,.75)';
     ctx.font = '700 20px system-ui, sans-serif';
@@ -560,7 +753,6 @@
   window.addEventListener('resize', fitCanvas);
   setupWorld();
   prepareShapes();
-  heldX = W / 2;
   bestEl.textContent = best;
   paintMute();
   reset();
