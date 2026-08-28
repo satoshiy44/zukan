@@ -14,12 +14,12 @@
 
   const W = 400;
   const H = 640;
-  const PLATFORM_W = 170;
+  const PLATFORM_W = 132;
   const PLATFORM_TOP = 560;     // 土台の上面（world y）
   const HOLD_GAP = 125;         // 積み上がりの先端から、これだけ上で構える
   const HOLD_MIN_Y = 72;        // ただし画面のこれより上には行かない
   const CAM_PIVOT = 340;        // 積み上がりの先端をこの画面高さに保つ
-  const LOST_BELOW = 220;       // 画面下からこれだけ落ちたら失敗
+  const LOST_BELOW = 260;       // 土台の上面からこれだけ下へ行ったら落下
   const PIECE_R = 38;           // 面積をそろえる基準（円の半径に相当）
   const PX_PER_CM = 4;          // 見た目の高さを cm 表記に直す係数
   const DROP_COOLDOWN = 620;
@@ -142,9 +142,9 @@
   // ---------------------------------------------------------------- 物理
   const PIECE_OPTS = {
     label: 'piece',
-    restitution: 0.02,   // 積む遊びなので、ほとんど跳ねさせない
-    friction: 0.75,      // 滑って崩れるより、噛み合って止まってほしい
-    frictionStatic: 1.1,
+    restitution: 0.05,   // 積む遊びなので、ほとんど跳ねさせない
+    friction: 0.5,       // 高すぎると端に載せても滑らず、傾かなくなる
+    frictionStatic: 0.7,
     density: 0.0012,
     slop: 0.02,
   };
@@ -154,8 +154,9 @@
     engine.gravity.y = 1;
     engine.positionIterations = 10;
     engine.velocityIterations = 10;
-    // 積み上がりが増えるので、止まったものは寝かせて安定させる
-    engine.enableSleeping = true;
+    // 寝かせると微妙な傾きが止まってしまい、バランスの緊張感が消える。
+    // 積み木遊びとしてはそこが肝なので、寝かせない。
+    engine.enableSleeping = false;
     world = engine.world;
     Events.on(engine, 'collisionStart', onCollisionStart);
   }
@@ -245,10 +246,12 @@
     heldX += Math.abs(dx) <= step ? dx : Math.sign(dx) * step;
     heldX = Math.max(10, Math.min(W - 10, heldX));
 
-    // 落ちたものを片付ける
+    // 落ちたものを片付ける。
+    // 画面の下端で判定すると、カメラが上がったときに土台付近の積み木まで
+    // 「画面外」になって落ちた扱いになってしまう。世界の座標で見る。
     for (let i = pieces.length - 1; i >= 0; i--) {
       const b = pieces[i];
-      if (b.position.y + camera < H + LOST_BELOW) continue;
+      if (b.position.y < PLATFORM_TOP + LOST_BELOW) continue;
       Composite.remove(world, b);
       pieces.splice(i, 1);
       if (b.plugin.landed) count = Math.max(0, count - 1);
