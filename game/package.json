@@ -1,8 +1,8 @@
 {
-  "name": "typescript-shin-ichiba-ranking-game-sample",
+  "name": "oimo-chicken",
   "private": true,
   "version": "0.1.0",
-  "description": "",
+  "description": "ニコ生ランキングゲーム「ひっこぬけ！おいもチキン」",
   "scripts": {
     "postinstall": "npm run build",
     "build": "rimraf ./script && tsc && akashic scan asset script",
@@ -10,9 +10,10 @@
     "lint": "eslint \"src/**/*.ts\" --fix",
     "start": "akashic sandbox .",
     "start:multi": "akashic serve .",
-    "export-zip": "rimraf game.zip && akashic export zip -o game.zip -s",
+    "export-zip": "rimraf game.zip && akashic export zip -o game.zip --nicolive",
     "export-html": "rimraf game && akashic export html -o game",
-    "test": "jest"
+    "test": "jest",
+    "assets": "node tools/gen-images.js && python3 tools/gen-audio.py && akashic scan asset"
   },
   "author": "",
   "license": "",

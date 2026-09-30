@@ -4,30 +4,6 @@
 	"fps": 30,
 	"main": "./script/_bootstrap.js",
 	"assets": {
-		"player": {
-			"type": "image",
-			"width": 32,
-			"height": 32,
-			"path": "image/player.png"
-		},
-		"shot": {
-			"type": "image",
-			"width": 16,
-			"height": 16,
-			"path": "image/shot.png"
-		},
-		"se": {
-			"type": "audio",
-			"path": "audio/se",
-			"systemId": "sound",
-			"duration": 250,
-			"hint": {
-				"extensions": [
-					".aac",
-					".ogg"
-				]
-			}
-		},
 		"_bootstrap": {
 			"type": "script",
 			"path": "script/_bootstrap.js",
@@ -42,6 +18,247 @@
 			"type": "script",
 			"path": "script/parameterObject.js",
 			"global": true
+		},
+		"beep": {
+			"type": "audio",
+			"path": "audio/beep",
+			"systemId": "sound",
+			"duration": 120,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"bgm": {
+			"type": "audio",
+			"path": "audio/bgm",
+			"systemId": "music",
+			"duration": 13629,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			},
+			"loop": true
+		},
+		"creak": {
+			"type": "audio",
+			"path": "audio/creak",
+			"systemId": "sound",
+			"duration": 220,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"finish": {
+			"type": "audio",
+			"path": "audio/finish",
+			"systemId": "sound",
+			"duration": 1200,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"go": {
+			"type": "audio",
+			"path": "audio/go",
+			"systemId": "sound",
+			"duration": 350,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"gold": {
+			"type": "audio",
+			"path": "audio/gold",
+			"systemId": "sound",
+			"duration": 840,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"harvest": {
+			"type": "audio",
+			"path": "audio/harvest",
+			"systemId": "sound",
+			"duration": 900,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"last": {
+			"type": "audio",
+			"path": "audio/last",
+			"systemId": "sound",
+			"duration": 1400,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"pop": {
+			"type": "audio",
+			"path": "audio/pop",
+			"systemId": "sound",
+			"duration": 140,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"pop_big": {
+			"type": "audio",
+			"path": "audio/pop_big",
+			"systemId": "sound",
+			"duration": 220,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"result": {
+			"type": "audio",
+			"path": "audio/result",
+			"systemId": "sound",
+			"duration": 1300,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"rock_se": {
+			"type": "audio",
+			"path": "audio/rock_se",
+			"systemId": "sound",
+			"duration": 180,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"snap_se": {
+			"type": "audio",
+			"path": "audio/snap_se",
+			"systemId": "sound",
+			"duration": 370,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"basket": {
+			"type": "image",
+			"path": "image/basket.png",
+			"width": 220,
+			"height": 150
+		},
+		"bg": {
+			"type": "image",
+			"path": "image/bg.png",
+			"width": 1280,
+			"height": 720
+		},
+		"imo": {
+			"type": "image",
+			"path": "image/imo.png",
+			"width": 96,
+			"height": 64
+		},
+		"imo_big": {
+			"type": "image",
+			"path": "image/imo_big.png",
+			"width": 150,
+			"height": 100
+		},
+		"imo_gold": {
+			"type": "image",
+			"path": "image/imo_gold.png",
+			"width": 110,
+			"height": 76
+		},
+		"leaf_red": {
+			"type": "image",
+			"path": "image/leaf_red.png",
+			"width": 40,
+			"height": 40
+		},
+		"leaf_yellow": {
+			"type": "image",
+			"path": "image/leaf_yellow.png",
+			"width": 40,
+			"height": 40
+		},
+		"logo": {
+			"type": "image",
+			"path": "image/logo.png",
+			"width": 900,
+			"height": 260
+		},
+		"rock": {
+			"type": "image",
+			"path": "image/rock.png",
+			"width": 90,
+			"height": 70
+		},
+		"snap": {
+			"type": "image",
+			"path": "image/snap.png",
+			"width": 200,
+			"height": 120
+		},
+		"tanuki_fall": {
+			"type": "image",
+			"path": "image/tanuki_fall.png",
+			"width": 240,
+			"height": 250
+		},
+		"tanuki_idle": {
+			"type": "image",
+			"path": "image/tanuki_idle.png",
+			"width": 240,
+			"height": 250
+		},
+		"tanuki_pull": {
+			"type": "image",
+			"path": "image/tanuki_pull.png",
+			"width": 240,
+			"height": 250
+		},
+		"vine": {
+			"type": "image",
+			"path": "image/vine.png",
+			"width": 200,
+			"height": 150
 		}
 	},
 	"environment": {
@@ -51,7 +268,7 @@
 				"ranking"
 			],
 			"preferredSessionParameters": {
-				"totalTimeLimit": 82
+				"totalTimeLimit": 75
 			}
 		}
 	},

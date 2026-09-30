@@ -1,90 +1,43 @@
-# typescript-shin-ichiba-ranking-game-sample
+# ひっこぬけ！おいもチキン(略: いもチキ)
 
-**typescript-shin-ichiba-ranking-game-sample**はTypeScriptでAkashicのゲームを作る際のサンプルプロジェクトです。
+ニコ生ゲーム(ランキングモード)向けの自作ゲームです。「自作ゲームパーティー2026秋」への応募を想定しています。
 
-## 利用方法
+## あそびかた
 
- `typescript-shin-ichiba-ranking-game-sample` を利用するにはNode.jsが必要です。
+- 画面を**長押し**すると、たぬきがつるを引っぱり、土の中からさつまいもが出てきます。
+- 引っぱっている間は「ピン」メーターが上がります。**満タンになると ブチッ! と切れ**、残りのいもは土に戻ります。
+- 指をはなすとメーターが下がります。**石(ガッ!)が地上に出る瞬間はメーターが一気に上がる**ので、手前でゆるめます。
+- つるを最後まで抜くと「まるごと!」。続けるほど倍率が上がります(×1 → ×3)。ブチッと切れると倍率は元に戻ります。
+- 一度もはなさずに抜くと「**一本釣り!!**」ボーナス。石のないつるで狙えます。
+- **残り15秒で「ラスト大株」**が出ます。金のいもが3個入っていて、得点は2倍です。全部抜けば大逆転できます。
 
-初回のみ、以下のコマンドを実行して、ビルドに必要なパッケージをインストールしてください。
-この作業は `typescript-shin-ichiba-ranking-game-sample` を新しく生成するごとに必要です。
+| いも | 点数(×倍率) |
+| --- | --- |
+| ふつうのいも | 100 |
+| 大きいいも | 300 |
+| 金のいも | 1000 |
+| まるごとボーナス | 200 (大株は 2000) |
+| 一本釣りボーナス | 800 |
 
-```sh
-npm install
+つるの形(長さ、いも、石、かたさ)はランキングの共通乱数(`randomSeed`)から作ります。同じ回の参加者は、全員同じつるで競います。
+
+## 開発
+
+```bash
+npm install          # 依存を入れてビルド
+npm start            # サンドボックスで起動 (http://localhost:3000)
+npm run build        # TypeScript をビルド
+npm run assets       # 画像と効果音を作り直す (tools/ の生成スクリプト)
+npm run export-zip   # 投稿用の game.zip を作る (akashic export zip --nicolive)
 ```
 
-### ビルド方法
+- `npm run export-zip` はランタイムのバージョンをネットから取ってくるので、インターネットにつながった PC で実行してください。
+- 画像は `tools/gen-images.js`(Chromium の canvas で描画)、音は `tools/gen-audio.py`(波形を合成)で作っています。外部素材は使っていないので、権利表記は不要です。
+- 自動プレイで確認するときは、サンドボックスを `-p 3300` で起動してから `node tools/playtest.js <出力先> smart` を実行します。
 
-`typescript-shin-ichiba-ranking-game-sample` はTypeScriptで書かれているため、以下のコマンドでJavaScriptファイルに変換する必要があります。
+## 仕様メモ
 
-```sh
-npm run build
-```
-
-`src` ディレクトリ以下のTypeScriptファイルがコンパイルされ、`script` ディレクトリ以下にJavaScriptファイルが生成されます。
-
-`npm run build` は自動的に `akashic scan asset script` を実行するので、`game.json` の更新が行われます。
-
-### 動作確認方法
-
-以下のどちらかを実行後、ブラウザで `http://localhost:3000/game/` にアクセスすることでゲームを実行できます。
-
-* `npm start`
-* `npm install -g @akashic/akashic-cli` 後、 `akashic sandbox .`
-
-また、マルチプレイゲームの動作確認は `akashic-cli-serve` を利用します。以下のどちらかを実行後、ブラウザで `http://localhost:3300` にアクセスすることでゲームを実行できます。
-
-* `npm run start:multi`
-* `npm install -g @akashic/akashic-cli` 後、 `akashic serve .`
-
-### テンプレートの使い方
-
-* ゲーム部分を作成する場合は、 `src/main.ts` を編集してください。
-  * 基本的に`src/_bootstrap.ts`を編集する必要はありません。
-* このテンプレートでは `src/main.ts` の `main` 関数の引数`param`に以下の値が新たに付与されています。
-  * `param.sessionParameter`: [セッションパラメーター](https://akashic-games.github.io/guide/ranking.html#session-parameters)
-* ランキングモードに対応したニコニコ新市場コンテンツの作り方の詳細については、[こちら](https://akashic-games.github.io/guide/ranking.html)を参照してください。
-
-### アセットの更新方法
-
-各種アセットを追加したい場合は、それぞれのアセットファイルを以下のディレクトリに格納します。
-
-* 画像アセット: `image`
-* スクリプトアセット: `script`
-* テキストアセット: `text`
-* オーディオアセット: `audio`
-
-これらのアセットを追加・変更したあとに `npm run update` をすると、アセットの変更内容をもとに `game.json` を書き換えることができます。
-
-### npm モジュールの追加・削除
-
-`typescript-shin-ichiba-ranking-game-sample` でnpmモジュールを利用する場合、このディレクトリで `akashic install <package_name>` することで npm モジュールを追加することができます。
-
-また `akashic uninstall <package_name>` すると npm モジュールを削除することができます。
-
-## エクスポート方法
-
-`typescript-shin-ichiba-ranking-game-sample` をエクスポートするときは以下のコマンドを利用します。
-
-### htmlファイルのエクスポート
-
-`npm run export-html` のコマンドを利用することで `game` ディレクトリにエクスポートすることができます。
-
-`game/index.html` をブラウザで開くと単体動作させることができます。
-
-### zipファイルのエクスポート
-
-`npm run export-zip` のコマンドを利用することで `game.zip` という名前のzipファイルを出力できます。
-
-## テスト方法
-
-1. [TSLint](https://github.com/palantir/tslint "TSLint")を使ったLint
-2. [Jest](https://jestjs.io/ "Jest")を使ったテスト
-
-がそれぞれ実行されます。
-
-```sh
-npm test
-```
-
-テストコードのサンプルとして `spec/testSpec.js` を用意していますので参考にしてテストコードを記述して下さい。
+- 解像度 1280x720 / 30fps / `supportedModes: ["ranking"]` / 希望制限時間 75秒
+- 時間配分は、説明とカウントダウン 4秒、プレイ(制限時間 − 15秒)、結果表示 約11秒です。制限時間の約10秒前までに結果表示を終えます。
+- スコアは `g.game.vars.gameState.score` に、得点が入るたびに書き込みます。
+- 展開後のサイズは約1MB です(上限は10MB)。
