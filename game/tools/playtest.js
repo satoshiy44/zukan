@@ -4,7 +4,8 @@ const { chromium } = require("playwright");
 const path = require("path");
 
 const outDir = process.argv[2] || ".";
-const shots = [2, 6, 9, 14, 20, 35, 52, 58, 63, 67, 72];
+const shots = [3, 10, 25, 40, 46, 52, 58, 66, 74, 80, 88];
+const STALL_START = 5 + 39 + 4; // イントロ+前半+切りかえ(秒)
 
 (async () => {
 	const browser = await chromium.launch();
@@ -41,9 +42,28 @@ const shots = [2, 6, 9, 14, 20, 35, 52, 58, 63, 67, 72];
 			return !(r > 240 && g > 200 && b > 190);
 		}, b64);
 	};
+	// 焼き加減メーターの「極上」の範囲(x=694〜766)に針(白)が来ているか
+	const needleInPerfect = async () => {
+		const buf = await page.screenshot({ clip: { x: box.x + 694 * box.width / 1280, y: box.y + 655 * box.height / 720, width: 72 * box.width / 1280, height: 1 } });
+		return page.evaluate(async (data) => {
+			const img = new Image();
+			img.src = "data:image/png;base64," + data;
+			await img.decode();
+			const c = document.createElement("canvas");
+			c.width = img.width; c.height = 1;
+			const ctx = c.getContext("2d");
+			ctx.drawImage(img, 0, 0);
+			const d = ctx.getImageData(0, 0, img.width, 1).data;
+			for (let i = 0; i < d.length; i += 4) if (d[i] > 240 && d[i + 1] > 240 && d[i + 2] > 220) return true;
+			return false;
+		}, buf.toString("base64"));
+	};
 	let down = false;
-	while (sec() < 76) {
-		if (smart) {
+	while (sec() < 92) {
+		if (smart && sec() > STALL_START) {
+			if (down) { await page.mouse.up(); down = false; }
+			if (await needleInPerfect()) { await page.mouse.click(cx, cy); await page.waitForTimeout(200); }
+		} else if (smart) {
 			// メーターが releaseAt まで来たら手をはなし、15%まで下がったらまた引く
 			if (down && await filled(releaseAt)) { await page.mouse.up(); down = false; }
 			else if (!down && !(await filled(0.15))) { await page.mouse.down(); down = true; }

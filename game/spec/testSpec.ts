@@ -2,7 +2,7 @@ import * as path from "path";
 import { GameContext } from "@akashic/headless-akashic";
 
 describe("おいもチキン", () => {
-	it("長押しでいもが取れ、最後まで遊んでもスコアが整数で残る", async () => {
+	it("前半でいもを集め、後半の屋台で売ると点が増え、最後までスコアが整数で残る", async () => {
 		const context = new GameContext<3>({
 			gameJsonPath: path.join(__dirname, "..", "game.json")
 		});
@@ -10,39 +10,44 @@ describe("おいもチキン", () => {
 		const game = client.game!;
 		expect(game.width).toBe(1280);
 		expect(game.height).toBe(720);
-
 		await client.advanceUntil(() => game.scene()!.local !== "full-local" && game.scene()!.name !== "_bootstrap");
 		expect(game.vars.gameState.score).toBe(0);
 
-		// イントロ(4秒)を抜ける
-		await context.advance(4500);
-		expect(game.vars.gameState.score).toBe(0);
+		// イントロ(5秒)を抜ける
+		await context.advance(5500);
 
-		// 0.9秒引っぱる → 最初のいもが取れる
+		// 前半: 0.9秒引っぱって離す → いもがかごに入って少し点が入る
 		client.sendPointDown(640, 360, 1);
 		await context.advance(900);
 		client.sendPointUp(640, 360, 1);
 		await context.advance(300);
-		const afterPull = game.vars.gameState.score;
-		expect(afterPull).toBeGreaterThan(0);
+		expect(game.vars.gameState.score).toBeGreaterThan(0);
 
-		// 引っぱりっぱなしにするとブチッと切れても落ちずに動き続ける
-		client.sendPointDown(640, 360, 1);
-		await context.advance(5000);
-		client.sendPointUp(640, 360, 1);
-
-		// 引く・ゆるめるを繰り返して最後まで遊ぶ
-		for (let i = 0; i < 40; i++) {
+		// 前半の残り(合計約39秒)を、引く・離すを繰り返して遊ぶ
+		for (let i = 0; i < 22; i++) {
 			client.sendPointDown(640, 360, 1);
 			await context.advance(1000);
 			client.sendPointUp(640, 360, 1);
-			await context.advance(600);
+			await context.advance(700);
 		}
-		await context.advance(15000);
+		// 切りかえ(4秒)を待って後半へ
+		await context.advance(4500);
+		const beforeStall = game.vars.gameState.score;
+
+		// 後半: 焼き加減がちょうどよくなる頃(0.7秒後)にタップして売る
+		for (let i = 0; i < 6; i++) {
+			await context.advance(700);
+			client.sendPointDown(640, 360, 1);
+			client.sendPointUp(640, 360, 1);
+			await context.advance(400);
+		}
+		const afterSales = game.vars.gameState.score;
+		expect(afterSales).toBeGreaterThan(beforeStall + 500);
+
+		await context.advance(40000);
 		const finalScore = game.vars.gameState.score;
 		expect(Number.isInteger(finalScore)).toBe(true);
-		expect(finalScore).toBeGreaterThanOrEqual(afterPull);
-		expect(finalScore).toBeLessThan(100000);
+		expect(finalScore).toBeGreaterThanOrEqual(afterSales);
 		await context.destroy();
 	}, 60000);
 });

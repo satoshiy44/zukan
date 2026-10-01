@@ -148,6 +148,19 @@ save("result", mix(*[tone(note(n), 0.14, "sq", 0.2) for n in (72, 74, 76, 79, 81
                    tone(note(84), 0.8, "tri", 0.35), tone(note(88), 0.8, "sq", 0.15),
                    offsets=[i * 0.08 for i in range(6)] + [0.5, 0.5]))
 
+# ---- 後半: やきいも屋台 ----
+# 極上(キラキラ)
+save("perfect", mix(*[tone(note(n), 0.3, "tri", 0.3, 0.002, 0.3) for n in (84, 88, 91, 96, 100)],
+                    *[tone(note(n), 0.3, "sq", 0.08, 0.002, 0.3) for n in (84, 88, 91, 96, 100)],
+                    offsets=[i * 0.05 for i in range(5)] * 2))
+# うまい
+save("good", mix(tone(note(79), 0.15, "sq", 0.2), tone(note(84), 0.3, "tri", 0.3), offsets=[0, 0.08]))
+# なま・こげ
+save("bad", mix(sweep(0.35, 300, 150, "sq", 0.25), lowpass(noise(0.2, 0.3, 2), 0.2)))
+# 屋台オープン
+save("open", mix(*[tone(note(n), 0.16, "sq", 0.18) for n in (72, 76, 79, 84, 79, 84)],
+                 tone(note(88), 0.7, "tri", 0.35), offsets=[i * 0.11 for i in range(6)] + [0.66]))
+
 # ---- BGM: 祭囃子風のループ(ヨナ抜き音階, 140BPM, 8小節) ----
 BPM = 140
 beat = 60 / BPM

@@ -367,6 +367,96 @@
 					".ogg"
 				]
 			}
+		},
+		"bad": {
+			"type": "audio",
+			"path": "audio/bad",
+			"systemId": "sound",
+			"duration": 350,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"good": {
+			"type": "audio",
+			"path": "audio/good",
+			"systemId": "sound",
+			"duration": 380,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"open": {
+			"type": "audio",
+			"path": "audio/open",
+			"systemId": "sound",
+			"duration": 1360,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"perfect": {
+			"type": "audio",
+			"path": "audio/perfect",
+			"systemId": "sound",
+			"duration": 500,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"cust_kitsune": {
+			"type": "image",
+			"path": "image/cust_kitsune.png",
+			"width": 240,
+			"height": 290
+		},
+		"cust_kuma": {
+			"type": "image",
+			"path": "image/cust_kuma.png",
+			"width": 240,
+			"height": 290
+		},
+		"cust_usagi": {
+			"type": "image",
+			"path": "image/cust_usagi.png",
+			"width": 240,
+			"height": 290
+		},
+		"imo_burnt": {
+			"type": "image",
+			"path": "image/imo_burnt.png",
+			"width": 96,
+			"height": 64
+		},
+		"imo_yaki": {
+			"type": "image",
+			"path": "image/imo_yaki.png",
+			"width": 110,
+			"height": 76
+		},
+		"stall_bg": {
+			"type": "image",
+			"path": "image/stall_bg.png",
+			"width": 1280,
+			"height": 720
+		},
+		"yatai": {
+			"type": "image",
+			"path": "image/yatai.png",
+			"width": 560,
+			"height": 470
 		}
 	},
 	"environment": {
@@ -376,7 +466,7 @@
 				"ranking"
 			],
 			"preferredSessionParameters": {
-				"totalTimeLimit": 75
+				"totalTimeLimit": 90
 			}
 		}
 	},

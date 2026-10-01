@@ -415,6 +415,197 @@ function drawAll() {
 		ctx.fillText("ブチッ!", cx, cy + 2);
 	});
 
+	// ======== 後半: やきいも屋台 ========
+	const rrect = (ctx, x, y, w, h, r) => {
+		ctx.beginPath();
+		ctx.moveTo(x + r, y);
+		ctx.arcTo(x + w, y, x + w, y + h, r);
+		ctx.arcTo(x + w, y + h, x, y + h, r);
+		ctx.arcTo(x, y + h, x, y, r);
+		ctx.arcTo(x, y, x + w, y, r);
+		ctx.closePath();
+	};
+	make("stall_bg", 1280, 720, (ctx, w, h) => {
+		const sky = ctx.createLinearGradient(0, 0, 0, h);
+		sky.addColorStop(0, "#2b2050");
+		sky.addColorStop(0.45, "#8a3f5a");
+		sky.addColorStop(0.7, "#e07a4a");
+		sky.addColorStop(1, "#5a3420");
+		ctx.fillStyle = sky;
+		ctx.fillRect(0, 0, w, h);
+		// 星
+		for (let i = 0; i < 60; i++) ellipse(ctx, rnd() * w, rnd() * 220, 1.5, 1.5, 0, "rgba(255,250,220," + (0.4 + rnd() * 0.6) + ")");
+		// 月
+		ellipse(ctx, 1080, 110, 46, 46, 0, "#fff3c4");
+		ellipse(ctx, 1100, 100, 40, 40, 0, "#2b2050");
+		// 町なみ
+		ctx.fillStyle = "#3a2440";
+		for (let x = 0; x < w; x += 110) {
+			const hh = 140 + rnd() * 80;
+			ctx.fillRect(x, 470 - hh, 100, hh);
+			ctx.beginPath(); ctx.moveTo(x - 10, 470 - hh); ctx.lineTo(x + 50, 470 - hh - 40); ctx.lineTo(x + 110, 470 - hh); ctx.fill();
+			ctx.fillStyle = "rgba(255,210,120,0.7)";
+			ctx.fillRect(x + 20, 470 - hh + 30, 18, 22);
+			ctx.fillRect(x + 60, 470 - hh + 30, 18, 22);
+			ctx.fillStyle = "#3a2440";
+		}
+		// 道
+		const road = ctx.createLinearGradient(0, 470, 0, h);
+		road.addColorStop(0, "#7a5236");
+		road.addColorStop(1, "#4a2c18");
+		ctx.fillStyle = road;
+		ctx.fillRect(0, 470, w, h - 470);
+		// ちょうちんのひも
+		ctx.strokeStyle = "#2a1a10";
+		ctx.lineWidth = 3;
+		ctx.beginPath(); ctx.moveTo(0, 40); ctx.quadraticCurveTo(640, 110, 1280, 40); ctx.stroke();
+		for (let i = 1; i < 10; i++) {
+			const x = i * 128, y = 40 + Math.sin(i / 10 * Math.PI) * 52;
+			const g = ctx.createRadialGradient(x, y + 30, 4, x, y + 30, 60);
+			g.addColorStop(0, "rgba(255,200,100,0.5)");
+			g.addColorStop(1, "rgba(255,200,100,0)");
+			ctx.fillStyle = g;
+			ctx.fillRect(x - 60, y - 30, 120, 120);
+			ellipse(ctx, x, y + 30, 20, 26, 0, "#e8412f", "#7a1a10", 3);
+			ctx.fillStyle = "#2a1a10";
+			ctx.fillRect(x - 12, y + 2, 24, 6);
+			ctx.fillRect(x - 12, y + 54, 24, 6);
+		}
+		// 落ち葉
+		for (let i = 0; i < 40; i++) {
+			const x = rnd() * w, y = 480 + rnd() * 230;
+			if (rnd() < 0.5) momiji(ctx, x, y, 8 + rnd() * 5, rnd() * 6, "#d8412f");
+			else ginkgo(ctx, x, y, 7 + rnd() * 4, rnd() * 6, "#f2b632");
+		}
+	});
+	// 屋台(石焼き窯つき)
+	make("yatai", 560, 470, (ctx, w, h) => {
+		// 屋根
+		ctx.fillStyle = "#c23a2a";
+		ctx.beginPath(); ctx.moveTo(10, 110); ctx.lineTo(60, 20); ctx.lineTo(500, 20); ctx.lineTo(550, 110); ctx.closePath(); ctx.fill();
+		ctx.strokeStyle = "#5a140c"; ctx.lineWidth = 5; ctx.stroke();
+		ctx.fillStyle = "#fff4dc";
+		for (let i = 0; i < 9; i++) {
+			ctx.beginPath();
+			ctx.moveTo(10 + i * 60, 110); ctx.lineTo(40 + i * 60, 110); ctx.lineTo(25 + i * 60, 135); ctx.closePath();
+			ctx.fill();
+		}
+		// のれん
+		ctx.fillStyle = "#2f4a8a";
+		for (let i = 0; i < 4; i++) { rrect(ctx, 70 + i * 108, 112, 98, 70, 6); ctx.fill(); }
+		ctx.fillStyle = "#fff4dc";
+		ctx.font = "bold 46px IPAGothic";
+		ctx.textAlign = "center";
+		ctx.textBaseline = "middle";
+		["や", "き", "い", "も"].forEach((c, i) => ctx.fillText(c, 119 + i * 108, 150));
+		// 柱
+		ctx.fillStyle = "#6b3f1c";
+		ctx.fillRect(40, 110, 22, 330);
+		ctx.fillRect(498, 110, 22, 330);
+		// 台
+		const g = ctx.createLinearGradient(0, 300, 0, 450);
+		g.addColorStop(0, "#b07a44");
+		g.addColorStop(1, "#7a4a22");
+		ctx.fillStyle = g;
+		rrect(ctx, 20, 300, 520, 150, 12); ctx.fill();
+		ctx.strokeStyle = "#3a1e08"; ctx.lineWidth = 5; ctx.stroke();
+		// 窯(石)
+		const ox = 280, oy = 290;
+		ellipse(ctx, ox, oy, 170, 70, 0, "#4a4038", "#2a2018", 5);
+		for (let i = 0; i < 26; i++) {
+			const a = rnd() * Math.PI * 2, d = rnd();
+			ellipse(ctx, ox + Math.cos(a) * 150 * d, oy + Math.sin(a) * 55 * d, 12 + rnd() * 8, 8 + rnd() * 5, rnd(), rnd() < 0.5 ? "#8a8278" : "#a59d92", "#3a342e", 2);
+		}
+		// 窯のまわりの赤い光
+		const glow = ctx.createRadialGradient(ox, oy, 10, ox, oy, 170);
+		glow.addColorStop(0, "rgba(255,140,40,0.55)");
+		glow.addColorStop(1, "rgba(255,90,20,0)");
+		ctx.fillStyle = glow;
+		ctx.fillRect(ox - 170, oy - 80, 340, 160);
+		// 車輪
+		ellipse(ctx, 110, 445, 30, 30, 0, "#3a2414", "#1a0e06", 4);
+		ellipse(ctx, 450, 445, 30, 30, 0, "#3a2414", "#1a0e06", 4);
+	});
+	// お客さん(きつね・うさぎ・くま)
+	const customer = (ctx, kind) => {
+		const cols = { kitsune: ["#f08a3a", "#fff4e0"], usagi: ["#f4f0ea", "#ffc8d4"], kuma: ["#8a5a36", "#e8c89a"] }[kind];
+		ctx.save();
+		ctx.translate(120, 150);
+		// 体
+		ellipse(ctx, 0, 70, 58, 62, 0, cols[0], "#3a2414", 5);
+		ellipse(ctx, 0, 80, 34, 40, 0, cols[1]);
+		// 耳
+		if (kind === "kitsune") {
+			for (const s of [-1, 1]) {
+				ctx.beginPath(); ctx.moveTo(s * 20, -60); ctx.lineTo(s * 50, -120); ctx.lineTo(s * 58, -45); ctx.closePath();
+				ctx.fillStyle = cols[0]; ctx.fill(); ctx.strokeStyle = "#3a2414"; ctx.lineWidth = 4; ctx.stroke();
+			}
+		} else if (kind === "usagi") {
+			for (const s of [-1, 1]) {
+				ellipse(ctx, s * 22, -110, 15, 50, s * 0.15, cols[0], "#3a2414", 4);
+				ellipse(ctx, s * 22, -108, 7, 36, s * 0.15, cols[1]);
+			}
+		} else {
+			for (const s of [-1, 1]) {
+				ellipse(ctx, s * 40, -58, 18, 18, 0, cols[0], "#3a2414", 4);
+				ellipse(ctx, s * 40, -58, 9, 9, 0, cols[1]);
+			}
+		}
+		// 顔
+		ellipse(ctx, 0, -20, 56, 48, 0, cols[0], "#3a2414", 5);
+		ellipse(ctx, 0, -2, 30, 20, 0, cols[1]);
+		ctx.strokeStyle = "#2a1208";
+		ctx.lineWidth = 4;
+		for (const s of [-1, 1]) {
+			ctx.beginPath(); ctx.arc(s * 20, -24, 7, Math.PI * 1.1, Math.PI * 1.9); ctx.stroke();
+		}
+		ellipse(ctx, 0, -8, 6, 5, 0, "#2a1208");
+		ctx.beginPath(); ctx.arc(0, 2, 9, 0.15 * Math.PI, 0.85 * Math.PI); ctx.stroke();
+		ellipse(ctx, -34, -4, 9, 6, 0, "rgba(255,120,140,0.6)");
+		ellipse(ctx, 34, -4, 9, 6, 0, "rgba(255,120,140,0.6)");
+		// 手
+		ellipse(ctx, -56, 50, 16, 14, 0, cols[0], "#3a2414", 4);
+		ellipse(ctx, 56, 50, 16, 14, 0, cols[0], "#3a2414", 4);
+		ctx.restore();
+	};
+	make("cust_kitsune", 240, 290, (ctx) => customer(ctx, "kitsune"));
+	make("cust_usagi", 240, 290, (ctx) => customer(ctx, "usagi"));
+	make("cust_kuma", 240, 290, (ctx) => customer(ctx, "kuma"));
+	// こげたいも
+	make("imo_burnt", 96, 64, (ctx, w, h) => {
+		ctx.save();
+		ctx.translate(w / 2, h / 2);
+		ctx.rotate(-0.12);
+		const rx = w * 0.44, ry = h * 0.36;
+		ctx.beginPath();
+		ctx.moveTo(-rx, 0);
+		ctx.bezierCurveTo(-rx * 0.9, -ry * 1.1, rx * 0.5, -ry * 1.25, rx, -ry * 0.1);
+		ctx.bezierCurveTo(rx * 0.6, ry * 1.2, -rx * 0.8, ry * 1.15, -rx, 0);
+		ctx.closePath();
+		ctx.fillStyle = "#2a1a14";
+		ctx.fill();
+		ctx.lineWidth = 3;
+		ctx.strokeStyle = "#0a0604";
+		ctx.stroke();
+		ctx.strokeStyle = "#fff";
+		ctx.lineWidth = 2.5;
+		for (const s of [-1, 1]) {
+			ctx.beginPath(); ctx.moveTo(s * 10 - 4, -6); ctx.lineTo(s * 10 + 4, 2); ctx.stroke();
+			ctx.beginPath(); ctx.moveTo(s * 10 + 4, -6); ctx.lineTo(s * 10 - 4, 2); ctx.stroke();
+		}
+		ctx.restore();
+	});
+	// 焼けたいも(割れて黄色い中身)
+	make("imo_yaki", 110, 76, (ctx, w, h) => {
+		const g = ctx.createRadialGradient(w / 2, h / 2, 4, w / 2, h / 2, w / 2);
+		g.addColorStop(0, "rgba(255,240,170,0.9)");
+		g.addColorStop(1, "rgba(255,220,120,0)");
+		ctx.fillStyle = g;
+		ctx.fillRect(0, 0, w, h);
+		imo(ctx, w, h, "#9a2a58", "#5c1238", false);
+		ellipse(ctx, w * 0.58, h * 0.46, w * 0.16, h * 0.2, 0.2, "#ffd23a", "#c98d12", 2);
+	});
+
 	// ---- タイトルロゴ ----
 	make("logo", 900, 260, (ctx, w, h) => {
 		ctx.textAlign = "center";
