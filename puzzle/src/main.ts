@@ -303,13 +303,30 @@ export function main(param: GameMainParameterObject): void {
 				if (phase !== "play") return;
 				loadBoard();
 				busy = false;
-			}, 1300);
+			}, 900);
+		};
+
+		// 見えている位置でピースを探す(落下中・列つめ中のピースも押せるように)
+		const pieceAt = (x: number, y: number): { c: number; r: number } | null => {
+			let best: { c: number; r: number } | null = null;
+			let bestDist = CELL * 0.6;
+			for (let c = 0; c < columns.length; c++) {
+				for (let r = 0; r < columns[c].length; r++) {
+					const s = columns[c][r].sprite;
+					const d = Math.max(Math.abs(s.x - x), Math.abs(s.y - y));
+					if (d < bestDist) {
+						bestDist = d;
+						best = { c, r };
+					}
+				}
+			}
+			return best;
 		};
 
 		const tap = (x: number, y: number): void => {
-			const c = Math.floor((x - BX) / CELL);
-			const r = ROWS - 1 - Math.floor((y - BY) / CELL);
-			if (c < 0 || c >= columns.length || r < 0 || r >= columns[c].length) return;
+			const hit = pieceAt(x, y);
+			if (!hit) return;
+			const c = hit.c, r = hit.r;
 			const piece = columns[c][r];
 			if (piece.type === IMO) {
 				se("miss");
@@ -319,6 +336,7 @@ export function main(param: GameMainParameterObject): void {
 			const group = findGroup(c, r);
 			if (group.length < 2) {
 				se("miss");
+				popup("つながってないよ", fontWhite, 26, piece.sprite.x, piece.sprite.y - 40, 0.6);
 				const s = piece.sprite;
 				animate(0.25, (p) => {
 					s.angle = Math.sin(p * Math.PI * 4) * 15 * (1 - p);
@@ -346,7 +364,7 @@ export function main(param: GameMainParameterObject): void {
 			bakeImo();
 			columns = columns.filter((col) => col.length > 0); // 空いた列はつめる
 			if (!hasMove()) {
-				scene.setTimeout(endBoard, 450);
+				scene.setTimeout(endBoard, 250);
 				busy = true;
 			}
 		};
@@ -434,9 +452,14 @@ export function main(param: GameMainParameterObject): void {
 			// たき火
 			heat = Math.max(0, heat - heat * 0.02 - 0.02);
 			const fireScale = Math.min(1.7, 0.8 + heat / 40 + (fever ? 0.3 : 0));
-			fire.src = fireImages[Math.floor(g.game.age / 5) % 2];
+			const fireImage = fireImages[Math.floor(g.game.age / 5) % 2];
 			fire.scaleX = fire.scaleY = fire.scaleX + (fireScale - fire.scaleX) * 0.2;
-			fire.invalidate();
+			if (fire.src !== fireImage) {
+				fire.src = fireImage;
+				fire.invalidate();
+			} else {
+				fire.modified();
+			}
 			if (cosmeticRandom.generate() < 0.1 + heat / 60) spawnSpark();
 
 			time -= dt;
