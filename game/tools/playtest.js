@@ -5,7 +5,7 @@ const path = require("path");
 
 const outDir = process.argv[2] || ".";
 const shots = [3, 10, 25, 40, 46, 52, 58, 66, 74, 80, 88];
-const STALL_START = 5 + 39 + 4; // イントロ+前半+切りかえ(秒)
+const STALL_START = 5 + 35 + 4; // イントロ+前半+切りかえ(秒)
 
 (async () => {
 	const browser = await chromium.launch();

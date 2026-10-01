@@ -8,10 +8,10 @@ const BASKET_Y = 190;
 const INTRO_SEC = 5; // 説明+カウントダウン
 const RESULT_SEC = 11; // 結果表示に使う時間(制限時間の約10秒前には終える)
 const SWITCH_SEC = 4; // 前半→後半の切りかえ
-const DIG_SHARE = 0.55; // プレイ時間のうち前半(いもほり)の割合
-const PULL_SPEED = 260; // px/秒
-const STRAIN_UP = 52; // 引っぱり中のメーター上昇/秒(×かたさ)
-const STRAIN_DOWN = 105; // はなしている間のメーター回復/秒
+const DIG_SHARE = 0.5; // プレイ時間のうち前半(いもほり)の割合
+const PULL_SPEED = 360; // px/秒
+const STRAIN_UP = 70; // 引っぱり中のメーター上昇/秒(×かたさ)。引っぱる速さに合わせて、1pxあたりの上がり方は同じくらい
+const STRAIN_DOWN = 130; // はなしている間のメーター回復/秒
 const ROCK_SPIKE = 42; // 石が引っかかったときのメーター上昇
 const STUN_SEC = 1.2; // ブチッの後に動けない時間
 const UPGRADE_CHAIN = 4; // 1回の長押しでこの数以上続けて抜くと、いもがランクアップ
@@ -27,12 +27,14 @@ const METER_X = 190;
 const METER_Y = 640;
 const METER_W = 900;
 const CUSTOMER_X = 960;
+const SALE_X = 820; // 売れたときの文字の位置(お客さんの左上)
+const SALE_Y = 330;
 
 type ImoKind = "imo" | "imo_big" | "imo_gold";
 type ItemKind = ImoKind | "rock";
 const DIG_SCORE: { [key: string]: number } = { imo: 10, imo_big: 30, imo_gold: 100 };
 const SELL_PRICE: { [key: string]: number } = { imo: 50, imo_big: 150, imo_gold: 400 };
-const BAKE_SEC: { [key: string]: number } = { imo: 1.4, imo_big: 1.25, imo_gold: 1.05 }; // 生→こげまでの時間
+const KIND_SPEED: { [key: string]: number } = { imo: 1, imo_big: 1.1, imo_gold: 1.25 }; // いいいもほど焼けるのが速い
 const UPGRADE: { [key: string]: ImoKind } = { imo: "imo_big", imo_big: "imo_gold", imo_gold: "imo_gold" };
 const KIND_ORDER: { [key: string]: number } = { imo_gold: 0, imo_big: 1, imo: 2 };
 
@@ -45,6 +47,31 @@ const ZONES: Zone[] = [
 	{ from: 0.64, to: 0.76, name: "ほくほく", mult: 2, color: "#f4a640" },
 	{ from: 0.76, to: 1.01, name: "こげ", mult: 0, color: "#3a2a24" }
 ];
+
+// お客さん(キャラ)ごとに、焼き加減の針の動き方がちがう
+type CustomerType = "kuma" | "usagi" | "kitsune";
+interface CustomerDef {
+	type: CustomerType;
+	base: number; // 針の基本の速さ(メーター/秒)
+	at: number; // くま: 強火になる位置 / うさぎ: 止まる位置
+	pause: number; // うさぎ: 止まる時間
+	freq: number; // きつね: 緩急の周期(回/秒)
+	phase: number; // きつね: 緩急の始まり
+}
+const CUSTOMER_INFO: { [key: string]: { image: string; name: string; hint: string } } = {
+	kuma: { image: "cust_kuma", name: "くまさん", hint: "のんびり… でも急に強火!" },
+	usagi: { image: "cust_usagi", name: "うさぎさん", hint: "せっかち! 一瞬止まって一気に" },
+	kitsune: { image: "cust_kitsune", name: "きつねさん", hint: "きまぐれ 速くなったり遅くなったり" }
+};
+// 共通乱数からお客さんの列を作る(全員同じ順番・同じ動き)
+function createCustomer(random: g.RandomGenerator): CustomerDef {
+	const r = (): number => random.generate();
+	const pick = r();
+	const type: CustomerType = pick < 0.34 ? "kuma" : pick < 0.67 ? "usagi" : "kitsune";
+	if (type === "kuma") return { type, base: 0.45 + r() * 0.12, at: 0.22 + r() * 0.2, pause: 0, freq: 0, phase: 0 };
+	if (type === "usagi") return { type, base: 0.9 + r() * 0.25, at: 0.28 + r() * 0.16, pause: 0.25 + r() * 0.3, freq: 0, phase: 0 };
+	return { type, base: 0.6 + r() * 0.2, at: 0, pause: 0, freq: 0.7 + r() * 0.8, phase: r() * Math.PI * 2 };
+}
 
 interface ItemDef {
 	kind: ItemKind;
@@ -63,7 +90,7 @@ function createPlant(random: g.RandomGenerator, index: number): PlantDef {
 	const r = (): number => random.generate();
 	const items: ItemDef[] = [];
 	const level = Math.min(index, 10);
-	const length = Math.round(330 + r() * 180 + level * 22);
+	const length = Math.round(290 + r() * 150 + level * 18);
 	const imoCount = 3 + Math.floor(r() * 3) + (level >= 4 ? 1 : 0);
 	const firstSide = r() < 0.5 ? -1 : 1;
 	const step = (length - 110) / imoCount;
@@ -256,13 +283,14 @@ export function main(param: GameMainParameterObject): void {
 		// ---- 後半の世界(やきいも屋台) ----
 		stallLayer.append(new g.Sprite({ scene, src: img("stall_bg") }));
 		stallLayer.append(new g.Sprite({ scene, src: img("yatai"), x: 150, y: 230 }));
-		const customerImages = [img("cust_kitsune"), img("cust_usagi"), img("cust_kuma")];
-		const customer = new g.Sprite({ scene, src: customerImages[0], x: CUSTOMER_X, y: 600, anchorX: 0.5, anchorY: 1 });
+		const customer = new g.Sprite({ scene, src: img("cust_kuma"), x: CUSTOMER_X, y: 600, anchorX: 0.5, anchorY: 1 });
 		stallLayer.append(customer);
 		const ovenImo = new g.Sprite({ scene, src: img("imo"), x: OVEN_X, y: OVEN_Y, anchorX: 0.5, anchorY: 0.5 });
 		ovenImo.scaleX = ovenImo.scaleY = 1.4;
 		stallLayer.append(ovenImo);
 		const wantLabel = label("", fontWhite, 30, CUSTOMER_X, 270, stallLayer, "center");
+		const customerName = label("", fontYellow, 30, CUSTOMER_X, 160, stallLayer, "center");
+		const customerHint = label("", fontWhite, 24, CUSTOMER_X, 204, stallLayer, "center");
 		// 焼き加減メーター
 		stallLayer.append(new g.FilledRect({
 			scene, cssColor: "#2a1408", x: METER_X - 8, y: METER_Y - 8, width: METER_W + 16, height: 60
@@ -317,6 +345,9 @@ export function main(param: GameMainParameterObject): void {
 		// つるは最初にまとめて作る(プレイ内容で乱数の消費がずれないように)
 		const plants: PlantDef[] = [];
 		for (let i = 0; i < 40; i++) plants.push(createPlant(param.random, i));
+		const customers: CustomerDef[] = [];
+		for (let i = 0; i < 80; i++) customers.push(createCustomer(param.random));
+		let customerIndex = 0;
 
 		const addScore = (v: number): void => {
 			score += Math.round(v);
@@ -624,8 +655,12 @@ export function main(param: GameMainParameterObject): void {
 
 		// ================= 後半: やきいも屋台 =================
 		let bakeKind: ImoKind | null = null;
-		let bakeT = 0;
-		let bakeDur = 1;
+		let bakeT = 0; // 焼きはじめてからの時間
+		let bakeP = 0; // 焼き加減(0〜1)
+		let cust: CustomerDef = customers[0];
+		let burstTimer = 0; // くま: 強火の残り時間
+		let pauseTimer = 0; // うさぎ: 止まっている残り時間
+		let eventDone = false;
 		let regular = 0; // 常連さん(うまく焼けた連続回数)
 		let fever = false;
 		let nextBakeTimer = 0;
@@ -640,11 +675,46 @@ export function main(param: GameMainParameterObject): void {
 		};
 		const setOvenImage = (id: string): void => setImage(ovenImo, img(id));
 		const nextCustomer = (): void => {
-			setImage(customer, customerImages[Math.floor(cosmeticRandom.generate() * customerImages.length)]);
+			cust = customers[customerIndex++ % customers.length];
+			const info = CUSTOMER_INFO[cust.type];
+			setImage(customer, img(info.image));
+			setText(customerName, info.name);
+			setText(customerHint, info.hint);
 			animate(0.25, (p) => {
 				customer.x = CUSTOMER_X + 300 * (1 - p);
 				customer.modified();
 			});
+		};
+		// お客さんごとの針の速さ
+		const needleSpeed = (kind: ImoKind): number => {
+			let v = cust.base;
+			if (cust.type === "kuma") {
+				if (!eventDone && bakeP >= cust.at) {
+					eventDone = true;
+					burstTimer = 0.16;
+					se("rock_se");
+					popup("ボッ! 強火!", fontRed, 40, OVEN_X, OVEN_Y - 110, 0.7);
+				}
+				if (burstTimer > 0) {
+					burstTimer -= dt;
+					v *= 5;
+				}
+			} else if (cust.type === "usagi") {
+				if (!eventDone && bakeP >= cust.at) {
+					eventDone = true;
+					pauseTimer = cust.pause;
+				}
+				if (pauseTimer > 0) {
+					pauseTimer -= dt;
+					v = 0;
+				} else if (eventDone) {
+					v *= 1.4;
+				}
+			} else {
+				v = cust.base * (1 + 0.85 * Math.sin(Math.PI * 2 * cust.freq * bakeT + cust.phase));
+				v = Math.max(0.1, v);
+			}
+			return v * KIND_SPEED[kind];
 		};
 		const loadBake = (): void => {
 			if (stock.length === 0) {
@@ -652,6 +722,8 @@ export function main(param: GameMainParameterObject): void {
 				ovenImo.hide();
 				setText(wantLabel, "");
 				setText(tapHint, "");
+				setText(customerName, "");
+				setText(customerHint, "");
 				if (!stats.soldOut) {
 					stats.soldOut = true;
 					const bonus = SELLOUT_BONUS + Math.floor(phaseLeft) * 100;
@@ -663,7 +735,10 @@ export function main(param: GameMainParameterObject): void {
 			}
 			bakeKind = stock.shift()!;
 			bakeT = 0;
-			bakeDur = BAKE_SEC[bakeKind];
+			bakeP = 0;
+			burstTimer = 0;
+			pauseTimer = 0;
+			eventDone = false;
 			ovenImo.show();
 			ovenImo.x = OVEN_X;
 			ovenImo.y = OVEN_Y;
@@ -675,8 +750,7 @@ export function main(param: GameMainParameterObject): void {
 		};
 		const takeOut = (): void => {
 			if (!bakeKind) return;
-			const p = bakeT / bakeDur;
-			const zone = zoneAt(p);
+			const zone = zoneAt(bakeP);
 			const kind = bakeKind;
 			bakeKind = null;
 			let price = 0;
@@ -689,13 +763,13 @@ export function main(param: GameMainParameterObject): void {
 				se("bank");
 				const top = zone.mult >= 3;
 				const text = (top ? "極上〜!! " : "うまい! ") + "+" + Math.round(price);
-				popup(text, top ? fontYellow : fontPink, top ? 52 : 42, CUSTOMER_X, 230, 1.0);
+				popup(text, top ? fontYellow : fontPink, top ? 52 : 42, SALE_X, SALE_Y, 1.0);
 			} else {
 				regular = 0;
 				price = SELL_PRICE[kind] * zone.mult;
 				se("bad");
 				shake(stallLayer, 8);
-				popup(zone.mult === 0 ? "こげてる… +0" : "なまだよ… +" + Math.round(price), fontRed, 40, CUSTOMER_X, 230, 1.0);
+				popup(zone.mult === 0 ? "こげてる… +0" : "なまだよ… +" + Math.round(price), fontRed, 40, SALE_X, SALE_Y, 1.0);
 			}
 			stats.sold++;
 			if (price > 0) addScore(price);
@@ -711,9 +785,6 @@ export function main(param: GameMainParameterObject): void {
 				if (!bakeKind) ovenImo.hide();
 			});
 			nextBakeTimer = 0.35;
-			scene.setTimeout(() => {
-				if (phase === "stall") nextCustomer();
-			}, 300);
 		};
 
 		// ---- 入力 ----
@@ -736,7 +807,7 @@ export function main(param: GameMainParameterObject): void {
 			"【前半 いもほり】長押しでつるを引っぱる! 4こ以上つづけて抜くと ランクアップ",
 			"指をはなすと手もとのいもをゲット / メーター満タンで ブチッ! 手もとはパー",
 			"【後半 やきいも屋台】集めたいもを焼いて売る! ちょうどいい焼き加減でタップ",
-			"後半は焼きの腕で一発逆転! ラスト8秒は値段2倍!"
+			"お客さんごとに焼け方がちがう! 後半の腕で一発逆転! ラスト8秒は値段2倍!"
 		].forEach((t, i) => label(t, i === 3 ? fontYellow : i === 2 ? fontPink : fontWhite, 30, 640, 280 + i * 52, introLayer, "center"));
 		const countLabel = label("", fontYellow, 110, 640, 590, introLayer, "center");
 		countLabel.anchorY = 0.5;
@@ -760,8 +831,9 @@ export function main(param: GameMainParameterObject): void {
 			label("前半しゅうりょう!", fontYellow, 72, 640, 150, switchPanel, "center");
 			label("かごの中: " + stock.length + "こ", fontWhite, 48, 640, 270, switchPanel, "center");
 			label(stockText(), fontPink, 40, 640, 340, switchPanel, "center");
-			label("後半は やきいも屋台! いいものから順に焼いて売るよ", fontWhite, 32, 640, 440, switchPanel, "center");
-			label("焼けたら タップ!", fontYellow, 56, 640, 510, switchPanel, "center");
+			label("後半は やきいも屋台! いいものから順に焼いて売るよ", fontWhite, 32, 640, 420, switchPanel, "center");
+			label("くま:のんびり→急に強火 / うさぎ:一瞬止まる / きつね:緩急", fontPink, 28, 640, 464, switchPanel, "center");
+			label("焼けたら タップ!", fontYellow, 56, 640, 520, switchPanel, "center");
 		};
 		const startStall = (): void => {
 			switchPanel.destroy();
@@ -812,6 +884,8 @@ export function main(param: GameMainParameterObject): void {
 			bakeKind = null;
 			setText(tapHint, "");
 			setText(wantLabel, "");
+			setText(customerName, "");
+			setText(customerHint, "");
 			// 売れ残りは安売り
 			if (stock.length > 0) addScore(stock.length * LEFTOVER_PRICE);
 			se("finish");
@@ -885,8 +959,9 @@ export function main(param: GameMainParameterObject): void {
 					return;
 				}
 				if (bakeKind) {
+					bakeP += needleSpeed(bakeKind) * dt;
 					bakeT += dt;
-					const p = bakeT / bakeDur;
+					const p = bakeP;
 					needle.x = METER_X + Math.min(1, p) * METER_W - 4;
 					needleShadow.x = needle.x - 3;
 					needle.modified();
@@ -915,7 +990,10 @@ export function main(param: GameMainParameterObject): void {
 					if (p >= 1) takeOut(); // 放っておくと こげて売れない
 				} else if (nextBakeTimer > 0) {
 					nextBakeTimer -= dt;
-					if (nextBakeTimer <= 0) loadBake();
+					if (nextBakeTimer <= 0) {
+						if (stock.length > 0) nextCustomer();
+						loadBake();
+					}
 				}
 				return;
 			}
