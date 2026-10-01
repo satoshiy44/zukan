@@ -369,8 +369,24 @@ export function main(param: GameMainParameterObject): void {
 			}
 		};
 
+		// 押した場所に輪っかを出す(押した手ごたえ)
+		const tapRing = (x: number, y: number): void => {
+			const ring = new g.FilledRect({
+				scene, cssColor: "#fff6d0", x, y, width: 36, height: 36, anchorX: 0.5, anchorY: 0.5, opacity: 0.8
+			});
+			ring.angle = 45;
+			overLayer.append(ring);
+			animate(0.25, (p) => {
+				ring.scaleX = ring.scaleY = 0.4 + p * 0.9;
+				ring.opacity = 0.8 * (1 - p);
+				ring.modified();
+			}, () => ring.destroy());
+		};
+
 		scene.onPointDownCapture.add((ev) => {
-			if (phase !== "play" || busy) return;
+			if (phase !== "play") return;
+			tapRing(ev.point.x, ev.point.y);
+			if (busy) return;
 			tap(ev.point.x, ev.point.y);
 		});
 
