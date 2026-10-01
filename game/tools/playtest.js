@@ -20,6 +20,7 @@ const shots = [2, 6, 9, 14, 20, 35, 52, 58, 63, 67, 72];
 	let shotIdx = 0;
 	await page.mouse.move(cx, cy);
 	const smart = process.argv[3] === "smart";
+	const releaseAt = Number(process.argv[4] || 0.85); // この高さでメーターから手をはなす
 	// メーター(x=896)の指定の高さに色が入っているかを見る
 	const gaugeAt = async (level) => {
 		const y = 70 + 200 * (1 - level);
@@ -43,8 +44,8 @@ const shots = [2, 6, 9, 14, 20, 35, 52, 58, 63, 67, 72];
 	let down = false;
 	while (sec() < 76) {
 		if (smart) {
-			// メーター85%で手をはなし、15%まで下がったらまた引く
-			if (down && await filled(0.85)) { await page.mouse.up(); down = false; }
+			// メーターが releaseAt まで来たら手をはなし、15%まで下がったらまた引く
+			if (down && await filled(releaseAt)) { await page.mouse.up(); down = false; }
 			else if (!down && !(await filled(0.15))) { await page.mouse.down(); down = true; }
 			await page.waitForTimeout(30);
 		} else {
@@ -59,11 +60,5 @@ const shots = [2, 6, 9, 14, 20, 35, 52, 58, 63, 67, 72];
 			shotIdx++;
 		}
 	}
-	const score = await page.evaluate(() => {
-		const w = window;
-		const game = w.sandboxDeveloperProps && w.sandboxDeveloperProps.game;
-		return game ? JSON.stringify(game.vars.gameState) : "n/a";
-	});
-	console.log("gameState:", score);
 	await browser.close();
 })();

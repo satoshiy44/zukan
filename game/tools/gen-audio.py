@@ -105,10 +105,20 @@ def note(n):
 
 os.makedirs(OUT, exist_ok=True)
 
-# ぽんっ(いもが抜けた)
-save("pop", mix(sweep(0.14, 350, 1100, "sin", 0.8, 0.6), sweep(0.14, 700, 2200, "tri", 0.2, 0.6)))
-# 大きいいも
-save("pop_big", mix(sweep(0.22, 220, 700, "sin", 0.9, 0.6), sweep(0.22, 440, 1400, "tri", 0.3, 0.6), tone(note(84), 0.2, "tri", 0.2)))
+# ぽんっ(いもが抜けた): 続けて抜くほど音が上がる
+for k in range(1, 9):
+    f = 330 * 2 ** ((k - 1) * 2 / 12)
+    save("pop%d" % k, mix(sweep(0.14, f, f * 3, "sin", 0.8, 0.6), sweep(0.14, f * 2, f * 6, "tri", 0.18, 0.6),
+                          tone(f * 4, 0.12, "tri", 0.06 * k, 0.002, 0.12)))
+# 手もと確定(チャリーン)
+save("bank", mix(*[tone(note(n), 0.25, "sq", 0.12, 0.002, 0.25) for n in (88, 93)],
+                 *[tone(note(n), 0.5, "sin", 0.3, 0.002, 0.5) for n in (100, 105)],
+                 offsets=[0, 0.07, 0.07, 0.14]))
+# パー(しょんぼり)
+save("lose", mix(sweep(0.25, 440, 330, "sq", 0.2), sweep(0.25, 415, 311, "sq", 0.2), sweep(0.6, 392, 196, "sq", 0.22, 1.5),
+                 offsets=[0, 0.25, 0.5]))
+# ドキドキ(心臓の音)
+save("heart", mix(lowpass(sweep(0.09, 90, 50, "sin", 1.0), 0.3), lowpass(sweep(0.09, 80, 45, "sin", 0.7), 0.3), offsets=[0, 0.14]))
 # 金のいも
 gold = [tone(note(n), 0.35, "tri", 0.35, 0.002, 0.35) for n in (84, 88, 91, 96)]
 save("gold", mix(*gold, tone(note(100), 0.6, "sin", 0.3, 0.002, 0.6), offsets=[0, 0.06, 0.12, 0.18, 0.24]))

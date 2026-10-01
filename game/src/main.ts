@@ -10,14 +10,16 @@ const RESULT_SEC = 11; // 結果表示に使う時間(制限時間の約10秒前
 const LAST_SEC = 15; // 残りこの秒数で「ラスト大株」
 const PULL_SPEED = 260; // px/秒
 const STRAIN_UP = 52; // 引っぱり中のメーター上昇/秒(×かたさ)
-const STRAIN_DOWN = 135; // はなしている間のメーター回復/秒
+const STRAIN_DOWN = 105; // はなしている間のメーター回復/秒
 const ROCK_SPIKE = 42; // 石が引っかかったときのメーター上昇
 const STUN_SEC = 1.2; // ブチッの後に動けない時間
-const COMBO_MULT = [1, 1.2, 1.5, 2, 2.5, 3];
-const IMO_SCORE: { [key: string]: number } = { imo: 100, imo_big: 300, imo_gold: 1000 };
-const FULL_BONUS = 200;
-const IPPON_BONUS = 800;
+const MAX_CHAIN = 8; // れんぞくぬきの倍率の上限
+const IMO_SCORE: { [key: string]: number } = { imo: 100, imo_big: 250, imo_gold: 600 };
+const FULL_BONUS = 300;
+const IPPON_BONUS = 1000;
 const LAST_FULL_BONUS = 2000;
+const HAND_X = 250; // 手もとのいもを積む場所
+const HAND_Y = 268;
 
 type ItemKind = "imo" | "imo_big" | "imo_gold" | "rock";
 interface ItemDef {
@@ -30,6 +32,7 @@ interface PlantDef {
 	stiffness: number;
 	items: ItemDef[];
 	isLast: boolean;
+	isGold: boolean;
 }
 
 // 共通乱数からつるを作る(全員同じ順番・同じ形のつるになる)
@@ -47,7 +50,7 @@ function createPlant(random: g.RandomGenerator, index: number, isLast: boolean):
 		}
 		// 石は金のいもの手前などに(いもといもの間)
 		[2, 5, 9, 12, 13].forEach((i) => items.push({ kind: "rock", depth: (depthOf(i - 1) + depthOf(i)) / 2, side: 0 }));
-		return { length, stiffness: 1.0, items, isLast };
+		return { length, stiffness: 1.0, items, isLast, isGold: false };
 	}
 	const level = Math.min(index, 10);
 	const length = Math.round(330 + r() * 180 + level * 22);
@@ -72,8 +75,16 @@ function createPlant(random: g.RandomGenerator, index: number, isLast: boolean):
 		const k = slots.splice(Math.floor(r() * slots.length), 1)[0];
 		items.push({ kind: "rock", depth: (depths[k - 1] + depths[k]) / 2, side: 0 });
 	}
-	const stiffness = 0.85 + r() * 0.35 + level * 0.025;
-	return { length, stiffness, items, isLast };
+	let stiffness = 0.85 + r() * 0.35 + level * 0.025;
+	// たまに「金のつる」: いもが全部 金。そのかわり かたい
+	const isGold = index >= 2 && r() < 0.12;
+	if (isGold) {
+		items.forEach((it) => {
+			if (it.kind !== "rock") it.kind = "imo_gold";
+		});
+		stiffness += 0.3;
+	}
+	return { length, stiffness, items, isLast, isGold };
 }
 
 interface LiveItem {
@@ -88,7 +99,8 @@ export function main(param: GameMainParameterObject): void {
 		assetIds: [
 			"bg", "imo", "imo_big", "imo_gold", "rock", "vine", "basket", "tanuki_idle", "tanuki_pull", "tanuki_fall",
 			"leaf_red", "leaf_yellow", "snap", "logo",
-			"pop", "pop_big", "gold", "snap_se", "creak", "rock_se", "harvest", "beep", "go", "finish", "last", "result", "bgm"
+			"pop1", "pop2", "pop3", "pop4", "pop5", "pop6", "pop7", "pop8",
+			"gold", "snap_se", "creak", "rock_se", "harvest", "bank", "lose", "heart", "beep", "go", "finish", "last", "result", "bgm"
 		]
 	});
 	let time = 75; // 制限時間
@@ -212,6 +224,13 @@ export function main(param: GameMainParameterObject): void {
 			tanuki.invalidate();
 		};
 
+		// メーターが赤いときの画面の点滅
+		const dangerFlash = new g.FilledRect({ scene, cssColor: "#ff2a1a", width: 1280, height: 720, opacity: 0 });
+		gaugeLayer.append(dangerFlash);
+		// 手もと(まだ確定していないいも)
+		const handLabel = label("", fontYellow, 40, HAND_X, 150, worldLayer, "center");
+		const nextLabel = label("", fontWhite, 26, HAND_X, 205, worldLayer, "center");
+
 		// メーター
 		const GAUGE_X = 880;
 		const GAUGE_Y = 70;
@@ -242,8 +261,12 @@ export function main(param: GameMainParameterObject): void {
 		const lastSec = Math.min(LAST_SEC, playTime * 0.3); // 制限時間が短い場合は大株も短く
 		let playLeft = playTime;
 		let score = 0;
-		let combo = 0;
 		let holding = false;
+		let wasHolding = false;
+		let heartTimer = 0;
+		interface HandItem { sprite: g.Sprite; state: "flying" | "hand" | "gone"; }
+		let hand: HandItem[] = [];
+		let handValue = 0;
 		const pointers: { [id: number]: boolean } = {};
 		let strain = 0;
 		let progress = 0;
@@ -256,7 +279,7 @@ export function main(param: GameMainParameterObject): void {
 		let plantIndex = 0;
 		let plant: PlantDef;
 		let liveItems: LiveItem[] = [];
-		const stats = { imo: 0, gold: 0, full: 0, snap: 0, maxCombo: 0, ippon: 0, lastFull: false };
+		const stats = { imo: 0, gold: 0, full: 0, snap: 0, maxChain: 0, bestHold: 0, lost: 0, ippon: 0, lastFull: false };
 
 		// つるは最初にまとめて作る(プレイ内容で乱数の消費がずれないように)
 		const plants: PlantDef[] = [];
@@ -266,7 +289,7 @@ export function main(param: GameMainParameterObject): void {
 		for (let i = 0; i < 10; i++) lastExtra.push(createPlant(param.random, 10, false));
 		let lastExtraIndex = 0;
 
-		const multiplier = (): number => COMBO_MULT[Math.min(combo, COMBO_MULT.length - 1)] * (lastStarted ? 2 : 1);
+		const lastMult = (): number => lastStarted ? 2 : 1;
 
 		const addScore = (v: number): void => {
 			score += Math.round(v);
@@ -343,7 +366,11 @@ export function main(param: GameMainParameterObject): void {
 				vine.modified();
 			});
 			const s = def.stiffness;
-			setText(stiffLabel, def.isLast ? "ラスト大株!!" : s > 1.25 ? "かったい!" : s > 1.05 ? "かため" : "ふつう");
+			setText(stiffLabel, def.isLast ? "ラスト大株!!" : def.isGold ? "金のつる!!" : s > 1.25 ? "かったい!" : s > 1.05 ? "かため" : "ふつう");
+			if (def.isGold) {
+				se("gold");
+				popup("金のつる!! ぜんぶ金のいも!", fontYellow, 44, 640, 160, 1.4);
+			}
 			layoutRoot();
 		};
 
@@ -377,28 +404,80 @@ export function main(param: GameMainParameterObject): void {
 			setText(remainLabel, plantActive ? "のこり " + remain + "こ" : "");
 		};
 
-		const flyToBasket = (sprite: g.Sprite, onArrive: () => void): void => {
-			const sx = sprite.x, sy = sprite.y;
-			const ex = BASKET_X + (cosmeticRandom.generate() - 0.5) * 60, ey = BASKET_Y + 20;
-			sprite.remove();
-			fxLayer.append(sprite);
-			animate(0.45, (p) => {
-				sprite.x = sx + (ex - sx) * p;
-				sprite.y = sy + (ey - sy) * p - Math.sin(p * Math.PI) * 180;
-				sprite.angle += 18;
-				sprite.modified();
-			}, () => {
-				sprite.destroy();
-				onArrive();
-			});
-		};
-
 		const bounceBasket = (): void => {
 			animate(0.2, (p) => {
 				basket.scaleX = 1 + Math.sin(p * Math.PI) * 0.12;
 				basket.scaleY = 1 - Math.sin(p * Math.PI) * 0.08;
 				basket.modified();
 			});
+		};
+
+		const handPos = (i: number): { x: number; y: number } => ({
+			x: HAND_X + ((i % 4) - 1.5) * 38,
+			y: HAND_Y - Math.floor(i / 4) * 26
+		});
+
+		const updateHandLabel = (): void => {
+			const k = hand.length;
+			setText(handLabel, k > 0 ? "手もと " + handValue : "");
+			handLabel.scaleX = handLabel.scaleY = 1 + Math.min(k, MAX_CHAIN) * 0.08;
+			handLabel.modified();
+			setText(nextLabel, k > 0 ? "つぎのいも ×" + Math.min(k + 1, MAX_CHAIN) : "");
+		};
+
+		// 指をはなしたら手もとのいもが確定
+		const bankHand = (): void => {
+			if (hand.length === 0) return;
+			const v = handValue;
+			addScore(v);
+			stats.bestHold = Math.max(stats.bestHold, v);
+			se("bank");
+			popup("ゲット! +" + v, v >= 3000 ? fontYellow : fontPink, v >= 3000 ? 54 : 42, HAND_X, 140, 1.0);
+			hand.forEach((h, i) => {
+				h.state = "gone";
+				const sp = h.sprite;
+				const sx = sp.x, sy = sp.y;
+				const ex = BASKET_X + (cosmeticRandom.generate() - 0.5) * 60, ey = BASKET_Y + 20;
+				const delay = i * 0.03;
+				animate(0.45 + delay, (p) => {
+					const q = Math.max(0, (p * (0.45 + delay) - delay) / 0.45);
+					sp.x = sx + (ex - sx) * q;
+					sp.y = sy + (ey - sy) * q - Math.sin(q * Math.PI) * 120;
+					sp.modified();
+				}, () => {
+					sp.destroy();
+					setText(basketCount, stats.imo + "こ");
+					bounceBasket();
+				});
+			});
+			hand = [];
+			handValue = 0;
+			updateHandLabel();
+		};
+
+		// ブチッと切れたら手もとのいもはパー
+		const loseHand = (): void => {
+			if (hand.length === 0) return;
+			stats.lost += handValue;
+			se("lose");
+			popup("パー… -" + handValue, fontRed, 48, HAND_X, 150, 1.4);
+			hand.forEach((h) => {
+				h.state = "gone";
+				const sp = h.sprite;
+				const vx = (cosmeticRandom.generate() - 0.5) * 300;
+				let vy = -200 - cosmeticRandom.generate() * 200;
+				animate(1.0, (p) => {
+					vy += 900 * dt;
+					sp.x += vx * dt;
+					sp.y += vy * dt;
+					sp.angle += 12;
+					sp.opacity = 1 - p;
+					sp.modified();
+				}, () => sp.destroy());
+			});
+			hand = [];
+			handValue = 0;
+			updateHandLabel();
 		};
 
 		const harvestItem = (it: LiveItem): void => {
@@ -421,31 +500,46 @@ export function main(param: GameMainParameterObject): void {
 				}, () => sp.destroy());
 				return;
 			}
-			const v = IMO_SCORE[it.def.kind] * multiplier();
-			addScore(v);
+			// 1回の長押しで抜けた数だけ倍率が上がる
+			const k = Math.min(hand.length + 1, MAX_CHAIN);
+			const v = IMO_SCORE[it.def.kind] * k * lastMult();
+			handValue += v;
 			stats.imo++;
+			stats.maxChain = Math.max(stats.maxChain, hand.length + 1);
+			se("pop" + k);
 			if (it.def.kind === "imo_gold") {
 				stats.gold++;
 				se("gold");
-				popup("金のいも! +" + Math.round(v), fontYellow, 44, ROOT_X, GY - 80, 1.1);
-			} else {
-				se(it.def.kind === "imo_big" ? "pop_big" : "pop");
-				const big = it.def.kind === "imo_big";
-				popup("+" + Math.round(v), big ? fontYellow : fontWhite, big ? 42 : 34, ROOT_X + 90, GY - 40);
 			}
-			flyToBasket(it.sprite, () => {
-				setText(basketCount, stats.imo + "こ");
-				bounceBasket();
+			const fancy = it.def.kind !== "imo" || k >= 4;
+			popup("+" + v + (k >= 2 ? " ×" + k : ""), fancy ? fontYellow : fontWhite, 30 + k * 3, ROOT_X + 100, GY - 40);
+			// 手もとへ飛ばす
+			const sp = it.sprite;
+			const entry: HandItem = { sprite: sp, state: "flying" };
+			const target = handPos(hand.length);
+			hand.push(entry);
+			updateHandLabel();
+			const sx = sp.x, sy = sp.y;
+			sp.remove();
+			fxLayer.append(sp);
+			animate(0.3, (p) => {
+				if (entry.state !== "flying") return;
+				sp.x = sx + (target.x - sx) * p;
+				sp.y = sy + (target.y - sy) * p - Math.sin(p * Math.PI) * 140;
+				sp.angle = 360 * p;
+				sp.scaleX = sp.scaleY = 1 - p * 0.35;
+				sp.modified();
+			}, () => {
+				if (entry.state === "flying") entry.state = "hand";
 			});
 		};
 
 		const fullHarvest = (): void => {
 			plantActive = false;
 			const wasLast = plant.isLast;
-			combo++;
 			stats.full++;
-			stats.maxCombo = Math.max(stats.maxCombo, combo);
-			const m = multiplier();
+			const m = lastMult();
+			bankHand();
 			addScore((wasLast ? LAST_FULL_BONUS : FULL_BONUS) * m);
 			se("harvest");
 			if (wasLast) {
@@ -477,7 +571,7 @@ export function main(param: GameMainParameterObject): void {
 		const snapPlant = (): void => {
 			plantActive = false;
 			stats.snap++;
-			combo = 0;
+			loseHand();
 			strain = 0;
 			stun = STUN_SEC;
 			se("snap_se");
@@ -506,6 +600,7 @@ export function main(param: GameMainParameterObject): void {
 		};
 
 		const startLast = (): void => {
+			bankHand(); // 切りかえの前に手もとは確定
 			lastStarted = true;
 			se("last");
 			bigText("ラスト大株!!", fontYellow, 96, 1.4, 300);
@@ -534,10 +629,10 @@ export function main(param: GameMainParameterObject): void {
 		const logo = new g.Sprite({ scene, src: img("logo"), x: 640, y: 150, anchorX: 0.5, anchorY: 0.5 });
 		introLayer.append(logo);
 		const howto = [
-			"長押しでつるを引っぱる! はなすとメーターが下がる",
-			"メーターが満タンになると ブチッ! と切れる",
-			"石(ガッ!)の手前ではいったんゆるめよう",
-			"ラスト15秒の「大株」で一発逆転!"
+			"長押しでつるを引っぱる! 続けて抜くほど いもの点が倍々に",
+			"指をはなすと 手もとのいもが確定(ゲット!)",
+			"メーター満タンで ブチッ! 手もとのいもはパー…",
+			"ラスト15秒の「大株」は得点2倍で一発逆転!"
 		];
 		howto.forEach((t, i) => label(t, i === 3 ? fontYellow : fontWhite, 34, 640, 300 + i * 56, introLayer, "center"));
 		const countLabel = label("", fontYellow, 120, 640, 560, introLayer, "center");
@@ -545,7 +640,11 @@ export function main(param: GameMainParameterObject): void {
 		let lastCount = -1;
 
 		const finishPlay = (): void => {
+			bankHand();
 			phase = "result";
+			dangerFlash.opacity = 0;
+			dangerFlash.modified();
+			setText(nextLabel, "");
 			plantActive = false;
 			setText(warnLabel, "");
 			setText(ipponLabel, "");
@@ -576,8 +675,8 @@ export function main(param: GameMainParameterObject): void {
 			label("称号: " + title, fontYellow, 44, 380, 206, panel, "center");
 			const lines = [
 				"とれたいも " + stats.imo + "こ(金のいも " + stats.gold + "こ)",
-				"まるごと " + stats.full + "回  一本釣り " + stats.ippon + "回",
-				"最大れんぞく " + stats.maxCombo + "  ブチッ " + stats.snap + "回",
+				"最大れんぞくぬき " + stats.maxChain + "こ  最高ゲット " + stats.bestHold,
+				"ブチッ " + stats.snap + "回(パーにした点 " + stats.lost + ")",
 				stats.lastFull ? "ラスト大株 ぶっこ抜き成功!!" : "ラスト大株… またこんど!"
 			];
 			lines.forEach((t, i) => label(t, i === 3 && stats.lastFull ? fontPink : fontWhite, 32, 380, 280 + i * 52, panel, "center"));
@@ -668,6 +767,7 @@ export function main(param: GameMainParameterObject): void {
 					}
 				} else {
 					if (progress > 0) ippon = false;
+					if (wasHolding) bankHand();
 					strain = Math.max(0, strain - STRAIN_DOWN * dt);
 					setPose("idle");
 				}
@@ -695,6 +795,17 @@ export function main(param: GameMainParameterObject): void {
 				setText(warnLabel, "");
 				setText(ipponLabel, "");
 			}
+			wasHolding = holding;
+
+			// あぶないときのドキドキ
+			const danger = holding && plantActive && strain > 72;
+			dangerFlash.opacity = danger ? 0.08 + 0.1 * Math.abs(Math.sin(g.game.age / 3)) : 0;
+			dangerFlash.modified();
+			heartTimer -= dt;
+			if (danger && heartTimer <= 0) {
+				se("heart");
+				heartTimer = strain > 88 ? 0.28 : 0.42;
+			}
 
 			// つるの伸び・メーター
 			const s = Math.min(100, strain);
@@ -707,8 +818,7 @@ export function main(param: GameMainParameterObject): void {
 			gaugeFill.y = GAUGE_Y + GAUGE_H - gaugeFill.height;
 			gaugeFill.cssColor = s > 75 ? "#e8412f" : s > 50 ? "#f2b632" : "#6cc04a";
 			gaugeFill.modified();
-			const m = multiplier();
-			setText(comboLabel, combo > 0 || m > 1 ? "×" + m + (combo > 0 ? "  れんぞく" + combo : "") : "");
+			setText(comboLabel, lastStarted ? "大株タイム 得点×2" : "");
 		});
 	});
 	g.game.pushScene(scene);

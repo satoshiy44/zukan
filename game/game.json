@@ -116,30 +116,6 @@
 				]
 			}
 		},
-		"pop": {
-			"type": "audio",
-			"path": "audio/pop",
-			"systemId": "sound",
-			"duration": 140,
-			"hint": {
-				"extensions": [
-					".aac",
-					".ogg"
-				]
-			}
-		},
-		"pop_big": {
-			"type": "audio",
-			"path": "audio/pop_big",
-			"systemId": "sound",
-			"duration": 220,
-			"hint": {
-				"extensions": [
-					".aac",
-					".ogg"
-				]
-			}
-		},
 		"result": {
 			"type": "audio",
 			"path": "audio/result",
@@ -259,6 +235,138 @@
 			"path": "image/vine.png",
 			"width": 200,
 			"height": 150
+		},
+		"bank": {
+			"type": "audio",
+			"path": "audio/bank",
+			"systemId": "sound",
+			"duration": 640,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"heart": {
+			"type": "audio",
+			"path": "audio/heart",
+			"systemId": "sound",
+			"duration": 230,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"lose": {
+			"type": "audio",
+			"path": "audio/lose",
+			"systemId": "sound",
+			"duration": 1100,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"pop1": {
+			"type": "audio",
+			"path": "audio/pop1",
+			"systemId": "sound",
+			"duration": 140,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"pop2": {
+			"type": "audio",
+			"path": "audio/pop2",
+			"systemId": "sound",
+			"duration": 140,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"pop3": {
+			"type": "audio",
+			"path": "audio/pop3",
+			"systemId": "sound",
+			"duration": 140,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"pop4": {
+			"type": "audio",
+			"path": "audio/pop4",
+			"systemId": "sound",
+			"duration": 140,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"pop5": {
+			"type": "audio",
+			"path": "audio/pop5",
+			"systemId": "sound",
+			"duration": 140,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"pop6": {
+			"type": "audio",
+			"path": "audio/pop6",
+			"systemId": "sound",
+			"duration": 140,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"pop7": {
+			"type": "audio",
+			"path": "audio/pop7",
+			"systemId": "sound",
+			"duration": 140,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"pop8": {
+			"type": "audio",
+			"path": "audio/pop8",
+			"systemId": "sound",
+			"duration": 140,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
 		}
 	},
 	"environment": {
