@@ -5,7 +5,7 @@ const fs = require("fs");
 const path = require("path");
 
 const OUT = path.join(__dirname, "..", "image");
-const CELL = 72;
+const CELL = 96; // マスの大きさ(ゲームの CELL と合わせる)
 
 function drawAll(CELL) {
 	const out = {};
@@ -110,18 +110,23 @@ function drawAll(CELL) {
 	};
 
 	// ---- ピース ----
-	const S = CELL;
-	make("p_momiji", S, S, (ctx) => {
+	// ピースは72px基準で描いて、CELLの大きさに拡大する
+	const S = 72;
+	const makeP = (name, w, h, fn) => make(name, CELL, CELL, (ctx) => {
+		ctx.scale(CELL / 72, CELL / 72);
+		fn(ctx, 72, 72);
+	});
+	makeP("p_momiji", S, S, (ctx) => {
 		tile(ctx, S, S, "#ffd9cf", "#f4a797");
 		momiji(ctx, S / 2, S / 2 - 1, S * 0.4, 0.1, "#d8322a", "#7a1410");
 		face(ctx, S / 2, S / 2 + 1, 0.9);
 	});
-	make("p_ichou", S, S, (ctx) => {
+	makeP("p_ichou", S, S, (ctx) => {
 		tile(ctx, S, S, "#fff4c4", "#f3d774");
 		ginkgo(ctx, S / 2, S / 2 + 2, S * 0.38, 0, "#f2b820", "#8a5a08");
 		face(ctx, S / 2, S / 2 - 2, 0.8);
 	});
-	make("p_donguri", S, S, (ctx) => {
+	makeP("p_donguri", S, S, (ctx) => {
 		tile(ctx, S, S, "#f0e0c8", "#d4b48c");
 		// どんぐり
 		const cx = S / 2, cy = S / 2 + 4;
@@ -154,7 +159,7 @@ function drawAll(CELL) {
 		ctx.fillRect(cx - 2, cy - 27, 4, 7);
 		face(ctx, cx, cy + 6, 0.75);
 	});
-	make("p_budou", S, S, (ctx) => {
+	makeP("p_budou", S, S, (ctx) => {
 		tile(ctx, S, S, "#eadcff", "#c7a8f0");
 		const cx = S / 2, cy = S / 2 + 2;
 		const berries = [[-12, -12], [0, -14], [12, -12], [-7, -1], [7, -1], [-13, 2], [13, 2], [0, 10], [-6, 19], [6, 19], [0, 0]];
@@ -169,7 +174,7 @@ function drawAll(CELL) {
 		face(ctx, cx, cy + 1, 0.7);
 	});
 	// やきいも(ピース)
-	make("p_imo", S, S, (ctx) => {
+	makeP("p_imo", S, S, (ctx) => {
 		const g = ctx.createRadialGradient(S / 2, S / 2, 4, S / 2, S / 2, S / 2);
 		g.addColorStop(0, "rgba(255,240,170,0.95)");
 		g.addColorStop(1, "rgba(255,220,120,0)");
@@ -237,8 +242,8 @@ function drawAll(CELL) {
 				ellipse(ctx, tx + Math.cos(a) * d, ty - 85 * s + Math.sin(a) * d * 0.8, 22 * s, 18 * s, 0, cols[i % cols.length]);
 			}
 		};
-		tree(1000, 470, 1.6, ["#d8412f", "#e8612c", "#c7302a", "#f08a2e"]);
-		tree(1230, 460, 1.3, ["#f2b632", "#e9a21f", "#f7c948"]);
+		tree(1180, 470, 1.25, ["#d8412f", "#e8612c", "#c7302a", "#f08a2e"]);
+		tree(1262, 452, 1.0, ["#f2b632", "#e9a21f", "#f7c948"]);
 		// 地面
 		const gr = ctx.createLinearGradient(0, 520, 0, h);
 		gr.addColorStop(0, "#b98a52");
@@ -256,7 +261,7 @@ function drawAll(CELL) {
 			else ginkgo(ctx, x, y, 7 + rnd() * 5, rnd() * 6, "#f2b632");
 		}
 		// 盤面のわく(左側)
-		const BX = 36, BY = 150, BW = 11 * CELL, BH = 7 * CELL;
+		const BX = 24, BY = 150, BW = 11 * CELL, BH = 5 * CELL; // 11列×5段
 		roundRect(ctx, BX - 16, BY - 16, BW + 32, BH + 32, 24);
 		ctx.fillStyle = "#6b3f1c";
 		ctx.fill();
@@ -402,7 +407,8 @@ function drawAll(CELL) {
 	await browser.close();
 	for (const [name, url] of Object.entries(images)) {
 		const buf = Buffer.from(url.split(",")[1], "base64");
-		const dest = name === "icon" ? path.join(__dirname, "..", "submission", "icon.png") : path.join(OUT, name + ".png");
+		if (name === "icon") continue; // 投稿用アイコンは tools/gen-icons.js で作る
+		const dest = path.join(OUT, name + ".png");
 		fs.mkdirSync(path.dirname(dest), { recursive: true });
 		fs.writeFileSync(dest, buf);
 		console.log("wrote", path.relative(process.cwd(), dest), buf.length);

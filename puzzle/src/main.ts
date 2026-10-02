@@ -2,11 +2,12 @@ import { GameMainParameterObject } from "./parameterObject";
 
 // ======== 調整用パラメータ ========
 const COLS = 11;
-const ROWS = 7;
-const CELL = 72;
-const BX = 36; // 盤面の左上
+const ROWS = 5;
+const CELL = 96;
+const BX = 24; // 盤面の左上
 const BY = 150;
-const FIRE_X = 1090; // たき火の中心
+const FIRE_X = 1180; // たき火の中心
+const FIRE_SCALE = 0.62; // 盤面が広いので、たき火は小さめに置く
 const FIRE_Y = 520;
 const INTRO_SEC = 4;
 const RESULT_SEC = 11;
@@ -113,6 +114,7 @@ export function main(param: GameMainParameterObject): void {
 		// たき火
 		const fireImages = [img("fire1"), img("fire2")];
 		const fire = new g.Sprite({ scene, src: fireImages[0], x: FIRE_X, y: FIRE_Y + 110, anchorX: 0.5, anchorY: 1 });
+		fire.scaleX = fire.scaleY = FIRE_SCALE * 0.8;
 		bgLayer.append(fire);
 		let heat = 0; // たき火の勢い(消した数で増えて、だんだん減る)
 		const imoCountLabel = label("やきいも 0こ", fontWhite, 30, FIRE_X, FIRE_Y + 130, bgLayer, "center");
@@ -120,7 +122,7 @@ export function main(param: GameMainParameterObject): void {
 		const spawnSpark = (): void => {
 			const s = new g.Sprite({
 				scene, src: img("spark"), anchorX: 0.5, anchorY: 0.5,
-				x: FIRE_X + (cosmeticRandom.generate() - 0.5) * 120, y: FIRE_Y + 40
+				x: FIRE_X + (cosmeticRandom.generate() - 0.5) * 70, y: FIRE_Y + 60
 			});
 			const vx = (cosmeticRandom.generate() - 0.5) * 60;
 			const vy = -120 - cosmeticRandom.generate() * 160;
@@ -467,7 +469,7 @@ export function main(param: GameMainParameterObject): void {
 			}
 			// たき火
 			heat = Math.max(0, heat - heat * 0.02 - 0.02);
-			const fireScale = Math.min(1.7, 0.8 + heat / 40 + (fever ? 0.3 : 0));
+			const fireScale = FIRE_SCALE * Math.min(1.7, 0.8 + heat / 40 + (fever ? 0.3 : 0));
 			const fireImage = fireImages[Math.floor(g.game.age / 5) % 2];
 			fire.scaleX = fire.scaleY = fire.scaleX + (fireScale - fire.scaleX) * 0.2;
 			if (fire.src !== fireImage) {

@@ -188,32 +188,32 @@
 		"p_budou": {
 			"type": "image",
 			"path": "image/p_budou.png",
-			"width": 72,
-			"height": 72
+			"width": 96,
+			"height": 96
 		},
 		"p_donguri": {
 			"type": "image",
 			"path": "image/p_donguri.png",
-			"width": 72,
-			"height": 72
+			"width": 96,
+			"height": 96
 		},
 		"p_ichou": {
 			"type": "image",
 			"path": "image/p_ichou.png",
-			"width": 72,
-			"height": 72
+			"width": 96,
+			"height": 96
 		},
 		"p_imo": {
 			"type": "image",
 			"path": "image/p_imo.png",
-			"width": 72,
-			"height": 72
+			"width": 96,
+			"height": 96
 		},
 		"p_momiji": {
 			"type": "image",
 			"path": "image/p_momiji.png",
-			"width": 72,
-			"height": 72
+			"width": 96,
+			"height": 96
 		},
 		"spark": {
 			"type": "image",

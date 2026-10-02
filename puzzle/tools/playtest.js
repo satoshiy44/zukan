@@ -19,7 +19,7 @@ const shots = [2, 6, 12, 25, 45, 62, 66, 72];
 	let shotIdx = 0;
 	while (sec() < 76) {
 		// 盤面(左下寄り)をランダムにタップ
-		const x = 36 + Math.random() * 792, y = 150 + 504 - Math.random() * Math.random() * 504;
+		const x = 24 + Math.random() * 1056, y = 150 + 480 - Math.random() * Math.random() * 480;
 		await page.mouse.click(box.x + x * sx, box.y + y * sy);
 		await page.waitForTimeout(220);
 		while (shotIdx < shots.length && sec() >= shots[shotIdx]) {

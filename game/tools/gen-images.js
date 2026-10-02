@@ -672,7 +672,8 @@ function drawAll() {
 	await browser.close();
 	for (const [name, url] of Object.entries(images)) {
 		const buf = Buffer.from(url.split(",")[1], "base64");
-		const dest = name === "icon" ? path.join(__dirname, "..", "submission", "icon.png") : path.join(OUT, name + ".png");
+		if (name === "icon") continue; // 投稿用アイコンは tools/gen-icons.js で作る
+		const dest = path.join(OUT, name + ".png");
 		fs.mkdirSync(path.dirname(dest), { recursive: true });
 		fs.writeFileSync(dest, buf);
 		console.log("wrote", path.relative(process.cwd(), dest), buf.length);

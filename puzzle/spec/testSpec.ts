@@ -12,17 +12,17 @@ describe("やきいもパズル", () => {
 		expect(game.vars.gameState.score).toBe(0);
 
 		// イントロ中のタップは無視される
-		client.sendPointDown(72, 618, 1);
-		client.sendPointUp(72, 618, 1);
+		client.sendPointDown(72, 582, 1);
+		client.sendPointUp(72, 582, 1);
 		await context.advance(4500);
 		expect(game.vars.gameState.score).toBe(0);
 
 		// 盤面を下の段から順にタップしていく
 		let taps = 0;
 		for (let loop = 0; loop < 12; loop++) {
-			for (let r = 0; r < 7; r++) {
+			for (let r = 0; r < 5; r++) {
 				for (let c = 0; c < 11; c++) {
-					const x = 36 + c * 72 + 36, y = 150 + (6 - r) * 72 + 36;
+					const x = 24 + c * 96 + 48, y = 150 + (4 - r) * 96 + 48;
 					client.sendPointDown(x, y, 1);
 					client.sendPointUp(x, y, 1);
 					taps++;
