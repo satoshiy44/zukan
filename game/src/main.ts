@@ -801,15 +801,17 @@ export function main(param: GameMainParameterObject): void {
 		// ---- イントロ ----
 		const introLayer = new g.E({ scene });
 		fxLayer.append(introLayer);
-		introLayer.append(new g.FilledRect({ scene, cssColor: "rgba(40,15,5,0.6)", width: 1280, height: 720 }));
-		introLayer.append(new g.Sprite({ scene, src: img("logo"), x: 640, y: 135, anchorX: 0.5, anchorY: 0.5 }));
+		introLayer.append(new g.FilledRect({ scene, cssColor: "rgba(40,15,5,0.88)", width: 1280, height: 720 }));
+		const introLogo = new g.Sprite({ scene, src: img("logo"), x: 640, y: 85, anchorX: 0.5, anchorY: 0.5 });
+		introLogo.scaleX = introLogo.scaleY = 0.62; // 説明の文字を大きくするため、ロゴは小さめ
+		introLayer.append(introLogo);
 		// 5秒で読めるように、短く大きく
 		[
 			"前半：長押しで ひっこぬく！",
 			"欲ばると ブチッ！",
 			"後半：焼けたら タップ！"
-		].forEach((t, i) => label(t, i === 1 ? fontRed : i === 2 ? fontPink : fontWhite, 52, 640, 270 + i * 76, introLayer, "center"));
-		const countLabel = label("", fontYellow, 110, 640, 590, introLayer, "center");
+		].forEach((t, i) => label(t, i === 1 ? fontRed : i === 2 ? fontPink : fontWhite, 84, 640, 180 + i * 118, introLayer, "center"));
+		const countLabel = label("", fontYellow, 100, 640, 640, introLayer, "center");
 		countLabel.anchorY = 0.5;
 		let lastCount = -1;
 
