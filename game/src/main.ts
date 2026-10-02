@@ -803,12 +803,12 @@ export function main(param: GameMainParameterObject): void {
 		fxLayer.append(introLayer);
 		introLayer.append(new g.FilledRect({ scene, cssColor: "rgba(40,15,5,0.6)", width: 1280, height: 720 }));
 		introLayer.append(new g.Sprite({ scene, src: img("logo"), x: 640, y: 135, anchorX: 0.5, anchorY: 0.5 }));
+		// 5秒で読めるように、短く大きく
 		[
-			"【前半 いもほり】長押しでつるを引っぱる! 4こ以上つづけて抜くと ランクアップ",
-			"指をはなすと手もとのいもをゲット / メーター満タンで ブチッ! 手もとはパー",
-			"【後半 やきいも屋台】集めたいもを焼いて売る! ちょうどいい焼き加減でタップ",
-			"お客さんごとに焼け方がちがう! 後半の腕で一発逆転! ラスト8秒は値段2倍!"
-		].forEach((t, i) => label(t, i === 3 ? fontYellow : i === 2 ? fontPink : fontWhite, 30, 640, 280 + i * 52, introLayer, "center"));
+			"前半：長押しで ひっこぬく！",
+			"欲ばると ブチッ！",
+			"後半：焼けたら タップ！"
+		].forEach((t, i) => label(t, i === 1 ? fontRed : i === 2 ? fontPink : fontWhite, 52, 640, 270 + i * 76, introLayer, "center"));
 		const countLabel = label("", fontYellow, 110, 640, 590, introLayer, "center");
 		countLabel.anchorY = 0.5;
 		let lastCount = -1;
