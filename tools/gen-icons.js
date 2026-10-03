@@ -8,7 +8,8 @@ const ROOT = path.join(__dirname, "..");
 const OUTPUTS = {
 	oimo: [path.join(ROOT, "dist", "oimo-chicken_icon.png"), path.join(ROOT, "game", "submission", "icon.png")],
 	puzzle: [path.join(ROOT, "dist", "yakiimo-puzzle_icon.png"), path.join(ROOT, "puzzle", "submission", "icon.png")],
-	tamaire: [path.join(ROOT, "dist", "korokoro-tamaire_icon.png"), path.join(ROOT, "tamaire", "submission", "icon.png")]
+	tamaire: [path.join(ROOT, "dist", "korokoro-tamaire_icon.png"), path.join(ROOT, "tamaire", "submission", "icon.png")],
+	kunai: [path.join(ROOT, "dist", "kunai-shugyo_icon.png"), path.join(ROOT, "kunai", "submission", "icon.png")]
 };
 
 function draw() {
@@ -120,6 +121,31 @@ function draw() {
 		ctx.stroke();
 		bigText(ctx, "たま", S / 2, 92, 132, "#ffffff", "#1e88e5", "#0a2f6b");
 		bigText(ctx, "いれ", S / 2, 238, 132, "#ffe14a", "#e53935", "#5a0000");
+	});
+	// クナイ修行
+	make("kunai", (ctx) => {
+		const g = ctx.createLinearGradient(0, 0, 0, S);
+		g.addColorStop(0, "#2a1c4a");
+		g.addColorStop(1, "#c8603a");
+		ctx.fillStyle = g;
+		ctx.fillRect(0, 0, S, S);
+		// 丸太の切り口
+		ctx.beginPath();
+		ctx.arc(S / 2, S / 2, 138, 0, Math.PI * 2);
+		ctx.fillStyle = "#e0a868";
+		ctx.fill();
+		ctx.lineWidth = 14;
+		ctx.strokeStyle = "#7a4a24";
+		ctx.stroke();
+		ctx.strokeStyle = "rgba(120,70,30,0.45)";
+		ctx.lineWidth = 3;
+		for (let k = 1; k <= 5; k++) {
+			ctx.beginPath();
+			ctx.arc(S / 2, S / 2, 22 * k, 0, Math.PI * 2);
+			ctx.stroke();
+		}
+		bigText(ctx, "クナイ", S / 2, 98, 104, "#ffffff", "#c62828", "#111111");
+		bigText(ctx, "修行", S / 2, 236, 132, "#ffe14a", "#c62828", "#111111");
 	});
 	return out;
 }

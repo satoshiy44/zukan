@@ -1,0 +1,258 @@
+{
+	"width": 1280,
+	"height": 720,
+	"fps": 30,
+	"main": "./script/_bootstrap.js",
+	"assets": {
+		"beep": {
+			"type": "audio",
+			"path": "audio/beep",
+			"systemId": "sound",
+			"duration": 120,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"bgm": {
+			"type": "audio",
+			"path": "audio/bgm",
+			"systemId": "music",
+			"duration": 14500,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			},
+			"loop": true
+		},
+		"boss": {
+			"type": "audio",
+			"path": "audio/boss",
+			"systemId": "sound",
+			"duration": 1500,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"break": {
+			"type": "audio",
+			"path": "audio/break",
+			"systemId": "sound",
+			"duration": 400,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"clang": {
+			"type": "audio",
+			"path": "audio/clang",
+			"systemId": "sound",
+			"duration": 700,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"clear": {
+			"type": "audio",
+			"path": "audio/clear",
+			"systemId": "sound",
+			"duration": 950,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"fever": {
+			"type": "audio",
+			"path": "audio/fever",
+			"systemId": "sound",
+			"duration": 740,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"finish": {
+			"type": "audio",
+			"path": "audio/finish",
+			"systemId": "sound",
+			"duration": 1250,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"go": {
+			"type": "audio",
+			"path": "audio/go",
+			"systemId": "sound",
+			"duration": 500,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"hit": {
+			"type": "audio",
+			"path": "audio/hit",
+			"systemId": "sound",
+			"duration": 80,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"koban_se": {
+			"type": "audio",
+			"path": "audio/koban_se",
+			"systemId": "sound",
+			"duration": 400,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"result": {
+			"type": "audio",
+			"path": "audio/result",
+			"systemId": "sound",
+			"duration": 880,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"throw": {
+			"type": "audio",
+			"path": "audio/throw",
+			"systemId": "sound",
+			"duration": 150,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"bg": {
+			"type": "image",
+			"path": "image/bg.png",
+			"width": 1280,
+			"height": 720
+		},
+		"chip": {
+			"type": "image",
+			"path": "image/chip.png",
+			"width": 20,
+			"height": 12
+		},
+		"koban": {
+			"type": "image",
+			"path": "image/koban.png",
+			"width": 56,
+			"height": 40
+		},
+		"kunai": {
+			"type": "image",
+			"path": "image/kunai.png",
+			"width": 36,
+			"height": 120
+		},
+		"kunai_dark": {
+			"type": "image",
+			"path": "image/kunai_dark.png",
+			"width": 36,
+			"height": 120
+		},
+		"log": {
+			"type": "image",
+			"path": "image/log.png",
+			"width": 320,
+			"height": 320
+		},
+		"log_boss": {
+			"type": "image",
+			"path": "image/log_boss.png",
+			"width": 320,
+			"height": 320
+		},
+		"logo": {
+			"type": "image",
+			"path": "image/logo.png",
+			"width": 900,
+			"height": 250
+		},
+		"ninja_idle": {
+			"type": "image",
+			"path": "image/ninja_idle.png",
+			"width": 240,
+			"height": 250
+		},
+		"ninja_throw": {
+			"type": "image",
+			"path": "image/ninja_throw.png",
+			"width": 240,
+			"height": 250
+		},
+		"spark": {
+			"type": "image",
+			"path": "image/spark.png",
+			"width": 40,
+			"height": 40
+		},
+		"_bootstrap": {
+			"type": "script",
+			"path": "script/_bootstrap.js",
+			"global": true
+		},
+		"main": {
+			"type": "script",
+			"path": "script/main.js",
+			"global": true
+		},
+		"parameterObject": {
+			"type": "script",
+			"path": "script/parameterObject.js",
+			"global": true
+		}
+	},
+	"environment": {
+		"sandbox-runtime": "3",
+		"nicolive": {
+			"supportedModes": [
+				"ranking"
+			],
+			"preferredSessionParameters": {
+				"totalTimeLimit": 75
+			}
+		}
+	},
+	"globalScripts": []
+}
