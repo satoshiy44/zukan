@@ -10,8 +10,8 @@ const CHZ = 170;
 const BH = 80; // とりだし口の仕切りの高さ
 const HOME_X = -315; // クレーンの定位置(とりだし口の真上)
 const HOME_Z = 85;
-const CLAW_UP = 300; // 上がったときのアームの先の高さ
-const PILE_LIMIT = 190; // 景品の山の高さの上限(これより上には積まない)
+const CLAW_UP = 390; // 上がったときのアームの先の高さ
+const PILE_LIMIT = 300; // 景品の山の高さの上限(これより上には積まない)
 const MOVE_X_SPEED = 460; // 押している間クレーンが進む速さ
 const MOVE_Z_SPEED = 380;
 const ACCEL = 1800; // クレーンの加速
@@ -25,8 +25,8 @@ const SWAY_DAMP = 3.2;
 const SWAY_GAIN = 0.0065;
 const SWAY_LEN = 200; // ゆれの角度を出すための、ひもの長さ
 const MAX_GRAB = 4; // 1回でつかめる最大の数
-const START_CAPSULES = 56;
-const REFILL_BELOW = 40; // カプセルがこれより少なくなったら補充
+const START_CAPSULES = 150;
+const REFILL_BELOW = 110; // カプセルがこれより少なくなったら補充
 const INTRO_SEC = 4;
 const RESULT_SEC = 10;
 const FEVER_SEC = 10;
@@ -114,7 +114,7 @@ export function main(param: GameMainParameterObject): void {
 			"coin", "thud", "jolt", "pop", "rip"
 		]
 	});
-	let time = 75;
+	let time = 150;
 	if (param.sessionParameter.totalTimeLimit) {
 		time = param.sessionParameter.totalTimeLimit;
 	}
@@ -254,7 +254,7 @@ export function main(param: GameMainParameterObject): void {
 		let tryGot = 0; // この1回で取れた数
 		const prizes: Prize[] = [];
 		const stats = { tries: 0, got: 0, gold: 0, top: 0, bestStreak: 0, multi: 0, bestRank: 9 };
-		const drops = createDrops(param.random, 600);
+		const drops = createDrops(param.random, 1200);
 		let dropIdx = 0;
 
 		const mult = (): number => 1 + Math.min(streak, 10) * 0.2;
@@ -418,13 +418,14 @@ export function main(param: GameMainParameterObject): void {
 		};
 		const pileCount = (): number => prizes.filter((p) => p.state === "pile").length;
 		// 置く場所を、とりだし口の外で、山が高すぎない所から選ぶ
-		const placeOf = (rx: number, rz: number): { x: number; z: number } => {
+		const toCenter = (u: number): number => 0.5 + (u < 0.5 ? -1 : 1) * 2 * (u - 0.5) * (u - 0.5);
+		const placeOf = (rx0: number, rz0: number): { x: number; z: number } => {
 			const r = BLACK.r;
 			let best = { x: 0, z: 300 };
 			let bestTop = 99999;
 			for (let k = 0; k < 8; k++) {
-				const x = XL + r + ((rx + k * 0.381) % 1) * (XR - XL - r * 2);
-				const z = r + ((rz + k * 0.618) % 1) * (ZB - r * 2);
+				const x = XL + r + toCenter((rx0 + k * 0.381) % 1) * (XR - XL - r * 2);
+				const z = r + toCenter((rz0 + k * 0.618) % 1) * (ZB - r * 2);
 				if (x - r < CHX + 10 && z - r < CHZ + 10) continue;
 				const restTop = restOf(null, r, x, 99999, z).y + BLACK.h;
 				if (restTop <= PILE_LIMIT) return { x, z };
@@ -705,7 +706,7 @@ export function main(param: GameMainParameterObject): void {
 			}
 			updateMult();
 			tryGot = 0;
-			if (pileCount() < REFILL_BELOW && refillQueue === 0) refill(14);
+			if (pileCount() < REFILL_BELOW && refillQueue === 0) refill(30);
 			claw = "ready";
 			showHint();
 		};
@@ -907,10 +908,10 @@ export function main(param: GameMainParameterObject): void {
 			panel.append(new g.FilledRect({ scene, cssColor: "#e8407a", width: 760, height: 80 }));
 			label("くじの結果", fontWhite, 48, 380, 12, panel, "center");
 			label(score + " 点", fontPink, 96, 380, 96, panel, "center");
-			const title = stats.got >= 18 ? "クレーンの神"
-				: stats.got >= 13 ? "クレーン名人"
-					: stats.got >= 8 ? "上級者"
-						: stats.got >= 4 ? "常連さん" : "ビギナー";
+			const title = stats.got >= 70 ? "クレーンの神"
+				: stats.got >= 50 ? "クレーン名人"
+					: stats.got >= 30 ? "上級者"
+						: stats.got >= 15 ? "常連さん" : "ビギナー";
 			label("称号: " + title, fontYellow, 44, 380, 206, panel, "center");
 			[
 				"取ったカプセル " + stats.got + "こ (金 " + stats.gold + "こ)",
@@ -969,7 +970,7 @@ export function main(param: GameMainParameterObject): void {
 					const p = makePrize(d, at.x, 520, at.z);
 					p.spin = (cosmeticRandom.generate() - 0.5) * 400;
 					refillQueue--;
-					refillTimer = 0.1;
+					refillTimer = 0.05;
 				}
 			}
 			if (phase === "play") {
@@ -980,7 +981,7 @@ export function main(param: GameMainParameterObject): void {
 					se("fever");
 					bigText("ラスト10秒! 得点2倍!!", fontYellow, 70, 1.3, 250);
 					setText(feverLabel, "得点×2");
-					refill(10);
+					refill(30);
 				}
 				if (fever) {
 					timeLabel.opacity = Math.floor(playLeft * 4) % 2 === 0 ? 1 : 0.55;
