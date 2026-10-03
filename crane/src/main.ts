@@ -25,8 +25,8 @@ const SWAY_DAMP = 3.2;
 const SWAY_GAIN = 0.0065;
 const SWAY_LEN = 200; // ゆれの角度を出すための、ひもの長さ
 const MAX_GRAB = 4; // 1回でつかめる最大の数
-const START_PLUSH = 110;
-const REFILL_BELOW = 80; // ぬいぐるみがこれより少なくなったら補充
+const START_PLUSH = 170;
+const REFILL_BELOW = 130; // ぬいぐるみがこれより少なくなったら補充
 const INTRO_SEC = 4;
 const RESULT_SEC = 10;
 const FEVER_SEC = 10;
@@ -53,25 +53,39 @@ interface PlushType {
 	big: boolean; // 大当たりの演出をする
 }
 const TYPES: PlushType[] = [
+	// 小
 	{ id: "p_hiyoko", name: "ひよこ", h: 62, r: 26, value: 100, need: 0.05, color: "#ffd000", big: false },
 	{ id: "p_buta", name: "こぶた", h: 68, r: 30, value: 100, need: 0.05, color: "#ff9ac0", big: false },
+	{ id: "p_penguin", name: "ペンギン", h: 60, r: 27, value: 100, need: 0.05, color: "#2a3a6a", big: false },
+	{ id: "p_kaeru", name: "かえる", h: 66, r: 29, value: 100, need: 0.05, color: "#5ab02a", big: false },
+	{ id: "p_hamster", name: "ハムスター", h: 55, r: 26, value: 100, need: 0.05, color: "#e0a060", big: false },
+	// 中
 	{ id: "p_usagi", name: "うさぎ", h: 118, r: 36, value: 250, need: 0.18, color: "#ff5a9a", big: false },
 	{ id: "p_neko", name: "ねこ", h: 100, r: 42, value: 250, need: 0.2, color: "#ff8a1a", big: false },
 	{ id: "p_inu", name: "いぬ", h: 95, r: 46, value: 250, need: 0.2, color: "#3a8aff", big: false },
+	{ id: "p_hitsuji", name: "ひつじ", h: 97, r: 46, value: 250, need: 0.2, color: "#d8d0c0", big: false },
+	{ id: "p_kitsune", name: "きつね", h: 105, r: 40, value: 250, need: 0.2, color: "#ff6a0a", big: false },
+	// 大
 	{ id: "p_kuma", name: "くま", h: 132, r: 60, value: 600, need: 0.32, color: "#8a4a1a", big: false },
+	{ id: "p_lion", name: "ライオン", h: 136, r: 62, value: 600, need: 0.32, color: "#c8641a", big: false },
+	{ id: "p_zou", name: "ぞう", h: 118, r: 66, value: 600, need: 0.32, color: "#8890b8", big: false },
+	// 特大
 	{ id: "p_panda", name: "でかパンダ", h: 186, r: 82, value: 1500, need: 0.42, color: "#222222", big: true },
-	{ id: "p_gold", name: "金のくま", h: 96, r: 44, value: 2000, need: 0.3, color: "#ffb400", big: true }
+	{ id: "p_kujira", name: "でかクジラ", h: 160, r: 90, value: 1500, need: 0.42, color: "#2a7aff", big: true },
+	// レア
+	{ id: "p_gold", name: "金のくま", h: 96, r: 44, value: 2000, need: 0.3, color: "#ffb400", big: true },
+	{ id: "p_unicorn", name: "ユニコーン", h: 132, r: 54, value: 3000, need: 0.36, color: "#d070ff", big: true }
 ];
-const PANDA = 6;
-const GOLD = 7;
+const RARE_FROM = 15; // これ以降はレア
 
 // 共通乱数で、ぬいぐるみの種類と置く場所を決める(全員同じ)
 interface Drop { type: number; x: number; z: number; }
 function pickType(a: number, b: number): number {
-	if (a < 0.36) return b < 0.5 ? 0 : 1;
-	if (a < 0.72) return b < 0.34 ? 2 : b < 0.67 ? 3 : 4;
-	if (a < 0.88) return 5;
-	return a < 0.94 ? PANDA : GOLD;
+	if (a < 0.38) return Math.floor(b * 5);
+	if (a < 0.72) return 5 + Math.floor(b * 5);
+	if (a < 0.87) return 10 + Math.floor(b * 3);
+	if (a < 0.94) return 13 + Math.floor(b * 2);
+	return a < 0.98 ? RARE_FROM : RARE_FROM + 1;
 }
 function createDrops(random: g.RandomGenerator, n: number): Drop[] {
 	const out: Drop[] = [];
@@ -110,7 +124,8 @@ export function main(param: GameMainParameterObject): void {
 		game: g.game,
 		assetIds: [
 			"bg", "front_panel", "marker", "claw_head", "claw_arm", "sparkle", "logo",
-			"p_hiyoko", "p_buta", "p_usagi", "p_neko", "p_inu", "p_kuma", "p_panda", "p_gold",
+			"p_hiyoko", "p_buta", "p_penguin", "p_kaeru", "p_hamster", "p_usagi", "p_neko", "p_inu", "p_hitsuji", "p_kitsune",
+			"p_kuma", "p_lion", "p_zou", "p_panda", "p_kujira", "p_gold", "p_unicorn",
 			"move", "down", "grab", "slip", "miss", "get", "jackpot", "refill", "beep", "go", "finish", "fever", "result", "bgm",
 			"thud", "jolt", "pop"
 		]
@@ -254,7 +269,14 @@ export function main(param: GameMainParameterObject): void {
 		let queued = false; // 戻っている間に押された
 		const prizes: Prize[] = [];
 		const stats = { tries: 0, got: 0, gold: 0, panda: 0, bestStreak: 0, multi: 0 };
-		const drops = createDrops(param.random, 1200);
+		const drops = createDrops(param.random, 1500);
+		// つかむたびのホールド力(6〜10)と、落ちるかどうかのくじ。共通乱数なので全員同じ順番
+		const holdSeq: number[] = [];
+		for (let i = 0; i < 300; i++) holdSeq.push(6 + Math.floor(param.random.generate() * 5));
+		const rollSeq: number[] = [];
+		for (let i = 0; i < 1500; i++) rollSeq.push(param.random.generate());
+		let rollIdx = 0;
+		let hold = 10;
 		let dropIdx = 0;
 
 		const mult = (): number => 1 + Math.min(streak, 10) * 0.2;
@@ -319,6 +341,31 @@ export function main(param: GameMainParameterObject): void {
 			setText(scoreLabel, String(shownScore));
 			scoreLabel.scaleX = scoreLabel.scaleY = 1.15;
 			scoreLabel.modified();
+		};
+		// ホールド力の表示(アームの横について動く)
+		const holdColors = ["#ff3a3a", "#ff8a1a", "#ffe14a", "#5af08a", "#6af0ff"];
+		const holdFonts = holdColors.map((c) => makeFont(c, "#2a0a2a"));
+		const holdBox = new g.E({ scene });
+		fxLayer.append(holdBox);
+		holdBox.append(new g.FilledRect({ scene, cssColor: "rgba(30,10,40,0.75)", x: -6, y: -6, width: 192, height: 74 }));
+		const holdLabel = label("", fontWhite, 30, 90, -2, holdBox, "center");
+		const holdBars: g.FilledRect[] = [];
+		for (let i = 0; i < 10; i++) {
+			const b = new g.FilledRect({ scene, cssColor: "#555", x: i * 18, y: 40, width: 14, height: 22 });
+			holdBox.append(b);
+			holdBars.push(b);
+		}
+		holdBox.hide();
+		const showHold = (): void => {
+			const c = hold - 6;
+			holdLabel.font = holdFonts[c];
+			setText(holdLabel, "ホールド力 " + hold);
+			holdBars.forEach((b, i) => {
+				b.cssColor = i < hold ? holdColors[c] : "#555";
+				b.modified();
+			});
+			holdBox.show();
+			if (hold >= 10 || hold <= 6) popup(hold >= 10 ? "MAX!!" : "弱い…", holdFonts[c], 48, clawE.x, clawE.y - 220, 0.9);
 		};
 		const updateMult = (): void => setText(multLabel, streak > 0 ? "れんぞく " + streak + " ×" + mult().toFixed(1) : "");
 
@@ -402,8 +449,8 @@ export function main(param: GameMainParameterObject): void {
 			p.dot.destroy();
 			tryGot++;
 			stats.got++;
-			if (p.t === TYPES[GOLD]) stats.gold++;
-			if (p.t === TYPES[PANDA]) stats.panda++;
+			if (TYPES.indexOf(p.t) >= RARE_FROM) stats.gold++;
+			else if (p.t.big) stats.panda++;
 			// 1回でたくさん取るほど1こあたりの点が上がる
 			const multi = 1 + (tryGot - 1) * 0.5;
 			const v = Math.round(p.t.value * multi * mult() * (fever ? 2 : 1));
@@ -578,6 +625,11 @@ export function main(param: GameMainParameterObject): void {
 				marker.hide();
 				guide.hide();
 			}
+			if (holdBox.visible()) {
+				holdBox.x = Math.min(1080, clawE.x + 70);
+				holdBox.y = Math.max(110, clawE.y - 200);
+				holdBox.modified();
+			}
 			mmClawH.x = mmClawV.x = mmX(tipX);
 			mmClawH.y = mmClawV.y = mmY(tipZ);
 			mmClawH.modified();
@@ -611,6 +663,8 @@ export function main(param: GameMainParameterObject): void {
 			}
 			cand.sort((a, b) => dist(a.x, a.z, tipX, tipZ) - dist(b.x, b.z, tipX, tipZ));
 			const grabbed = cand.slice(0, MAX_GRAB);
+			hold = holdSeq[stats.tries % holdSeq.length];
+			if (grabbed.length > 0) showHold();
 			grabbed.forEach((p) => {
 				const grip = Math.max(0, 1 - dist(p.x, p.z, tipX, tipZ) / (p.t.r + 30));
 				p.state = "held";
@@ -619,8 +673,18 @@ export function main(param: GameMainParameterObject): void {
 				p.offZ = (p.z - tipZ) * 0.4;
 				p.vx = p.vy = p.vz = 0;
 				// つかみが甘いと、持ち上げる途中で落ちる。ギリギリだと上で「ガクッ」と止まったときに落ちる
-				p.slipAt = grip >= p.t.need ? 2 : 0.05 + 0.6 * grip / p.t.need;
-				p.weak = grip >= p.t.need && grip < p.t.need + 0.08;
+				// 落ちる確率: ホールド力が弱いほど、つかみが甘いほど、大きいほど落ちやすい
+				const q = grip / Math.max(0.01, p.t.need);
+				const chance = Math.max(0, Math.min(0.95, (10 - hold) * 0.1 + (q < 1 ? (1 - q) * 0.9 : 0) + p.t.need * 0.3 - 0.06));
+				const r1 = rollSeq[rollIdx++ % rollSeq.length];
+				const r2 = rollSeq[rollIdx++ % rollSeq.length];
+				p.slipAt = 2;
+				p.weak = false;
+				if (r1 < chance) {
+					// 3回に1回は上で「ガクッ」と止まったとき、それ以外は運んでいる途中のどこかで落ちる
+					if (r2 < 0.33) p.weak = true;
+					else p.slipAt = 0.1 + r2 * 0.85;
+				}
 			});
 			// アームが山に突っ込んだ勢いで、まわりのぬいぐるみがはじかれて転がる
 			let pushed = 0;
@@ -677,7 +741,8 @@ export function main(param: GameMainParameterObject): void {
 			}
 			updateMult();
 			tryGot = 0;
-			if (pileCount() < REFILL_BELOW && refillQueue === 0) refill(24);
+			holdBox.hide();
+			if (pileCount() < REFILL_BELOW && refillQueue === 0) refill(30);
 			claw = "ready";
 			if (queued && pressing) {
 				claw = "moveX";
@@ -890,7 +955,7 @@ export function main(param: GameMainParameterObject): void {
 			label("称号: " + title, fontYellow, 44, 380, 206, panel, "center");
 			[
 				"取ったぬいぐるみ " + stats.got + "こ (" + stats.tries + "回中)",
-				"でかパンダ " + stats.panda + "こ  金のくま " + stats.gold + "こ",
+				"特大 " + stats.panda + "こ  レア " + stats.gold + "こ",
 				"最大れんぞく " + stats.bestStreak + "  まとめ取り " + stats.multi + "回"
 			].forEach((t, i) => label(t, fontWhite, 32, 380, 286 + i * 56, panel, "center"));
 			animate(0.35, (p) => {
@@ -956,7 +1021,7 @@ export function main(param: GameMainParameterObject): void {
 					se("fever");
 					bigText("ラスト10秒! 得点2倍!!", fontYellow, 70, 1.3, 250);
 					setText(feverLabel, "得点×2");
-					refill(24);
+					refill(30);
 				}
 				if (fever) {
 					timeLabel.opacity = Math.floor(playLeft * 4) % 2 === 0 ? 1 : 0.55;

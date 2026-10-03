@@ -303,6 +303,133 @@ function drawAll() {
 			ctx.lineWidth = 3;
 			ctx.beginPath(); ctx.arc(72, 86, 6, 0.2, Math.PI - 0.2); ctx.arc(84, 86, 6, 0.2, Math.PI - 0.2); ctx.stroke();
 		};
+		const drawPenguin = (ctx) => {
+			ellipse(ctx, 45, 52, 36, 40, 0, "#2a3a6a", "#141c3a", 4);
+			ellipse(ctx, 45, 60, 24, 30, 0, "#ffffff");
+			ellipse(ctx, 12, 58, 8, 20, 0.4, "#2a3a6a", "#141c3a", 3);
+			ellipse(ctx, 78, 58, 8, 20, -0.4, "#2a3a6a", "#141c3a", 3);
+			face(ctx, 45, 40, 0.75, "rgba(255,120,150,0.6)");
+			ctx.fillStyle = "#ffa21a";
+			ctx.beginPath(); ctx.moveTo(39, 47); ctx.lineTo(51, 47); ctx.lineTo(45, 55); ctx.closePath(); ctx.fill();
+			ellipse(ctx, 33, 92, 10, 4, 0, "#ffa21a");
+			ellipse(ctx, 57, 92, 10, 4, 0, "#ffa21a");
+		};
+		const drawKaeru = (ctx) => {
+			const line = "#2a6a1a", body = "#7ad04a";
+			ellipse(ctx, 26, 22, 16, 16, 0, body, line, 4);
+			ellipse(ctx, 64, 22, 16, 16, 0, body, line, 4);
+			ellipse(ctx, 45, 56, 42, 32, 0, body, line, 4);
+			ellipse(ctx, 26, 22, 8, 9, 0, "#ffffff");
+			ellipse(ctx, 64, 22, 8, 9, 0, "#ffffff");
+			ellipse(ctx, 27, 23, 4, 5, 0, "#2a1408");
+			ellipse(ctx, 63, 23, 4, 5, 0, "#2a1408");
+			ellipse(ctx, 45, 66, 24, 14, 0, "#d8f4a8");
+			ctx.strokeStyle = line; ctx.lineWidth = 3;
+			ctx.beginPath(); ctx.arc(45, 46, 14, 0.3, Math.PI - 0.3); ctx.stroke();
+			ellipse(ctx, 18, 52, 7, 4, 0, "rgba(255,120,150,0.6)");
+			ellipse(ctx, 72, 52, 7, 4, 0, "rgba(255,120,150,0.6)");
+		};
+		const drawHamster = (ctx) => {
+			const line = "#9a5a2a", body = "#f4c48a";
+			ellipse(ctx, 24, 20, 11, 11, 0, body, line, 3);
+			ellipse(ctx, 70, 20, 11, 11, 0, body, line, 3);
+			ellipse(ctx, 24, 20, 5, 5, 0, "#ffb0b0");
+			ellipse(ctx, 70, 20, 5, 5, 0, "#ffb0b0");
+			ellipse(ctx, 47, 50, 40, 34, 0, body, line, 4);
+			ellipse(ctx, 47, 62, 26, 20, 0, "#fff6ea");
+			face(ctx, 47, 46, 0.8, "rgba(255,110,130,0.6)");
+			ellipse(ctx, 47, 54, 3, 2.5, 0, "#c06070");
+		};
+		const drawHitsuji = (ctx) => {
+			for (let i = 0; i < 12; i++) {
+				const a = i / 12 * Math.PI * 2;
+				ellipse(ctx, 60 + Math.cos(a) * 42, 62 + Math.sin(a) * 38, 18, 18, 0, "#ffffff", "#b8b0a0", 3);
+			}
+			ellipse(ctx, 60, 62, 44, 40, 0, "#ffffff");
+			ellipse(ctx, 26, 50, 12, 7, 0.4, "#6a5040");
+			ellipse(ctx, 94, 50, 12, 7, -0.4, "#6a5040");
+			ellipse(ctx, 60, 58, 26, 28, 0, "#7a5a48", "#4a3020", 3);
+			ellipse(ctx, 50, 54, 4.5, 5, 0, "#ffffff");
+			ellipse(ctx, 70, 54, 4.5, 5, 0, "#ffffff");
+			ellipse(ctx, 50, 55, 2.5, 3, 0, "#1a0a04");
+			ellipse(ctx, 70, 55, 2.5, 3, 0, "#1a0a04");
+			ellipse(ctx, 60, 70, 7, 4, 0, "#c88a7a");
+		};
+		const drawKitsune = (ctx) => {
+			const line = "#8a3a0a", body = "#ff8a2a";
+			ctx.fillStyle = body; ctx.strokeStyle = line; ctx.lineWidth = 4;
+			ctx.beginPath(); ctx.moveTo(14, 46); ctx.lineTo(22, 2); ctx.lineTo(50, 26); ctx.closePath(); ctx.fill(); ctx.stroke();
+			ctx.beginPath(); ctx.moveTo(106, 46); ctx.lineTo(98, 2); ctx.lineTo(70, 26); ctx.closePath(); ctx.fill(); ctx.stroke();
+			ellipse(ctx, 60, 96, 36, 22, 0, body, line, 4);
+			ellipse(ctx, 60, 56, 48, 38, 0, body, line, 4);
+			ctx.fillStyle = "#fff6ea";
+			ctx.beginPath(); ctx.moveTo(14, 58); ctx.quadraticCurveTo(60, 110, 106, 58); ctx.quadraticCurveTo(60, 80, 14, 58); ctx.fill();
+			face(ctx, 60, 56, 0.9, "rgba(255,110,110,0.5)");
+			ellipse(ctx, 60, 70, 6, 4, 0, "#2a1408");
+		};
+		const drawLion = (ctx) => {
+			for (let i = 0; i < 16; i++) {
+				const a = i / 16 * Math.PI * 2;
+				ellipse(ctx, 78 + Math.cos(a) * 54, 64 + Math.sin(a) * 50, 22, 22, 0, "#c8641a", "#7a3a0a", 3);
+			}
+			ellipse(ctx, 78, 64, 58, 54, 0, "#c8641a");
+			ellipse(ctx, 78, 70, 46, 42, 0, "#ffd06a", "#9a5a0a", 4);
+			ellipse(ctx, 46, 36, 12, 12, 0, "#ffd06a", "#9a5a0a", 3);
+			ellipse(ctx, 110, 36, 12, 12, 0, "#ffd06a", "#9a5a0a", 3);
+			face(ctx, 78, 66, 1.05, "rgba(255,110,90,0.5)");
+			ellipse(ctx, 78, 78, 9, 6, 0, "#6a2a0a");
+			ellipse(ctx, 78, 128, 40, 16, 0, "#ffd06a", "#9a5a0a", 4);
+		};
+		const drawZou = (ctx) => {
+			const body = "#a8b4d8", line = "#56628a";
+			ellipse(ctx, 30, 58, 30, 40, -0.2, "#b8c4e8", line, 4);
+			ellipse(ctx, 126, 58, 30, 40, 0.2, "#b8c4e8", line, 4);
+			ellipse(ctx, 30, 58, 18, 26, -0.2, "#f0c0d0");
+			ellipse(ctx, 126, 58, 18, 26, 0.2, "#f0c0d0");
+			ellipse(ctx, 78, 104, 50, 32, 0, body, line, 4);
+			ellipse(ctx, 78, 60, 46, 42, 0, body, line, 4);
+			ctx.strokeStyle = line; ctx.lineWidth = 18; ctx.lineCap = "round";
+			ctx.beginPath(); ctx.moveTo(78, 70); ctx.quadraticCurveTo(78, 110, 100, 108); ctx.stroke();
+			ctx.strokeStyle = body; ctx.lineWidth = 11;
+			ctx.stroke();
+			ellipse(ctx, 62, 56, 5, 6, 0, "#1a1430");
+			ellipse(ctx, 94, 56, 5, 6, 0, "#1a1430");
+			ellipse(ctx, 60, 53, 2, 2, 0, "#ffffff");
+			ellipse(ctx, 92, 53, 2, 2, 0, "#ffffff");
+			ellipse(ctx, 50, 72, 8, 5, 0, "rgba(255,120,150,0.6)");
+			ellipse(ctx, 106, 72, 8, 5, 0, "rgba(255,120,150,0.6)");
+		};
+		const drawKujira = (ctx) => {
+			const body = "#4a9aff", line = "#1a4a9a";
+			ctx.fillStyle = body; ctx.strokeStyle = line; ctx.lineWidth = 5;
+			ctx.beginPath(); ctx.moveTo(150, 70); ctx.lineTo(176, 44); ctx.lineTo(178, 96); ctx.closePath(); ctx.fill(); ctx.stroke();
+			ellipse(ctx, 86, 78, 76, 52, 0, body, line, 5);
+			ctx.fillStyle = "#e8f4ff";
+			ctx.beginPath(); ctx.moveTo(14, 84); ctx.quadraticCurveTo(80, 150, 150, 92); ctx.quadraticCurveTo(80, 110, 14, 84); ctx.fill();
+			ctx.strokeStyle = "#7ac8ff"; ctx.lineWidth = 5; ctx.lineCap = "round";
+			[-12, 0, 12].forEach((dx) => { ctx.beginPath(); ctx.moveTo(70, 26); ctx.quadraticCurveTo(70 + dx, 10, 70 + dx * 1.8, 4); ctx.stroke(); });
+			face(ctx, 60, 70, 1.0, "rgba(255,120,150,0.6)");
+		};
+		const drawUnicorn = (ctx) => {
+			const line = "#a080c0";
+			const rainbow = ["#ff5a8a", "#ffb43a", "#fff36a", "#5af08a", "#5ad0ff", "#b07aff"];
+			rainbow.forEach((c, i) => ellipse(ctx, 116 - i * 6, 40 + i * 14, 18, 22, 0.3, c));
+			ellipse(ctx, 70, 100, 46, 30, 0, "#ffffff", line, 4);
+			ellipse(ctx, 70, 62, 48, 40, 0, "#ffffff", line, 4);
+			rainbow.forEach((c, i) => ellipse(ctx, 30 + i * 9, 26 - Math.sin(i / 5 * Math.PI) * 8, 12, 14, 0, c));
+			const g = ctx.createLinearGradient(60, 0, 80, 30);
+			g.addColorStop(0, "#fff6a0");
+			g.addColorStop(1, "#ffb400");
+			ctx.fillStyle = g; ctx.strokeStyle = "#b07a00"; ctx.lineWidth = 3;
+			ctx.beginPath(); ctx.moveTo(62, 26); ctx.lineTo(70, -0); ctx.lineTo(78, 26); ctx.closePath(); ctx.fill(); ctx.stroke();
+			face(ctx, 70, 66, 0.95, "rgba(255,120,170,0.65)");
+			ctx.fillStyle = "rgba(255,255,255,0.95)";
+			ctx.beginPath();
+			ctx.moveTo(20, 80); ctx.lineTo(24, 92); ctx.lineTo(36, 96); ctx.lineTo(24, 100);
+			ctx.lineTo(20, 112); ctx.lineTo(16, 100); ctx.lineTo(4, 96); ctx.lineTo(16, 92);
+			ctx.closePath();
+			ctx.fill();
+		};
 		const sized = (name, w, h, sc, fn) => make(name, Math.ceil(w * sc) + 4, Math.ceil(h * sc) + 4, (ctx) => {
 			ctx.translate(2, 2);
 			ctx.scale(sc, sc);
@@ -315,6 +442,15 @@ function drawAll() {
 		sized("p_inu", 120, 120, 0.9, drawInu);
 		sized("p_kuma", 156, 140, 1.0, (ctx) => drawKuma(ctx, "#c8844a", "#6a3a14", "#f2c08a"));
 		sized("p_panda", 156, 140, 1.4, drawPanda);
+		sized("p_penguin", 90, 100, 0.72, drawPenguin);
+		sized("p_kaeru", 90, 90, 0.78, drawKaeru);
+		sized("p_hamster", 94, 86, 0.72, drawHamster);
+		sized("p_hitsuji", 122, 122, 0.85, drawHitsuji);
+		sized("p_kitsune", 120, 122, 0.88, drawKitsune);
+		sized("p_lion", 156, 146, 0.95, drawLion);
+		sized("p_zou", 156, 140, 1.0, drawZou);
+		sized("p_kujira", 182, 136, 1.25, drawKujira);
+		make("p_unicorn", 150, 150, (ctx) => { ctx.translate(4, 12); drawUnicorn(ctx); });
 		sized("p_gold", 156, 140, 0.72, (ctx) => {
 			const g = ctx.createLinearGradient(0, 0, 156, 140);
 			g.addColorStop(0, "#fff27a");

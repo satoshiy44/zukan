@@ -313,6 +313,60 @@
 			"path": "image/p_usagi.png",
 			"width": 78,
 			"height": 122
+		},
+		"p_hamster": {
+			"type": "image",
+			"path": "image/p_hamster.png",
+			"width": 61,
+			"height": 57
+		},
+		"p_hitsuji": {
+			"type": "image",
+			"path": "image/p_hitsuji.png",
+			"width": 106,
+			"height": 99
+		},
+		"p_kaeru": {
+			"type": "image",
+			"path": "image/p_kaeru.png",
+			"width": 70,
+			"height": 68
+		},
+		"p_kitsune": {
+			"type": "image",
+			"path": "image/p_kitsune.png",
+			"width": 89,
+			"height": 108
+		},
+		"p_kujira": {
+			"type": "image",
+			"path": "image/p_kujira.png",
+			"width": 217,
+			"height": 165
+		},
+		"p_lion": {
+			"type": "image",
+			"path": "image/p_lion.png",
+			"width": 148,
+			"height": 141
+		},
+		"p_penguin": {
+			"type": "image",
+			"path": "image/p_penguin.png",
+			"width": 65,
+			"height": 62
+		},
+		"p_unicorn": {
+			"type": "image",
+			"path": "image/p_unicorn.png",
+			"width": 130,
+			"height": 136
+		},
+		"p_zou": {
+			"type": "image",
+			"path": "image/p_zou.png",
+			"width": 160,
+			"height": 122
 		}
 	},
 	"environment": {
