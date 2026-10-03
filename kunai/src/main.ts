@@ -32,7 +32,7 @@ interface StageDef {
 function createStage(random: g.RandomGenerator, i: number): StageDef {
 	const r = (): number => random.generate();
 	const boss = (i + 1) % 5 === 0;
-	const needed = Math.min(5 + Math.floor(i * 0.7), 10) + (boss ? 2 : 0);
+	const needed = Math.min(4 + Math.floor(i * 0.5), 8) + (boss ? 1 : 0);
 	const used: number[] = [];
 	const freeAngle = (gap: number): number => {
 		for (let k = 0; k < 50; k++) {
@@ -45,7 +45,7 @@ function createStage(random: g.RandomGenerator, i: number): StageDef {
 		return Math.floor(r() * 360);
 	};
 	const obstacles: number[] = [];
-	const obsCount = Math.min(Math.floor(i / 1.5), 4) + (boss ? 1 : 0);
+	const obsCount = Math.min(Math.floor(i / 2), 3) + (boss ? 1 : 0);
 	for (let k = 0; k < obsCount; k++) obstacles.push(freeAngle(36));
 	const kobans: number[] = [];
 	for (let k = 0; k < 1 + (i % 2); k++) kobans.push(freeAngle(26));
@@ -56,17 +56,26 @@ function createStage(random: g.RandomGenerator, i: number): StageDef {
 }
 
 // 修行ごとの回転の速さ(度/秒)。t はその修行を始めてからの秒数
+// どの回り方でも、全体としては同じ向きに進み、丸太の全周が下に来るようにする
 function angularSpeed(s: StageDef, t: number): number {
 	const tau = Math.PI * 2;
 	switch (s.motion) {
-		case "reverse":
-			return s.dir * s.base * (Math.sin(tau * t / s.period) >= 0 ? 1 : -1);
+		case "reverse": {
+			// 長く進んで、短く戻る
+			const ph = (t % s.period) / s.period;
+			return s.dir * s.base * (ph < 0.7 ? 1.2 : -0.8);
+		}
 		case "sine":
-			return s.dir * (s.base * 0.4 + s.base * 1.1 * Math.sin(tau * t / s.period));
+			// 速くなったり遅くなったり(止まるくらいまで遅くなるが、戻らない)
+			return s.dir * s.base * (1 + 0.85 * Math.sin(tau * t / s.period));
 		case "stopgo":
 			return (t % 1.4) < 0.55 ? 0 : s.dir * s.base * 2;
-		case "boss":
-			return s.dir * (s.base * 0.9 * Math.sin(tau * t / 2.2) + s.base * 0.7 * Math.sin(tau * t / 0.9 + 1));
+		case "boss": {
+			// 師匠: 緩急に、ときどき急加速がまざる。向きは変わらない
+			const wave = 1 + 0.7 * Math.sin(tau * t / 2.3) + 0.2 * Math.sin(tau * t / 0.8 + 1);
+			const dash = (t % 1.9) < 0.22 ? 1.6 : 0;
+			return s.dir * s.base * (wave + dash);
+		}
 		default:
 			return s.dir * s.base;
 	}
