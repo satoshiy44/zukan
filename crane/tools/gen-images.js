@@ -174,75 +174,159 @@ function drawAll() {
 			ellipse(ctx, 14, 8, 8, 8, 0, "#6a7280", "#3a404a", 3);
 		});
 
-		// ---- 景品(カプセル) ----
-		// つやのある球。half: "top" / "bottom" / undefined(まるごと)
-		const capsule = (ctx, cx, cy, R, gold, half) => {
-			ctx.save();
-			if (half) {
-				ctx.beginPath();
-				if (half === "top") ctx.rect(cx - R - 4, cy - R - 4, R * 2 + 8, R + 4);
-				else ctx.rect(cx - R - 4, cy, R * 2 + 8, R + 4);
-				ctx.clip();
-			}
-			const g = ctx.createRadialGradient(cx - R * 0.35, cy - R * 0.4, R * 0.1, cx, cy, R);
-			if (gold) {
-				g.addColorStop(0, "#fffbd0");
-				g.addColorStop(0.35, "#ffd23a");
-				g.addColorStop(0.8, "#d89a00");
-				g.addColorStop(1, "#8a5a00");
-			} else {
-				g.addColorStop(0, "#8a8a9a");
-				g.addColorStop(0.3, "#3a3a46");
-				g.addColorStop(0.8, "#121218");
-				g.addColorStop(1, "#000000");
-			}
-			ellipse(ctx, cx, cy, R, R, 0, g, gold ? "#6a4000" : "#000000", 3);
-			// 合わせ目
-			ctx.fillStyle = gold ? "#b07a00" : "#2a2a34";
-			ctx.fillRect(cx - R, cy - 3, R * 2, 6);
-			ctx.fillStyle = gold ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.18)";
-			ctx.fillRect(cx - R, cy - 3, R * 2, 2);
-			// 光
-			ellipse(ctx, cx - R * 0.38, cy - R * 0.45, R * 0.28, R * 0.16, -0.6, "rgba(255,255,255,0.85)");
-			ellipse(ctx, cx + R * 0.45, cy + R * 0.5, R * 0.1, R * 0.06, -0.6, "rgba(255,255,255,0.4)");
-			ctx.restore();
-		};
-		make("p_black", 80, 80, (ctx) => capsule(ctx, 40, 40, 36, false));
-		make("p_gold", 80, 80, (ctx) => capsule(ctx, 40, 40, 36, true));
-		[["black", false], ["gold", true]].forEach((c) => {
-			make("cap_" + c[0] + "_top", 120, 64, (ctx) => capsule(ctx, 60, 62, 56, c[1], "top"));
-			make("cap_" + c[0] + "_bottom", 120, 64, (ctx) => capsule(ctx, 60, 2, 56, c[1], "bottom"));
-		});
-		// 三角くじ(閉じている)
-		make("kuji", 170, 150, (ctx) => {
+		// ---- 景品(大小いろいろなぬいぐるみ) ----
+		const face = (ctx, x, y, sc, cheek) => {
+			ellipse(ctx, x - 14 * sc, y, 5 * sc, 6 * sc, 0, "#2a1408");
+			ellipse(ctx, x + 14 * sc, y, 5 * sc, 6 * sc, 0, "#2a1408");
+			ellipse(ctx, x - 15.5 * sc, y - 2 * sc, 1.8 * sc, 1.8 * sc, 0, "#ffffff");
+			ellipse(ctx, x + 12.5 * sc, y - 2 * sc, 1.8 * sc, 1.8 * sc, 0, "#ffffff");
+			ellipse(ctx, x - 24 * sc, y + 10 * sc, 7 * sc, 4.5 * sc, 0, cheek);
+			ellipse(ctx, x + 24 * sc, y + 10 * sc, 7 * sc, 4.5 * sc, 0, cheek);
+			ctx.strokeStyle = "#2a1408";
+			ctx.lineWidth = 2.5 * sc;
 			ctx.beginPath();
-			ctx.moveTo(85, 8); ctx.lineTo(162, 142); ctx.lineTo(8, 142); ctx.closePath();
-			const g = ctx.createLinearGradient(0, 8, 0, 142);
-			g.addColorStop(0, "#ff6a8a");
-			g.addColorStop(1, "#e8205a");
-			ctx.fillStyle = g;
-			ctx.fill();
-			ctx.lineJoin = "round";
-			ctx.lineWidth = 5;
-			ctx.strokeStyle = "#ffffff";
+			ctx.arc(x - 4 * sc, y + 8 * sc, 4 * sc, 0.2, Math.PI - 0.2);
+			ctx.arc(x + 4 * sc, y + 8 * sc, 4 * sc, 0.2, Math.PI - 0.2);
 			ctx.stroke();
-			// 折り目と、ミシン目
-			ctx.strokeStyle = "rgba(255,255,255,0.7)";
-			ctx.lineWidth = 3;
-			ctx.beginPath(); ctx.moveTo(85, 8); ctx.lineTo(85, 142); ctx.stroke();
-			ctx.setLineDash([6, 5]);
-			ctx.beginPath(); ctx.moveTo(30, 104); ctx.lineTo(140, 104); ctx.stroke();
-			ctx.setLineDash([]);
-			text(ctx, "くじ", 85, 82, 30, "#ffffff", "#a0103a", 7);
-		});
-		// 三角くじ(開いた紙)
-		make("kuji_open", 260, 170, (ctx, w, h) => {
-			roundRect(ctx, 6, 6, w - 12, h - 12, 10, "#fffdf4", "#e8205a", 6);
-			ctx.strokeStyle = "rgba(232,32,90,0.35)";
+		};
+		const drawHiyoko = (ctx) => {
+			ellipse(ctx, 45, 52, 36, 33, 0, "#ffe14a", "#c89a00", 4);
+			ellipse(ctx, 20, 56, 12, 8, -0.6, "#ffd000", "#c89a00", 3);
+			ellipse(ctx, 70, 56, 12, 8, 0.6, "#ffd000", "#c89a00", 3);
+			ctx.fillStyle = "#ffe14a";
+			ctx.beginPath(); ctx.moveTo(40, 22); ctx.lineTo(45, 8); ctx.lineTo(50, 22); ctx.fill();
+			face(ctx, 45, 44, 0.8, "rgba(255,120,120,0.55)");
+			ctx.fillStyle = "#ff8a1a";
+			ctx.beginPath(); ctx.moveTo(39, 52); ctx.lineTo(51, 52); ctx.lineTo(45, 60); ctx.closePath(); ctx.fill();
+			ellipse(ctx, 33, 85, 9, 4, 0, "#ff8a1a");
+			ellipse(ctx, 57, 85, 9, 4, 0, "#ff8a1a");
+		};
+		const drawButa = (ctx) => {
+			const pink = "#ffb0c8", line = "#c8507a";
+			ctx.fillStyle = pink;
+			ctx.strokeStyle = line;
+			ctx.lineWidth = 4;
+			ctx.beginPath(); ctx.moveTo(18, 30); ctx.lineTo(24, 8); ctx.lineTo(42, 20); ctx.closePath(); ctx.fill(); ctx.stroke();
+			ctx.beginPath(); ctx.moveTo(82, 30); ctx.lineTo(76, 8); ctx.lineTo(58, 20); ctx.closePath(); ctx.fill(); ctx.stroke();
+			ellipse(ctx, 50, 54, 44, 38, 0, pink, line, 4);
+			face(ctx, 50, 46, 0.85, "rgba(255,80,120,0.5)");
+			ellipse(ctx, 50, 64, 14, 9, 0, "#ff8aaa", line, 3);
+			ellipse(ctx, 45, 64, 2.5, 3.5, 0, line);
+			ellipse(ctx, 55, 64, 2.5, 3.5, 0, line);
+		};
+		const drawUsagi = (ctx) => {
+			const pink = "#ffc8dc", line = "#d0507a";
+			ellipse(ctx, 36, 38, 13, 34, -0.15, "#ffffff", line, 4);
+			ellipse(ctx, 74, 38, 13, 34, 0.15, "#ffffff", line, 4);
+			ellipse(ctx, 36, 40, 6, 24, -0.15, pink);
+			ellipse(ctx, 74, 40, 6, 24, 0.15, pink);
+			ellipse(ctx, 55, 112, 38, 26, 0, "#ffffff", line, 4);
+			ellipse(ctx, 55, 82, 42, 34, 0, "#ffffff", line, 4);
+			face(ctx, 55, 80, 0.9, "rgba(255,110,150,0.6)");
+			ctx.fillStyle = "#ff4a8a";
+			ctx.beginPath(); ctx.moveTo(55, 52); ctx.lineTo(40, 42); ctx.lineTo(40, 62); ctx.closePath();
+			ctx.moveTo(55, 52); ctx.lineTo(70, 42); ctx.lineTo(70, 62); ctx.closePath(); ctx.fill();
+			ellipse(ctx, 55, 52, 6, 6, 0, "#ff7aa8");
+		};
+		const drawNeko = (ctx) => {
+			const line = "#8a4a1a", body = "#ffb45a";
+			ctx.fillStyle = body;
+			ctx.strokeStyle = line;
+			ctx.lineWidth = 4;
+			ctx.beginPath(); ctx.moveTo(18, 40); ctx.lineTo(26, 6); ctx.lineTo(50, 26); ctx.closePath(); ctx.fill(); ctx.stroke();
+			ctx.beginPath(); ctx.moveTo(102, 40); ctx.lineTo(94, 6); ctx.lineTo(70, 26); ctx.closePath(); ctx.fill(); ctx.stroke();
+			ellipse(ctx, 60, 92, 40, 22, 0, body, line, 4);
+			ellipse(ctx, 60, 54, 48, 38, 0, body, line, 4);
+			ctx.fillStyle = "rgba(200,100,20,0.6)";
+			ctx.fillRect(54, 17, 4, 14); ctx.fillRect(62, 17, 4, 14);
+			ellipse(ctx, 60, 70, 20, 12, 0, "#fff3e0");
+			face(ctx, 60, 56, 0.9, "rgba(255,110,110,0.55)");
+			ctx.strokeStyle = line;
 			ctx.lineWidth = 2;
-			ctx.setLineDash([6, 5]);
-			ctx.strokeRect(18, 18, w - 36, h - 36);
-			ctx.setLineDash([]);
+			[[-1, 0], [-1, 6], [1, 0], [1, 6]].forEach((q) => {
+				ctx.beginPath(); ctx.moveTo(60 + q[0] * 26, 66 + q[1]); ctx.lineTo(60 + q[0] * 46, 62 + q[1] * 1.6); ctx.stroke();
+			});
+			ellipse(ctx, 40, 108, 11, 6, 0, "#fff3e0", line, 3);
+			ellipse(ctx, 80, 108, 11, 6, 0, "#fff3e0", line, 3);
+		};
+		const drawInu = (ctx) => {
+			const line = "#5a3a1a", body = "#fff4e0";
+			ellipse(ctx, 22, 50, 16, 30, 0.3, "#b07a4a", line, 4);
+			ellipse(ctx, 98, 50, 16, 30, -0.3, "#b07a4a", line, 4);
+			ellipse(ctx, 60, 94, 38, 22, 0, body, line, 4);
+			ellipse(ctx, 60, 54, 46, 40, 0, body, line, 4);
+			ellipse(ctx, 82, 44, 14, 12, 0, "#e0b080");
+			face(ctx, 60, 54, 0.9, "rgba(255,110,110,0.5)");
+			ellipse(ctx, 60, 64, 7, 5, 0, "#2a1408");
+			ctx.fillStyle = "#3a8aff";
+			ctx.fillRect(28, 84, 64, 9);
+			ellipse(ctx, 60, 98, 7, 7, 0, "#ffd23a", "#a07a00", 2);
+		};
+		const drawKuma = (ctx, fur, dark, inner) => {
+			ellipse(ctx, 34, 28, 22, 22, 0, fur, dark, 5);
+			ellipse(ctx, 122, 28, 22, 22, 0, fur, dark, 5);
+			ellipse(ctx, 34, 28, 11, 11, 0, inner);
+			ellipse(ctx, 122, 28, 11, 11, 0, inner);
+			ellipse(ctx, 78, 96, 66, 42, 0, fur, dark, 5);
+			ellipse(ctx, 78, 62, 56, 48, 0, fur, dark, 5);
+			ellipse(ctx, 78, 78, 24, 17, 0, "#f2d0a8", dark, 3);
+			ellipse(ctx, 78, 72, 8, 6, 0, "#2a1408");
+			ellipse(ctx, 56, 54, 7, 8, 0, "#2a1408");
+			ellipse(ctx, 100, 54, 7, 8, 0, "#2a1408");
+			ellipse(ctx, 54, 51, 2.5, 2.5, 0, "#ffffff");
+			ellipse(ctx, 98, 51, 2.5, 2.5, 0, "#ffffff");
+			ellipse(ctx, 44, 74, 9, 6, 0, "rgba(255,120,140,0.5)");
+			ellipse(ctx, 112, 74, 9, 6, 0, "rgba(255,120,140,0.5)");
+			ctx.fillStyle = "#e83a5a";
+			ctx.beginPath();
+			ctx.moveTo(78, 108); ctx.lineTo(54, 96); ctx.lineTo(54, 122); ctx.closePath();
+			ctx.moveTo(78, 108); ctx.lineTo(102, 96); ctx.lineTo(102, 122); ctx.closePath();
+			ctx.fill();
+			ellipse(ctx, 78, 108, 8, 8, 0, "#ff6a8a", "#8a0a2a", 2);
+		};
+		const drawPanda = (ctx) => {
+			const line = "#1a1a1a";
+			ellipse(ctx, 34, 28, 22, 22, 0, "#2a2a2a", line, 5);
+			ellipse(ctx, 122, 28, 22, 22, 0, "#2a2a2a", line, 5);
+			ellipse(ctx, 78, 98, 66, 40, 0, "#ffffff", line, 5);
+			ellipse(ctx, 30, 104, 18, 24, 0.4, "#2a2a2a");
+			ellipse(ctx, 126, 104, 18, 24, -0.4, "#2a2a2a");
+			ellipse(ctx, 78, 62, 58, 48, 0, "#ffffff", line, 5);
+			ellipse(ctx, 56, 58, 14, 18, -0.5, "#2a2a2a");
+			ellipse(ctx, 100, 58, 14, 18, 0.5, "#2a2a2a");
+			ellipse(ctx, 58, 56, 4.5, 5, 0, "#ffffff");
+			ellipse(ctx, 98, 56, 4.5, 5, 0, "#ffffff");
+			ellipse(ctx, 78, 78, 9, 6, 0, "#2a2a2a");
+			ellipse(ctx, 46, 82, 9, 6, 0, "rgba(255,120,140,0.6)");
+			ellipse(ctx, 110, 82, 9, 6, 0, "rgba(255,120,140,0.6)");
+			ctx.strokeStyle = line;
+			ctx.lineWidth = 3;
+			ctx.beginPath(); ctx.arc(72, 86, 6, 0.2, Math.PI - 0.2); ctx.arc(84, 86, 6, 0.2, Math.PI - 0.2); ctx.stroke();
+		};
+		const sized = (name, w, h, sc, fn) => make(name, Math.ceil(w * sc) + 4, Math.ceil(h * sc) + 4, (ctx) => {
+			ctx.translate(2, 2);
+			ctx.scale(sc, sc);
+			fn(ctx);
+		});
+		sized("p_hiyoko", 90, 90, 0.8, drawHiyoko);
+		sized("p_buta", 100, 96, 0.78, drawButa);
+		sized("p_usagi", 110, 140, 0.88, drawUsagi);
+		sized("p_neko", 120, 116, 0.9, drawNeko);
+		sized("p_inu", 120, 120, 0.9, drawInu);
+		sized("p_kuma", 156, 140, 1.0, (ctx) => drawKuma(ctx, "#c8844a", "#6a3a14", "#f2c08a"));
+		sized("p_panda", 156, 140, 1.4, drawPanda);
+		sized("p_gold", 156, 140, 0.72, (ctx) => {
+			const g = ctx.createLinearGradient(0, 0, 156, 140);
+			g.addColorStop(0, "#fff27a");
+			g.addColorStop(0.5, "#ffc400");
+			g.addColorStop(1, "#d89000");
+			drawKuma(ctx, g, "#8a5a00", "#fff6c0");
+			ctx.fillStyle = "rgba(255,255,255,0.95)";
+			ctx.beginPath();
+			ctx.moveTo(30, 60); ctx.lineTo(34, 72); ctx.lineTo(46, 76); ctx.lineTo(34, 80);
+			ctx.lineTo(30, 92); ctx.lineTo(26, 80); ctx.lineTo(14, 76); ctx.lineTo(26, 72);
+			ctx.closePath();
+			ctx.fill();
 		});
 		// キラキラ
 		make("sparkle", 40, 40, (ctx) => {

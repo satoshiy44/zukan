@@ -200,8 +200,8 @@
 		"p_gold": {
 			"type": "image",
 			"path": "image/p_gold.png",
-			"width": 76,
-			"height": 76
+			"width": 99,
+			"height": 100
 		},
 		"sparkle": {
 			"type": "image",
@@ -236,18 +236,6 @@
 			"width": 120,
 			"height": 48
 		},
-		"coin": {
-			"type": "audio",
-			"path": "audio/coin",
-			"systemId": "sound",
-			"duration": 310,
-			"hint": {
-				"extensions": [
-					".aac",
-					".ogg"
-				]
-			}
-		},
 		"jolt": {
 			"type": "audio",
 			"path": "audio/jolt",
@@ -272,18 +260,6 @@
 				]
 			}
 		},
-		"rip": {
-			"type": "audio",
-			"path": "audio/rip",
-			"systemId": "sound",
-			"duration": 180,
-			"hint": {
-				"extensions": [
-					".aac",
-					".ogg"
-				]
-			}
-		},
 		"thud": {
 			"type": "audio",
 			"path": "audio/thud",
@@ -296,47 +272,47 @@
 				]
 			}
 		},
-		"cap_black_bottom": {
+		"p_buta": {
 			"type": "image",
-			"path": "image/cap_black_bottom.png",
-			"width": 120,
-			"height": 64
+			"path": "image/p_buta.png",
+			"width": 72,
+			"height": 70
 		},
-		"cap_black_top": {
+		"p_hiyoko": {
 			"type": "image",
-			"path": "image/cap_black_top.png",
-			"width": 120,
-			"height": 64
+			"path": "image/p_hiyoko.png",
+			"width": 62,
+			"height": 65
 		},
-		"cap_gold_bottom": {
+		"p_inu": {
 			"type": "image",
-			"path": "image/cap_gold_bottom.png",
-			"width": 120,
-			"height": 64
+			"path": "image/p_inu.png",
+			"width": 104,
+			"height": 97
 		},
-		"cap_gold_top": {
+		"p_kuma": {
 			"type": "image",
-			"path": "image/cap_gold_top.png",
-			"width": 120,
-			"height": 64
+			"path": "image/p_kuma.png",
+			"width": 138,
+			"height": 138
 		},
-		"kuji": {
+		"p_neko": {
 			"type": "image",
-			"path": "image/kuji.png",
-			"width": 170,
-			"height": 150
+			"path": "image/p_neko.png",
+			"width": 90,
+			"height": 103
 		},
-		"kuji_open": {
+		"p_panda": {
 			"type": "image",
-			"path": "image/kuji_open.png",
-			"width": 260,
-			"height": 170
+			"path": "image/p_panda.png",
+			"width": 192,
+			"height": 192
 		},
-		"p_black": {
+		"p_usagi": {
 			"type": "image",
-			"path": "image/p_black.png",
-			"width": 76,
-			"height": 76
+			"path": "image/p_usagi.png",
+			"width": 78,
+			"height": 122
 		}
 	},
 	"environment": {

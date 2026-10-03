@@ -169,14 +169,19 @@ function draw() {
 			ctx.quadraticCurveTo(S / 2 + dir * 120, 250, S / 2 + dir * 70, 310);
 			ctx.stroke();
 		};
-		// 金のカプセル
-		const cg = ctx.createRadialGradient(S / 2 - 20, 232, 6, S / 2, 250, 62);
-		cg.addColorStop(0, "#fffbd0");
-		cg.addColorStop(0.4, "#ffd23a");
-		cg.addColorStop(1, "#a06a00");
-		ctx.beginPath(); ctx.arc(S / 2, 252, 58, 0, Math.PI * 2); ctx.fillStyle = cg; ctx.fill();
-		ctx.lineWidth = 5; ctx.strokeStyle = "#6a4000"; ctx.stroke();
-		ctx.fillStyle = "#b07a00"; ctx.fillRect(S / 2 - 58, 248, 116, 8);
+		// 金のくまのぬいぐるみ
+		const cg = ctx.createLinearGradient(S / 2 - 60, 200, S / 2 + 60, 310);
+		cg.addColorStop(0, "#fff27a");
+		cg.addColorStop(0.5, "#ffc400");
+		cg.addColorStop(1, "#d89000");
+		const ball = (x, y, r) => { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = cg; ctx.fill(); ctx.lineWidth = 5; ctx.strokeStyle = "#8a5a00"; ctx.stroke(); };
+		ball(S / 2 - 44, 212, 20);
+		ball(S / 2 + 44, 212, 20);
+		ball(S / 2, 258, 56);
+		ctx.fillStyle = "#2a1408";
+		[[-20, 248], [20, 248]].forEach((q) => { ctx.beginPath(); ctx.arc(S / 2 + q[0], q[1], 6, 0, Math.PI * 2); ctx.fill(); });
+		ctx.beginPath(); ctx.ellipse(S / 2, 270, 16, 11, 0, 0, Math.PI * 2); ctx.fillStyle = "#fff0c0"; ctx.fill();
+		ctx.beginPath(); ctx.ellipse(S / 2, 266, 6, 4, 0, 0, Math.PI * 2); ctx.fillStyle = "#2a1408"; ctx.fill();
 		ctx.lineWidth = 22;
 		ctx.strokeStyle = "#2a2f38";
 		arm(-1); arm(1);

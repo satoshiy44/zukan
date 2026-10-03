@@ -25,8 +25,8 @@ const SWAY_DAMP = 3.2;
 const SWAY_GAIN = 0.0065;
 const SWAY_LEN = 200; // ゆれの角度を出すための、ひもの長さ
 const MAX_GRAB = 4; // 1回でつかめる最大の数
-const START_CAPSULES = 150;
-const REFILL_BELOW = 110; // カプセルがこれより少なくなったら補充
+const START_PLUSH = 110;
+const REFILL_BELOW = 80; // ぬいぐるみがこれより少なくなったら補充
 const INTRO_SEC = 4;
 const RESULT_SEC = 10;
 const FEVER_SEC = 10;
@@ -41,41 +41,43 @@ const depthScale = (z: number): number => FOCAL / (z + Z0);
 const screenX = (x: number, z: number): number => 640 + x * depthScale(z);
 const screenY = (y: number, z: number): number => HORIZON + (CAM_H - y) * depthScale(z);
 
-// カプセルの種類
-interface CapType {
+// ぬいぐるみの種類(大きいほど高得点で、つかみにくい)
+interface PlushType {
 	id: string;
-	gold: boolean;
+	name: string;
 	h: number;
 	r: number; // 上から見たときの半径
+	value: number;
 	need: number; // しっかりつかむのに必要な「つかみの良さ」(0〜1)
 	color: string; // 上から見た図の色
+	big: boolean; // 大当たりの演出をする
 }
-const BLACK: CapType = { id: "p_black", gold: false, h: 72, r: 34, need: 0.12, color: "#1a1a22" };
-const GOLD: CapType = { id: "p_gold", gold: true, h: 72, r: 34, need: 0.3, color: "#ffb400" };
-
-// 三角くじの等級
-interface Rank { name: string; pt: number; }
-const RANKS: Rank[] = [
-	{ name: "特賞", pt: 2000 },
-	{ name: "1等", pt: 1000 },
-	{ name: "2等", pt: 500 },
-	{ name: "3等", pt: 300 },
-	{ name: "4等", pt: 200 },
-	{ name: "5等", pt: 100 }
+const TYPES: PlushType[] = [
+	{ id: "p_hiyoko", name: "ひよこ", h: 62, r: 26, value: 100, need: 0.05, color: "#ffd000", big: false },
+	{ id: "p_buta", name: "こぶた", h: 68, r: 30, value: 100, need: 0.05, color: "#ff9ac0", big: false },
+	{ id: "p_usagi", name: "うさぎ", h: 118, r: 36, value: 250, need: 0.18, color: "#ff5a9a", big: false },
+	{ id: "p_neko", name: "ねこ", h: 100, r: 42, value: 250, need: 0.2, color: "#ff8a1a", big: false },
+	{ id: "p_inu", name: "いぬ", h: 95, r: 46, value: 250, need: 0.2, color: "#3a8aff", big: false },
+	{ id: "p_kuma", name: "くま", h: 132, r: 60, value: 600, need: 0.32, color: "#8a4a1a", big: false },
+	{ id: "p_panda", name: "でかパンダ", h: 186, r: 82, value: 1500, need: 0.42, color: "#222222", big: true },
+	{ id: "p_gold", name: "金のくま", h: 96, r: 44, value: 2000, need: 0.3, color: "#ffb400", big: true }
 ];
-// 黒カプセルはほとんど4〜5等、金カプセルは3等以上
-function drawRank(gold: boolean, r: number): number {
-	if (gold) return r < 0.05 ? 0 : r < 0.25 ? 1 : r < 0.6 ? 2 : 3;
-	return r < 0.05 ? 2 : r < 0.2 ? 3 : r < 0.5 ? 4 : 5;
-}
+const PANDA = 6;
+const GOLD = 7;
 
-// 共通乱数で、カプセルの色・置く場所・中のくじを決める(全員同じ)
-interface Drop { gold: boolean; x: number; z: number; rank: number; }
+// 共通乱数で、ぬいぐるみの種類と置く場所を決める(全員同じ)
+interface Drop { type: number; x: number; z: number; }
+function pickType(a: number, b: number): number {
+	if (a < 0.36) return b < 0.5 ? 0 : 1;
+	if (a < 0.72) return b < 0.34 ? 2 : b < 0.67 ? 3 : 4;
+	if (a < 0.88) return 5;
+	return a < 0.94 ? PANDA : GOLD;
+}
 function createDrops(random: g.RandomGenerator, n: number): Drop[] {
 	const out: Drop[] = [];
 	for (let i = 0; i < n; i++) {
-		const gold = random.generate() < 0.2;
-		out.push({ gold, x: random.generate(), z: random.generate(), rank: drawRank(gold, random.generate()) });
+		const type = pickType(random.generate(), random.generate());
+		out.push({ type, x: random.generate(), z: random.generate() });
 	}
 	return out;
 }
@@ -83,8 +85,7 @@ function createDrops(random: g.RandomGenerator, n: number): Drop[] {
 const inChute = (x: number, z: number): boolean => x < CHX && z < CHZ;
 
 interface Prize {
-	t: CapType;
-	rank: number;
+	t: PlushType;
 	x: number;
 	y: number; // 下のはしの高さ
 	z: number;
@@ -108,10 +109,10 @@ export function main(param: GameMainParameterObject): void {
 	const scene = new g.Scene({
 		game: g.game,
 		assetIds: [
-			"bg", "front_panel", "marker", "claw_head", "claw_arm", "p_black", "p_gold",
-			"cap_black_top", "cap_black_bottom", "cap_gold_top", "cap_gold_bottom", "kuji", "kuji_open", "sparkle", "logo",
+			"bg", "front_panel", "marker", "claw_head", "claw_arm", "sparkle", "logo",
+			"p_hiyoko", "p_buta", "p_usagi", "p_neko", "p_inu", "p_kuma", "p_panda", "p_gold",
 			"move", "down", "grab", "slip", "miss", "get", "jackpot", "refill", "beep", "go", "finish", "fever", "result", "bgm",
-			"coin", "thud", "jolt", "pop", "rip"
+			"thud", "jolt", "pop"
 		]
 	});
 	let time = 75;
@@ -137,8 +138,6 @@ export function main(param: GameMainParameterObject): void {
 		const fontYellow = makeFont("#ffe14a", "#5a0a3a");
 		const fontPink = makeFont("#ff6aa0", "#ffffff");
 		const fontBlue = makeFont("#6af0ff", "#1a1050");
-		const fontRank = makeFont("#e8205a", "#ffffff");
-		const fontInk = makeFont("#3a1a2a", "#ffffff");
 
 		type Align = "left" | "center" | "right";
 		const label = (text: string, font: g.Font, size: number, x: number, y: number, parent: g.E, align: Align = "left"): g.Label => {
@@ -163,14 +162,13 @@ export function main(param: GameMainParameterObject): void {
 
 		// ---- レイヤー ----
 		const bgLayer = new g.E({ scene });
-		const worldLayer = new g.E({ scene }); // カプセルとクレーン。奥にあるものから順に描く
+		const worldLayer = new g.E({ scene }); // ぬいぐるみとクレーン。奥にあるものから順に描く
 		const markerLayer = new g.E({ scene });
 		const frontLayer = new g.E({ scene });
 		const fxLayer = new g.E({ scene });
 		const hudLayer = new g.E({ scene });
-		const kujiLayer = new g.E({ scene });
 		const overLayer = new g.E({ scene });
-		[bgLayer, worldLayer, markerLayer, frontLayer, fxLayer, hudLayer, kujiLayer, overLayer].forEach((e) => scene.append(e));
+		[bgLayer, worldLayer, markerLayer, frontLayer, fxLayer, hudLayer, overLayer].forEach((e) => scene.append(e));
 		bgLayer.append(new g.Sprite({ scene, src: img("bg") }));
 		frontLayer.append(new g.Sprite({ scene, src: img("front_panel"), y: 650 }));
 
@@ -252,8 +250,10 @@ export function main(param: GameMainParameterObject): void {
 		let liftDone = 0;
 		let pressing = false;
 		let tryGot = 0; // この1回で取れた数
+		let hitStop = 0; // つかんだ瞬間に一瞬止める
+		let queued = false; // 戻っている間に押された
 		const prizes: Prize[] = [];
-		const stats = { tries: 0, got: 0, gold: 0, top: 0, bestStreak: 0, multi: 0, bestRank: 9 };
+		const stats = { tries: 0, got: 0, gold: 0, panda: 0, bestStreak: 0, multi: 0 };
 		const drops = createDrops(param.random, 1200);
 		let dropIdx = 0;
 
@@ -261,7 +261,6 @@ export function main(param: GameMainParameterObject): void {
 		const addScore = (v: number): void => {
 			score += Math.round(v);
 			g.game.vars.gameState.score = score; // 常に最新のスコアを入れておく
-			setText(scoreLabel, String(score));
 		};
 		const popup = (text: string, font: g.Font, size: number, x: number, y: number, dur = 0.9): void => {
 			const l = label(text, font, size, x, y, fxLayer, "center");
@@ -295,94 +294,38 @@ export function main(param: GameMainParameterObject): void {
 				}, () => c.destroy());
 			}
 		};
-		const updateMult = (): void => setText(multLabel, streak > 0 ? "れんぞく " + streak + " ×" + mult().toFixed(1) : "");
-
-		// ---- カプセルを開けて三角くじ ----
-		let opening = 0; // 開けている途中の数
-		let openCount = 0;
-		let nextOpenAt = 0; // 次のくじを開けられる時刻(重ならないように少しずらす)
-		const openCapsule = (p: Prize, bonus: number): void => {
-			opening++;
-			const delay = Math.max(0, nextOpenAt - elapsed);
-			nextOpenAt = elapsed + delay + 0.45;
-			scene.setTimeout(() => revealKuji(p, bonus), delay * 1000);
+		let shakeT = 0;
+		let shakeAmp = 0;
+		const shake = (dur: number, amp: number): void => {
+			shakeT = Math.max(shakeT, dur);
+			shakeAmp = Math.max(shakeT > 0 ? shakeAmp : 0, amp);
 		};
-		const revealKuji = (p: Prize, bonus: number): void => {
-			const rank = RANKS[p.rank];
-			const color = p.t.gold ? "gold" : "black";
-			// 続けて開けたくじは、上下にずらして並べる
-			const cx = 250, cy = 230 + (openCount++ % 3) * 150;
-			const box = new g.E({ scene, x: cx, y: cy });
-			kujiLayer.append(box);
-			// カプセルがパカッと開く
-			const capTop = new g.Sprite({ scene, src: img("cap_" + color + "_top"), anchorX: 0.5, anchorY: 1 });
-			const capBot = new g.Sprite({ scene, src: img("cap_" + color + "_bottom"), anchorX: 0.5, anchorY: 0 });
-			const kuji = new g.Sprite({ scene, src: img("kuji"), anchorX: 0.5, anchorY: 0.5 });
-			kuji.scaleX = kuji.scaleY = 0.3;
-			box.append(kuji);
-			box.append(capBot);
-			box.append(capTop);
-			se("pop");
-			animate(0.25, (q) => {
-				capTop.y = -q * 70;
-				capTop.angle = -q * 40;
-				capTop.x = -q * 50;
-				capBot.y = q * 70;
-				capBot.angle = q * 30;
-				capBot.x = q * 40;
-				capTop.opacity = capBot.opacity = 1 - q * 0.8;
-				kuji.scaleX = kuji.scaleY = 0.3 + 0.7 * q;
-				kuji.y = -q * 20;
-				[capTop, capBot, kuji].forEach((e) => e.modified());
-			}, () => {
-				capTop.destroy();
-				capBot.destroy();
-				// くじをペリッと開く
-				scene.setTimeout(() => {
-					se("rip");
-					const paper = new g.Sprite({ scene, src: img("kuji_open"), anchorX: 0.5, anchorY: 0.5, y: -20 });
-					paper.scaleX = 0.1;
-					box.append(paper);
-					const big = p.rank <= 1;
-					const rankLabel = label(rank.name, big ? fontYellow : fontRank, big ? 84 : 72, 0, -66, box, "center");
-					const v = Math.round(rank.pt * bonus);
-					const ptLabel = label("+" + v + "点", fontInk, 40, 0, 20, box, "center");
-					rankLabel.opacity = ptLabel.opacity = 0;
-					animate(0.15, (q) => {
-						kuji.scaleX = 1 - q;
-						kuji.modified();
-						paper.scaleX = 0.1 + 0.9 * q;
-						paper.modified();
-					}, () => {
-						kuji.destroy();
-						rankLabel.opacity = ptLabel.opacity = 1;
-						rankLabel.modified();
-						ptLabel.modified();
-						addScore(v);
-						opening--;
-						stats.bestRank = Math.min(stats.bestRank, p.rank);
-						if (p.rank <= 1) stats.top++;
-						if (big) {
-							se("jackpot");
-							sparkles(cx, cy, 18, kujiLayer);
-							bigText(rank.name + "!! +" + v, fontYellow, 100, 1.4, 300);
-						} else {
-							se(p.rank <= 3 ? "get" : "coin");
-						}
-						animate(0.7, (q) => {
-							box.opacity = q < 0.6 ? 1 : 1 - (q - 0.6) / 0.4;
-							box.y = cy - q * 30;
-							box.modified();
-						}, () => box.destroy());
-					});
-				}, 60);
+		const updateShake = (): void => {
+			const shaking = shakeT > 0;
+			shakeT = Math.max(0, shakeT - dt);
+			const dx = shaking ? (cosmeticRandom.generate() - 0.5) * 2 * shakeAmp : 0;
+			const dy = shaking ? (cosmeticRandom.generate() - 0.5) * 2 * shakeAmp : 0;
+			[bgLayer, worldLayer, markerLayer, frontLayer].forEach((e) => {
+				e.x = dx;
+				e.y = dy;
+				e.modified();
 			});
 		};
+		// 表示の点数は、本当の点数に向かってカウントアップする
+		let shownScore = 0;
+		const updateScoreLabel = (): void => {
+			if (shownScore === score) return;
+			shownScore = Math.min(score, shownScore + Math.max(7, Math.ceil((score - shownScore) * 0.18)));
+			setText(scoreLabel, String(shownScore));
+			scoreLabel.scaleX = scoreLabel.scaleY = 1.15;
+			scoreLabel.modified();
+		};
+		const updateMult = (): void => setText(multLabel, streak > 0 ? "れんぞく " + streak + " ×" + mult().toFixed(1) : "");
 
-		// ---- カプセルの山 ----
+		// ---- ぬいぐるみの山 ----
 		const top = (p: Prize): number => p.y + p.t.h;
 		const dist = (ax: number, az: number, bx: number, bz: number): number => Math.sqrt((ax - bx) * (ax - bx) + (az - bz) * (az - bz));
-		// 位置 (x, z) の半径 r のものが、高さ y から下に落ちたときに止まる高さと、乗っているカプセル
+		// 位置 (x, z) の半径 r のものが、高さ y から下に落ちたときに止まる高さと、乗っているぬいぐるみ
 		const restOf = (self: Prize | null, r: number, x: number, y: number, z: number): { y: number; under: Prize[] } => {
 			let ry = 0;
 			let under: Prize[] = [];
@@ -404,13 +347,14 @@ export function main(param: GameMainParameterObject): void {
 			return { y: ry, under };
 		};
 		const makePrize = (d: Drop, x: number, y: number, z: number): Prize => {
-			const t = d.gold ? GOLD : BLACK;
+			const t = TYPES[d.type];
 			const sprite = new g.Sprite({ scene, src: img(t.id), anchorX: 0.5, anchorY: 0.5 });
 			worldLayer.append(sprite);
-			const dot = new g.FilledRect({ scene, cssColor: t.color, width: 9, height: 9, anchorX: 0.5, anchorY: 0.5 });
+			const size = Math.max(6, t.r * MM_S * 1.6);
+			const dot = new g.FilledRect({ scene, cssColor: t.color, width: size, height: size, anchorX: 0.5, anchorY: 0.5 });
 			dotLayer.append(dot);
 			const p: Prize = {
-				t, rank: d.rank, x, y, z, vx: 0, vy: 0, vz: 0, ang: 0, spin: 0, squash: 0, state: "pile",
+				t, x, y, z, vx: 0, vy: 0, vz: 0, ang: 0, spin: 0, squash: 0, state: "pile",
 				sprite, dot, off: 0, offX: 0, offZ: 0, slipAt: 2, weak: false
 			};
 			prizes.push(p);
@@ -419,15 +363,16 @@ export function main(param: GameMainParameterObject): void {
 		const pileCount = (): number => prizes.filter((p) => p.state === "pile").length;
 		// 置く場所を、とりだし口の外で、山が高すぎない所から選ぶ
 		const toCenter = (u: number): number => 0.5 + (u < 0.5 ? -1 : 1) * 2 * (u - 0.5) * (u - 0.5);
-		const placeOf = (rx0: number, rz0: number): { x: number; z: number } => {
-			const r = BLACK.r;
+		const placeOf = (type: number, rx0: number, rz0: number): { x: number; z: number } => {
+			const t = TYPES[type];
+			const r = t.r;
 			let best = { x: 0, z: 300 };
 			let bestTop = 99999;
 			for (let k = 0; k < 8; k++) {
 				const x = XL + r + toCenter((rx0 + k * 0.381) % 1) * (XR - XL - r * 2);
 				const z = r + toCenter((rz0 + k * 0.618) % 1) * (ZB - r * 2);
 				if (x - r < CHX + 10 && z - r < CHZ + 10) continue;
-				const restTop = restOf(null, r, x, 99999, z).y + BLACK.h;
+				const restTop = restOf(null, r, x, 99999, z).y + t.h;
 				if (restTop <= PILE_LIMIT) return { x, z };
 				if (restTop < bestTop) {
 					bestTop = restTop;
@@ -437,9 +382,9 @@ export function main(param: GameMainParameterObject): void {
 			return best;
 		};
 		// 最初の山は、上から積んだ形をすぐ作る
-		for (let i = 0; i < START_CAPSULES; i++) {
+		for (let i = 0; i < START_PLUSH; i++) {
 			const d = drops[dropIdx++];
-			const at = placeOf(d.x, d.z);
+			const at = placeOf(d.type, d.x, d.z);
 			const p = makePrize(d, at.x, 99999, at.z);
 			p.y = restOf(p, p.t.r, p.x, p.y, p.z).y;
 		}
@@ -448,7 +393,7 @@ export function main(param: GameMainParameterObject): void {
 		const refill = (n: number): void => {
 			refillQueue += n;
 			se("refill");
-			bigText("カプセル 補充!", fontBlue, 64, 0.9, 250);
+			bigText("ぬいぐるみ 補充!", fontBlue, 64, 0.9, 250);
 		};
 
 		const collect = (p: Prize): void => {
@@ -457,17 +402,25 @@ export function main(param: GameMainParameterObject): void {
 			p.dot.destroy();
 			tryGot++;
 			stats.got++;
-			if (p.t.gold) stats.gold++;
+			if (p.t === TYPES[GOLD]) stats.gold++;
+			if (p.t === TYPES[PANDA]) stats.panda++;
 			// 1回でたくさん取るほど1こあたりの点が上がる
-			const bonus = (1 + (tryGot - 1) * 0.5) * mult() * (fever ? 2 : 1);
-			se("get");
-			sparkles(screenX((XL + CHX) / 2, CHZ / 2), 600, p.t.gold ? 12 : 5);
-			if (tryGot >= 2) popup(tryGot + "こ目! ×" + (1 + (tryGot - 1) * 0.5).toFixed(1), fontYellow, 40, 250, 470, 1.0);
-			openCapsule(p, bonus);
+			const multi = 1 + (tryGot - 1) * 0.5;
+			const v = Math.round(p.t.value * multi * mult() * (fever ? 2 : 1));
+			addScore(v);
+			const cx = screenX((XL + CHX) / 2, CHZ / 2);
+			se(p.t.big ? "jackpot" : "get");
+			se("pop");
+			sparkles(cx, 600, p.t.big ? 18 : 7);
+			shake(p.t.big ? 0.4 : 0.18, p.t.big ? 14 : 7);
+			const text = (tryGot >= 2 ? tryGot + "こ目! " : "") + p.t.name + " +" + v;
+			const font = p.t.big || tryGot >= 2 ? fontYellow : fontWhite;
+			popup(text, font, p.t.big ? 56 : 46, cx + 110, 480 - Math.min(tryGot - 1, 4) * 54, 1.1);
+			if (p.t.big) bigText(p.t.name + "!!", fontYellow, 110, 1.2, 300);
 		};
 
 		const settle = (): void => {
-			// 下にあるカプセルから順に、支えがなければ落とす
+			// 下にあるぬいぐるみから順に、支えがなければ落とす
 			const pile = prizes.filter((p) => p.state === "pile" || p.state === "chute");
 			pile.sort((a, b) => a.y - b.y);
 			for (let i = 0; i < pile.length; i++) {
@@ -536,7 +489,7 @@ export function main(param: GameMainParameterObject): void {
 					p.x += p.vx * dt;
 					p.z += p.vz * dt;
 					p.ang += (0 - p.ang) * Math.min(1, 6 * dt);
-					// 真ん中が下のカプセルからはみ出していたら、ころがり落ちる
+					// 真ん中が下のぬいぐるみからはみ出していたら、ころがり落ちる
 					if (rest.under.length === 1) {
 						const q = rest.under[0];
 						const d = dist(p.x, p.z, q.x, q.z);
@@ -552,7 +505,7 @@ export function main(param: GameMainParameterObject): void {
 			}
 		};
 
-		// カプセルとクレーンの見た目を、3Dの位置から画面に合わせる
+		// ぬいぐるみとクレーンの見た目を、3Dの位置から画面に合わせる
 		const aiming = (): boolean => claw === "ready" || claw === "moveX" || claw === "stopX" || claw === "wait" || claw === "moveZ" ||
 			claw === "stopZ" || claw === "pause";
 		const swayAngle = (): number => Math.atan(swayX / SWAY_LEN) * 180 / Math.PI;
@@ -637,7 +590,7 @@ export function main(param: GameMainParameterObject): void {
 			clawT = 0;
 			se("down");
 			setText(hintLabel, "");
-			// アームの真下で、いちばん高いカプセルの上まで下りる
+			// アームの真下で、いちばん高いぬいぐるみの上まで下りる
 			let target = 0;
 			for (let i = 0; i < prizes.length; i++) {
 				const q = prizes[i];
@@ -647,7 +600,7 @@ export function main(param: GameMainParameterObject): void {
 			downTo = Math.max(4, target - 34);
 		};
 		const doGrab = (): void => {
-			// アームの先がとどくカプセルを、近い順につかむ
+			// アームの先がとどくぬいぐるみを、近い順につかむ
 			const tipTop = downTo + 34;
 			const cand: Prize[] = [];
 			for (let i = 0; i < prizes.length; i++) {
@@ -669,6 +622,24 @@ export function main(param: GameMainParameterObject): void {
 				p.slipAt = grip >= p.t.need ? 2 : 0.05 + 0.6 * grip / p.t.need;
 				p.weak = grip >= p.t.need && grip < p.t.need + 0.08;
 			});
+			// アームが山に突っ込んだ勢いで、まわりのぬいぐるみがはじかれて転がる
+			let pushed = 0;
+			for (let i = 0; i < prizes.length; i++) {
+				const p = prizes[i];
+				if (p.state !== "pile") continue;
+				const d = dist(p.x, p.z, tipX, tipZ);
+				if (d > p.t.r + 90 || Math.abs(top(p) - tipTop) > 110) continue;
+				const k = (1 - d / (p.t.r + 90)) * 260 / Math.max(1, d);
+				// とりだし口の方へは、少し強めに転がる
+				const toChute = p.x < tipX && p.z < tipZ + 60 ? 1.4 : 1;
+				p.vx += (p.x - tipX) * k * toChute;
+				p.vz += (p.z - tipZ) * k * toChute;
+				p.vy = -160 - 140 * (1 - d / (p.t.r + 90));
+				p.spin = (p.x > tipX ? 1 : -1) * 300;
+				pushed++;
+			}
+			if (pushed > 0) shake(0.12, 4);
+			hitStop = grabbed.length > 0 ? 0.09 : 0;
 			openTarget = grabbed.length > 0 ? 0.3 : 0;
 			se(grabbed.length > 0 ? "grab" : "miss");
 			if (grabbed.length >= 2) popup(grabbed.length + "こ つかんだ!", fontYellow, 44, clawE.x, clawE.y - 160, 0.9);
@@ -706,8 +677,14 @@ export function main(param: GameMainParameterObject): void {
 			}
 			updateMult();
 			tryGot = 0;
-			if (pileCount() < REFILL_BELOW && refillQueue === 0) refill(30);
+			if (pileCount() < REFILL_BELOW && refillQueue === 0) refill(24);
 			claw = "ready";
+			if (queued && pressing) {
+				claw = "moveX";
+				clawT = 0;
+				se("move");
+			}
+			queued = false;
 			showHint();
 		};
 		// 目標の速さに向けて、加速・ブレーキをかける
@@ -820,7 +797,7 @@ export function main(param: GameMainParameterObject): void {
 				case "drop":
 					openTarget = 1;
 					if (clawT >= 0.08) releaseHeld(() => true, false);
-					// 落ちたカプセルが全部とりだし口に入るのを待つ
+					// 落ちたぬいぐるみが全部とりだし口に入るのを待つ
 					if (clawT >= 0.3 && !prizes.some((p) => p.state === "held")) endTry();
 					break;
 			}
@@ -847,7 +824,7 @@ export function main(param: GameMainParameterObject): void {
 			tipX = nx;
 			tipZ = nz;
 			open += (openTarget - open) * Math.min(1, (claw === "close" ? 7 : 9) * dt);
-			// つかんでいるカプセルはアームといっしょにゆれる
+			// つかんでいるぬいぐるみはアームといっしょにゆれる
 			for (let i = 0; i < prizes.length; i++) {
 				const p = prizes[i];
 				if (p.state !== "held") continue;
@@ -866,10 +843,13 @@ export function main(param: GameMainParameterObject): void {
 				clawT = 0;
 				se("move");
 				setText(hintLabel, "");
+			} else if (claw === "jolt" || claw === "back" || claw === "settle" || claw === "drop") {
+				queued = true;
 			}
 		});
 		scene.onPointUpCapture.add(() => {
 			pressing = false;
+			queued = false;
 		});
 
 		// ---- イントロ ----
@@ -879,7 +859,7 @@ export function main(param: GameMainParameterObject): void {
 		const logo = new g.Sprite({ scene, src: img("logo"), x: 640, y: 92, anchorX: 0.5, anchorY: 0.5 });
 		logo.scaleX = logo.scaleY = 0.68;
 		introLayer.append(logo);
-		const introLines = ["① 長押しで 右へ動く!", "② 長押しで 奥へ動く!", "カプセルの中は 三角くじ!"];
+		const introLines = ["① 長押しで 右へ動く!", "② 長押しで 奥へ動く!", "でっかいのは 高得点!"];
 		const introFonts = [fontWhite, fontBlue, fontYellow];
 		introLines.forEach((t, i) => label(t, introFonts[i], 76, 640, 196 + i * 112, introLayer, "center"));
 		const countLabel = label("", fontYellow, 96, 640, 650, introLayer, "center");
@@ -895,18 +875,13 @@ export function main(param: GameMainParameterObject): void {
 			scene.setTimeout(showResult, 1500);
 		};
 		const showResult = (): void => {
-			// 開けている途中のくじがあれば、全部開いてから結果を出す
-			if (opening > 0) {
-				scene.setTimeout(showResult, 300);
-				return;
-			}
 			se("result");
 			const panel = new g.E({ scene, x: 640, y: 380, anchorX: 0.5, anchorY: 0.5, width: 760, height: 500 });
 			overLayer.append(panel);
 			panel.append(new g.FilledRect({ scene, cssColor: "#5a0a3a", x: -6, y: -6, width: 772, height: 512 }));
 			panel.append(new g.FilledRect({ scene, cssColor: "#fff6fa", width: 760, height: 500 }));
 			panel.append(new g.FilledRect({ scene, cssColor: "#e8407a", width: 760, height: 80 }));
-			label("くじの結果", fontWhite, 48, 380, 12, panel, "center");
+			label("取ったぬいぐるみ", fontWhite, 48, 380, 12, panel, "center");
 			label(score + " 点", fontPink, 96, 380, 96, panel, "center");
 			const title = stats.got >= 35 ? "クレーンの神"
 				: stats.got >= 25 ? "クレーン名人"
@@ -914,8 +889,8 @@ export function main(param: GameMainParameterObject): void {
 						: stats.got >= 8 ? "常連さん" : "ビギナー";
 			label("称号: " + title, fontYellow, 44, 380, 206, panel, "center");
 			[
-				"取ったカプセル " + stats.got + "こ (金 " + stats.gold + "こ)",
-				"いちばん良いくじ " + (stats.bestRank < RANKS.length ? RANKS[stats.bestRank].name : "なし") + "  1等以上 " + stats.top + "回",
+				"取ったぬいぐるみ " + stats.got + "こ (" + stats.tries + "回中)",
+				"でかパンダ " + stats.panda + "こ  金のくま " + stats.gold + "こ",
 				"最大れんぞく " + stats.bestStreak + "  まとめ取り " + stats.multi + "回"
 			].forEach((t, i) => label(t, fontWhite, 32, 380, 286 + i * 56, panel, "center"));
 			animate(0.35, (p) => {
@@ -961,12 +936,12 @@ export function main(param: GameMainParameterObject): void {
 				render();
 				return;
 			}
-			// カプセルの補充は上から降ってくる
+			// ぬいぐるみの補充は上から降ってくる
 			if (refillQueue > 0) {
 				refillTimer -= dt;
 				if (refillTimer <= 0) {
 					const d = drops[dropIdx++ % drops.length];
-					const at = placeOf(d.x, d.z);
+					const at = placeOf(d.type, d.x, d.z);
 					const p = makePrize(d, at.x, 520, at.z);
 					p.spin = (cosmeticRandom.generate() - 0.5) * 400;
 					refillQueue--;
@@ -981,17 +956,22 @@ export function main(param: GameMainParameterObject): void {
 					se("fever");
 					bigText("ラスト10秒! 得点2倍!!", fontYellow, 70, 1.3, 250);
 					setText(feverLabel, "得点×2");
-					refill(30);
+					refill(24);
 				}
 				if (fever) {
 					timeLabel.opacity = Math.floor(playLeft * 4) % 2 === 0 ? 1 : 0.55;
 					timeLabel.modified();
 				}
 				if (playLeft <= 0) finishPlay();
+				else if (hitStop > 0) hitStop -= dt;
 				else updateClaw();
 			}
-			settle();
+			if (hitStop <= 0) settle();
 			render();
+			updateShake();
+			updateScoreLabel();
+			scoreLabel.scaleX = scoreLabel.scaleY = 1 + (scoreLabel.scaleX - 1) * 0.8;
+			scoreLabel.modified();
 		});
 	});
 	g.game.pushScene(scene);
