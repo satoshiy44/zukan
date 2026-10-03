@@ -9,7 +9,6 @@ const MAX_LV = 9;
 const WILD = 99; // なんでも(虹色の星)
 const INTRO_SEC = 4;
 const RESULT_SEC = 10;
-const FEVER_SEC = 15; // 残りこの秒数で得点2倍
 const MERGE_SEC = 0.22; // 合体の動きの長さ
 // レベル L のぬいぐるみを作ったときの点(3つ合体したとき)
 const VALUE = [0, 0, 20, 60, 180, 500, 1500, 4000, 10000, 25000];
@@ -37,7 +36,7 @@ export function main(param: GameMainParameterObject): void {
 		assetIds: [
 			"bg", "cell", "cell_hi", "lv1", "lv2", "lv3", "lv4", "lv5", "lv6", "lv7", "lv8", "lv9", "wild", "sparkle", "logo",
 			"place", "ng", "merge1", "merge2", "merge3", "merge4", "merge5", "jackpot", "swap", "full",
-			"beep", "go", "finish", "fever", "result", "bgm"
+			"beep", "go", "finish", "result", "bgm"
 		]
 	});
 	let time = 90;
@@ -107,7 +106,6 @@ export function main(param: GameMainParameterObject): void {
 		// ---- 右のパネル ----
 		const scoreLabel = label("0", fontPink, 72, 982, 70, uiLayer, "center");
 		const timeLabel = label("", fontInk, 40, 982, 150, uiLayer, "center");
-		const feverLabel = label("", fontYellow, 30, 1230, 158, uiLayer, "right");
 		label("いまの", fontInk, 30, 820, 206, uiLayer, "center");
 		label("つぎ", fontInk, 30, 990, 206, uiLayer, "center");
 		label("ほかん", fontInk, 30, 1150, 206, uiLayer, "center");
@@ -140,7 +138,6 @@ export function main(param: GameMainParameterObject): void {
 		const playTime = Math.max(20, time - INTRO_SEC - RESULT_SEC);
 		let playLeft = playTime;
 		let score = 0;
-		let fever = false;
 		let busy = false; // 合体のアニメーション中は置けない
 		const grid: number[][] = [];
 		const sprites: (g.Sprite | null)[][] = [];
@@ -295,7 +292,6 @@ export function main(param: GameMainParameterObject): void {
 			se("merge" + k);
 			const sizeBonus = group.length >= 4 ? 1 : group.length / 3; // 4つ以上はレベルが2つ上がるので、点の倍率はつけない
 			const chainBonus = 1 + (chain - 1) * 0.5;
-			const feverBonus = fever ? 2 : 1;
 			// 合体: まわりのぬいぐるみが、置いたマスに吸いこまれる
 			group.forEach((p) => {
 				const s = sprites[p[0]][p[1]];
@@ -315,7 +311,7 @@ export function main(param: GameMainParameterObject): void {
 				if (lv >= MAX_LV) {
 					// 金のくまを3つ: まわり3×3をまとめて吹き飛ばす大爆発
 					stats.blasts++;
-					const v = BLAST_SCORE * sizeBonus * chainBonus * feverBonus;
+					const v = BLAST_SCORE * sizeBonus * chainBonus;
 					addScore(v);
 					se("jackpot");
 					for (let rr = r - 1; rr <= r + 1; rr++) {
@@ -333,7 +329,7 @@ export function main(param: GameMainParameterObject): void {
 				// 3つなら1つ上、4つ以上なら2つ上にしんか
 				const nlv = Math.min(MAX_LV, lv + (group.length >= 4 ? 2 : 1));
 				setCell(r, c, nlv, true);
-				const v = VALUE[nlv] * sizeBonus * chainBonus * feverBonus;
+				const v = VALUE[nlv] * sizeBonus * chainBonus;
 				addScore(v);
 				sparkles(cellX(c), cellY(r), 6 + chain * 3);
 				popup("+" + Math.round(v), chain >= 2 ? fontYellow : fontWhite, 34 + Math.min(chain, 4) * 6, cellX(c), cellY(r) - 50);
@@ -523,16 +519,6 @@ export function main(param: GameMainParameterObject): void {
 			if (phase !== "play") return;
 			playLeft -= dt;
 			setText(timeLabel, "のこり " + Math.max(0, Math.ceil(playLeft)) + "秒");
-			if (!fever && playLeft <= FEVER_SEC) {
-				fever = true;
-				se("fever");
-				bigText("ラスト15秒! 得点2倍!!", fontYellow, 64, 1.3);
-				setText(feverLabel, "得点×2");
-			}
-			if (fever) {
-				timeLabel.opacity = Math.floor(playLeft * 4) % 2 === 0 ? 1 : 0.55;
-				timeLabel.modified();
-			}
 			if (playLeft <= 0) finishPlay();
 		});
 	});

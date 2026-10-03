@@ -155,7 +155,6 @@ save("full", mix(sweep(0.5, 400, 120, "saw", 0.3), lowpass(noise(0.3, 0.6, 1), 0
 save("beep", tone(note(81), 0.12, "sq", 0.3))
 save("go", mix(*[bell(note(n), 0.3, 0.3) for n in (72, 76, 79, 84)], offsets=[0, 0.08, 0.16, 0.24]))
 save("finish", mix(*[bell(note(n), 0.5, 0.3) for n in (84, 79, 76, 72)], offsets=[0, 0.12, 0.24, 0.36]))
-save("fever", mix(*[chip(note(72 + (i % 4) * 4), 0.08, 0.22) for i in range(12)], offsets=[i * 0.06 for i in range(12)]))
 save("result", mix(*[bell(note(n), 0.5, 0.3) for n in (72, 76, 79, 84, 88)], offsets=[i * 0.1 for i in range(5)]))
 
 # ---- BGM: ゆったりしたマリンバ風(104BPM, 8小節) ----

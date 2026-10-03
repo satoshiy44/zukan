@@ -29,18 +29,6 @@
 			},
 			"loop": true
 		},
-		"fever": {
-			"type": "audio",
-			"path": "audio/fever",
-			"systemId": "sound",
-			"duration": 740,
-			"hint": {
-				"extensions": [
-					".aac",
-					".ogg"
-				]
-			}
-		},
 		"finish": {
 			"type": "audio",
 			"path": "audio/finish",
