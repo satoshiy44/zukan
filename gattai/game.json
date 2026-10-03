@@ -161,18 +161,6 @@
 				]
 			}
 		},
-		"result": {
-			"type": "audio",
-			"path": "audio/result",
-			"systemId": "sound",
-			"duration": 900,
-			"hint": {
-				"extensions": [
-					".aac",
-					".ogg"
-				]
-			}
-		},
 		"swap": {
 			"type": "audio",
 			"path": "audio/swap",

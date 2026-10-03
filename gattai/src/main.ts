@@ -36,7 +36,7 @@ export function main(param: GameMainParameterObject): void {
 		assetIds: [
 			"bg", "cell", "cell_hi", "lv1", "lv2", "lv3", "lv4", "lv5", "lv6", "lv7", "lv8", "lv9", "wild", "sparkle", "logo",
 			"place", "ng", "merge1", "merge2", "merge3", "merge4", "merge5", "jackpot", "swap", "full",
-			"beep", "go", "finish", "result", "bgm"
+			"beep", "go", "finish", "bgm"
 		]
 	});
 	let time = 90;
@@ -450,38 +450,10 @@ export function main(param: GameMainParameterObject): void {
 		const finishPlay = (): void => {
 			phase = "result";
 			se("finish");
+			// 結果はニコ生のランキングで出るので、ゲームの中では出さない
 			bigText("しゅうりょう!", fontYellow, 110, 1.4, 640, 340);
-			scene.setTimeout(showResult, 1500);
-		};
-		const showResult = (): void => {
-			se("result");
 			setText(scoreLabel, String(score));
-			const panel = new g.E({ scene, x: 640, y: 380, anchorX: 0.5, anchorY: 0.5, width: 760, height: 500 });
-			overLayer.append(panel);
-			panel.append(new g.FilledRect({ scene, cssColor: "#5a2a7a", x: -6, y: -6, width: 772, height: 512 }));
-			panel.append(new g.FilledRect({ scene, cssColor: "#fff6fa", width: 760, height: 500 }));
-			panel.append(new g.FilledRect({ scene, cssColor: "#ff6aa0", width: 760, height: 80 }));
-			label("けっか", fontWhite, 48, 380, 12, panel, "center");
-			label(score + " 点", fontPink, 96, 380, 96, panel, "center");
-			const title = stats.blasts > 0 ? "合体マスター"
-				: stats.bestLv >= 8 ? "合体の達人"
-					: stats.bestLv >= 7 ? "合体じょうず"
-						: stats.bestLv >= 5 ? "ぬいぐるみ好き" : "かけだし";
-			label("称号: " + title, fontYellow, 44, 380, 206, panel, "center");
-			const best = new g.Sprite({ scene, src: img("lv" + stats.bestLv), x: 120, y: 330, anchorX: 0.5, anchorY: 0.5 });
-			best.scaleX = best.scaleY = 1.3;
-			panel.append(best);
-			[
-				"いちばん: " + NAMES[stats.bestLv],
-				"合体 " + stats.merges + "回  さいだい " + stats.bestChain + "れんさ",
-				"だいばくはつ " + stats.blasts + "回"
-			].forEach((t, i) => label(t, fontInk, 34, 440, 286 + i * 56, panel, "center"));
-			animate(0.35, (p) => {
-				panel.scaleX = panel.scaleY = 0.6 + 0.4 * ease(p);
-				panel.modified();
-			});
 		};
-
 		const bgm = scene.asset.getAudioById("bgm");
 
 		// ---- メインループ ----
