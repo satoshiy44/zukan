@@ -7,7 +7,8 @@ const path = require("path");
 const ROOT = path.join(__dirname, "..");
 const OUTPUTS = {
 	oimo: [path.join(ROOT, "dist", "oimo-chicken_icon.png"), path.join(ROOT, "game", "submission", "icon.png")],
-	puzzle: [path.join(ROOT, "dist", "yakiimo-puzzle_icon.png"), path.join(ROOT, "puzzle", "submission", "icon.png")]
+	puzzle: [path.join(ROOT, "dist", "yakiimo-puzzle_icon.png"), path.join(ROOT, "puzzle", "submission", "icon.png")],
+	tamaire: [path.join(ROOT, "dist", "korokoro-tamaire_icon.png"), path.join(ROOT, "tamaire", "submission", "icon.png")]
 };
 
 function draw() {
@@ -97,6 +98,28 @@ function draw() {
 		flame(S / 2, 90, 220, "#ffd84a", "#ff9a1a");
 		bigText(ctx, "やき", S / 2, 92, 132, "#ffffff", "#e0602a", "#2a0c04");
 		bigText(ctx, "いも", S / 2, 238, 132, "#ffe14a", "#e0602a", "#2a0c04");
+	});
+	// ころころ玉入れ
+	make("tamaire", (ctx) => {
+		// 紅白のしま
+		for (let i = 0; i < 8; i++) {
+			ctx.fillStyle = i % 2 === 0 ? "#e53935" : "#ffffff";
+			ctx.fillRect(i * 40, 0, 40, S);
+		}
+		// まん中に大きな青い玉
+		const g = ctx.createRadialGradient(140, 140, 10, S / 2, S / 2, 150);
+		g.addColorStop(0, "#9fd3ff");
+		g.addColorStop(0.6, "#1e88e5");
+		g.addColorStop(1, "#0d47a1");
+		ctx.beginPath();
+		ctx.arc(S / 2, S / 2, 140, 0, Math.PI * 2);
+		ctx.fillStyle = g;
+		ctx.fill();
+		ctx.lineWidth = 10;
+		ctx.strokeStyle = "#0a2f6b";
+		ctx.stroke();
+		bigText(ctx, "たま", S / 2, 92, 132, "#ffffff", "#1e88e5", "#0a2f6b");
+		bigText(ctx, "いれ", S / 2, 238, 132, "#ffe14a", "#e53935", "#5a0000");
 	});
 	return out;
 }
