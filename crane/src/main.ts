@@ -114,7 +114,7 @@ export function main(param: GameMainParameterObject): void {
 			"coin", "thud", "jolt", "pop", "rip"
 		]
 	});
-	let time = 150;
+	let time = 75;
 	if (param.sessionParameter.totalTimeLimit) {
 		time = param.sessionParameter.totalTimeLimit;
 	}
@@ -908,10 +908,10 @@ export function main(param: GameMainParameterObject): void {
 			panel.append(new g.FilledRect({ scene, cssColor: "#e8407a", width: 760, height: 80 }));
 			label("くじの結果", fontWhite, 48, 380, 12, panel, "center");
 			label(score + " 点", fontPink, 96, 380, 96, panel, "center");
-			const title = stats.got >= 70 ? "クレーンの神"
-				: stats.got >= 50 ? "クレーン名人"
-					: stats.got >= 30 ? "上級者"
-						: stats.got >= 15 ? "常連さん" : "ビギナー";
+			const title = stats.got >= 35 ? "クレーンの神"
+				: stats.got >= 25 ? "クレーン名人"
+					: stats.got >= 15 ? "上級者"
+						: stats.got >= 8 ? "常連さん" : "ビギナー";
 			label("称号: " + title, fontYellow, 44, 380, 206, panel, "center");
 			[
 				"取ったカプセル " + stats.got + "こ (金 " + stats.gold + "こ)",
