@@ -478,23 +478,51 @@ function drawAll() {
 
 		// ---- タイトルロゴ ----
 		make("logo", 1160, 250, (ctx, w) => {
-			text(ctx, "何回やってもタダ！", w / 2, 50, 56, "#ffffff", "#7a0a3a", 14);
-			const g = ctx.createLinearGradient(0, 100, 0, 220);
-			g.addColorStop(0, "#fff8a0");
-			g.addColorStop(0.5, "#ffd23a");
-			g.addColorStop(1, "#ff8a1a");
-			ctx.font = "bold 128px IPAGothic";
-			ctx.textAlign = "center";
-			ctx.textBaseline = "middle";
-			ctx.lineJoin = "round";
-			ctx.lineWidth = 30;
-			ctx.strokeStyle = "#ffffff";
-			ctx.strokeText("クレーン取り放題", w / 2, 160);
-			ctx.lineWidth = 14;
-			ctx.strokeStyle = "#c2245e";
-			ctx.strokeText("クレーン取り放題", w / 2, 160);
-			ctx.fillStyle = g;
-			ctx.fillText("クレーン取り放題", w / 2, 160);
+			// 上の帯「何回やってもタダ！」
+			roundRect(ctx, w / 2 - 230, 6, 460, 62, 31, "#ff4a8a", "#ffffff", 6);
+			text(ctx, "何回やってもタダ！", w / 2, 38, 40, "#ffffff", "#7a0a3a", 8);
+			// 1文字ずつ、ポップに傾けて色を変える
+			const chars = "クレーン取り放題";
+			const colors = ["#ff6aa0", "#ffb43a", "#5ad0ff", "#7ad04a"];
+			for (let i = 0; i < chars.length; i++) {
+				const x = 150 + i * 123, y = 166 + (i % 2 === 0 ? 8 : -8);
+				ctx.save();
+				ctx.translate(x, y);
+				ctx.rotate(i % 2 === 0 ? -0.07 : 0.07);
+				ctx.font = "bold " + (i < 4 ? 118 : 128) + "px IPAGothic";
+				ctx.textAlign = "center";
+				ctx.textBaseline = "middle";
+				ctx.lineJoin = "round";
+				ctx.lineWidth = 30;
+				ctx.strokeStyle = "#ffffff";
+				ctx.strokeText(chars[i], 0, 0);
+				ctx.lineWidth = 13;
+				ctx.strokeStyle = "#5a0a3a";
+				ctx.strokeText(chars[i], 0, 0);
+				let fill;
+				if (i < 4) {
+					fill = colors[i];
+				} else {
+					fill = ctx.createLinearGradient(0, -60, 0, 60);
+					fill.addColorStop(0, "#fff8a0");
+					fill.addColorStop(0.5, "#ffd23a");
+					fill.addColorStop(1, "#ff8a1a");
+				}
+				ctx.fillStyle = fill;
+				ctx.fillText(chars[i], 0, 0);
+				ctx.restore();
+			}
+			// 両はしからぬいぐるみがのぞく
+			ctx.save();
+			ctx.translate(-6, 120);
+			ctx.scale(0.62, 0.62);
+			drawPanda(ctx);
+			ctx.restore();
+			ctx.save();
+			ctx.translate(1068, 128);
+			ctx.scale(0.58, 0.58);
+			drawUnicorn(ctx);
+			ctx.restore();
 		});
 		void rnd;
 		return out;

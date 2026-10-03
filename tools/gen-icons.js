@@ -9,8 +9,7 @@ const OUTPUTS = {
 	oimo: [path.join(ROOT, "dist", "oimo-chicken_icon.png"), path.join(ROOT, "game", "submission", "icon.png")],
 	puzzle: [path.join(ROOT, "dist", "yakiimo-puzzle_icon.png"), path.join(ROOT, "puzzle", "submission", "icon.png")],
 	tamaire: [path.join(ROOT, "dist", "korokoro-tamaire_icon.png"), path.join(ROOT, "tamaire", "submission", "icon.png")],
-	kunai: [path.join(ROOT, "dist", "kunai-shugyo_icon.png"), path.join(ROOT, "kunai", "submission", "icon.png")],
-	crane: [path.join(ROOT, "dist", "crane-torihoudai_icon.png"), path.join(ROOT, "crane", "submission", "icon.png")]
+	kunai: [path.join(ROOT, "dist", "kunai-shugyo_icon.png"), path.join(ROOT, "kunai", "submission", "icon.png")]
 };
 
 function draw() {
@@ -147,49 +146,6 @@ function draw() {
 		}
 		bigText(ctx, "クナイ", S / 2, 98, 104, "#ffffff", "#c62828", "#111111");
 		bigText(ctx, "修行", S / 2, 236, 132, "#ffe14a", "#c62828", "#111111");
-	});
-	// クレーン取り放題
-	make("crane", (ctx) => {
-		const g = ctx.createLinearGradient(0, 0, 0, S);
-		g.addColorStop(0, "#5a3ab0");
-		g.addColorStop(1, "#e8407a");
-		ctx.fillStyle = g;
-		ctx.fillRect(0, 0, S, S);
-		// クレーンのアーム
-		ctx.lineCap = "round";
-		ctx.strokeStyle = "#2a2f38";
-		ctx.lineWidth = 10;
-		ctx.beginPath(); ctx.moveTo(S / 2, 0); ctx.lineTo(S / 2, 150); ctx.stroke();
-		ctx.fillStyle = "#e0e5ec";
-		ctx.lineWidth = 7;
-		ctx.beginPath(); ctx.roundRect(S / 2 - 70, 120, 140, 70, 18); ctx.fill(); ctx.stroke();
-		const arm = (dir) => {
-			ctx.beginPath();
-			ctx.moveTo(S / 2 + dir * 40, 185);
-			ctx.quadraticCurveTo(S / 2 + dir * 120, 250, S / 2 + dir * 70, 310);
-			ctx.stroke();
-		};
-		// 金のくまのぬいぐるみ
-		const cg = ctx.createLinearGradient(S / 2 - 60, 200, S / 2 + 60, 310);
-		cg.addColorStop(0, "#fff27a");
-		cg.addColorStop(0.5, "#ffc400");
-		cg.addColorStop(1, "#d89000");
-		const ball = (x, y, r) => { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = cg; ctx.fill(); ctx.lineWidth = 5; ctx.strokeStyle = "#8a5a00"; ctx.stroke(); };
-		ball(S / 2 - 44, 212, 20);
-		ball(S / 2 + 44, 212, 20);
-		ball(S / 2, 258, 56);
-		ctx.fillStyle = "#2a1408";
-		[[-20, 248], [20, 248]].forEach((q) => { ctx.beginPath(); ctx.arc(S / 2 + q[0], q[1], 6, 0, Math.PI * 2); ctx.fill(); });
-		ctx.beginPath(); ctx.ellipse(S / 2, 270, 16, 11, 0, 0, Math.PI * 2); ctx.fillStyle = "#fff0c0"; ctx.fill();
-		ctx.beginPath(); ctx.ellipse(S / 2, 266, 6, 4, 0, 0, Math.PI * 2); ctx.fillStyle = "#2a1408"; ctx.fill();
-		ctx.lineWidth = 22;
-		ctx.strokeStyle = "#2a2f38";
-		arm(-1); arm(1);
-		ctx.lineWidth = 11;
-		ctx.strokeStyle = "#cfd5dd";
-		arm(-1); arm(1);
-		bigText(ctx, "クレーン", S / 2, 70, 66, "#ffffff", "#e8407a", "#3a0c22");
-		bigText(ctx, "取り放題", S / 2, 256, 66, "#ffe14a", "#e8407a", "#3a0c22");
 	});
 	return out;
 }
