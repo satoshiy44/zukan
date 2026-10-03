@@ -425,9 +425,17 @@ export function main(param: GameMainParameterObject): void {
 			const r = t.r;
 			let best = { x: 0, z: 300 };
 			let bestTop = 99999;
-			for (let k = 0; k < 8; k++) {
-				const x = XL + r + toCenter((rx0 + k * 0.381) % 1) * (XR - XL - r * 2);
-				const z = r + toCenter((rz0 + k * 0.618) % 1) * (ZB - r * 2);
+			// 高得点のものほど右(とりだし口から遠い所)に置く。右がいっぱいなら、だんだん左へ広げる
+			const left0 = t.value >= 600 ? 0.62 : t.value >= 250 ? 0.25 : 0;
+			const width0 = t.value >= 600 ? 0.38 : t.value >= 250 ? 0.6 : 0.8;
+			for (let k = 0; k < 24; k++) {
+				const widen = Math.floor(k / 8) * 0.25; // 8回ごとに左へ広げる
+				const lo = Math.max(0, left0 - widen);
+				const u = (rx0 + k * 0.381) % 1;
+				const fx = lo + (left0 + width0 - lo) * (t.value >= 600 ? u : toCenter(u));
+				const x = XL + r + fx * (XR - XL - r * 2);
+				const uz = (rz0 + k * 0.618) % 1;
+				const z = r + (t.value >= 600 ? uz : toCenter(uz)) * (ZB - r * 2);
 				if (x - r < CHX + 10 && z - r < CHZ + 10) continue;
 				const restTop = restOf(null, r, x, 99999, z).y + t.h;
 				if (restTop <= PILE_LIMIT) return { x, z };
