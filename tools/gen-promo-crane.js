@@ -10,8 +10,8 @@ const srcs = {
 	shot: dataUrl(process.argv[2]),
 	bg: dataUrl(path.join(ROOT, "crane/image/bg.png")),
 	logo: dataUrl(path.join(ROOT, "crane/image/logo.png")),
-	tanuki: dataUrl(path.join(ROOT, "crane/image/p_big.png")),
-	kago: dataUrl(path.join(ROOT, "crane/image/p_plush.png")),
+	tanuki: dataUrl(path.join(ROOT, "crane/image/p_black.png")),
+	kago: dataUrl(path.join(ROOT, "crane/image/kuji.png")),
 	medal: dataUrl(path.join(ROOT, "crane/image/p_gold.png"))
 };
 
@@ -54,12 +54,12 @@ async function draw(srcs) {
 	ctx.drawImage(imgs.shot, -w / 2, -h / 2, w, h);
 	ctx.restore();
 	ctx.drawImage(imgs.logo, 640 - 450, -6, 900, 194);
-	ctx.drawImage(imgs.tanuki, 10, 420, 220, 218);
-	ctx.drawImage(imgs.kago, 1090, 250, 165, 150);
-	ctx.drawImage(imgs.medal, 1090, 430, 170, 179);
+	ctx.drawImage(imgs.tanuki, 20, 440, 190, 190);
+	ctx.drawImage(imgs.kago, 1080, 230, 180, 159);
+	ctx.drawImage(imgs.medal, 1080, 430, 180, 180);
 	ctx.fillStyle = "rgba(90,10,58,0.85)";
 	ctx.fillRect(0, 636, W, 84);
-	text("長押しでねらって 景品を取りまくれ！", 640, 678, 54, "#ffe14a", "#5a0a3a", 14);
+	text("カプセルの中は三角くじ！ 取りまくれ！", 640, 678, 54, "#ffe14a", "#5a0a3a", 14);
 	return c.toDataURL("image/png");
 }
 

@@ -1,10 +1,10 @@
-// サンドボックスで、ランダムな長さだけ長押ししてはなすのをくり返し、スクリーンショットを撮る
+// サンドボックスで、ランダムな長さだけ長押ししてはなすのをくり返し(1回目で右、2回目で奥)、スクリーンショットを撮る
 // 使い方: npx akashic sandbox . -p 3304 を起動した状態で node tools/playtest.js <出力先ディレクトリ>
 const { chromium } = require("playwright");
 const path = require("path");
 
 const outDir = process.argv[2] || ".";
-const shots = [2, 6, 9, 12, 20, 30, 45, 55, 62, 70];
+const shots = [6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 20, 25, 30, 40, 50];
 
 (async () => {
 	const browser = await chromium.launch();
@@ -26,11 +26,11 @@ const shots = [2, 6, 9, 12, 20, 30, 45, 55, 62, 70];
 	while (sec() < 76) {
 		await page.mouse.move(box.x + box.width / 2, box.y + box.height * 0.6);
 		await page.mouse.down();
-		const hold = 200 + Math.random() * 2400;
+		const hold = 150 + Math.random() * 900;
 		const t0 = Date.now();
 		while (Date.now() - t0 < hold) { await page.waitForTimeout(100); await snap(); }
 		await page.mouse.up();
-		for (let k = 0; k < 10; k++) { await page.waitForTimeout(100); await snap(); }
+		for (let k = 0; k < 3; k++) { await page.waitForTimeout(100); await snap(); }
 	}
 	await browser.close();
 })();

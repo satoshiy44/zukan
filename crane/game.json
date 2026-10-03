@@ -173,23 +173,11 @@
 				]
 			}
 		},
-		"barrier": {
-			"type": "image",
-			"path": "image/barrier.png",
-			"width": 16,
-			"height": 130
-		},
 		"bg": {
 			"type": "image",
 			"path": "image/bg.png",
 			"width": 1280,
 			"height": 720
-		},
-		"chute_front": {
-			"type": "image",
-			"path": "image/chute_front.png",
-			"width": 200,
-			"height": 90
 		},
 		"claw_arm": {
 			"type": "image",
@@ -209,35 +197,11 @@
 			"width": 1160,
 			"height": 250
 		},
-		"p_big": {
-			"type": "image",
-			"path": "image/p_big.png",
-			"width": 138,
-			"height": 137
-		},
-		"p_box": {
-			"type": "image",
-			"path": "image/p_box.png",
-			"width": 90,
-			"height": 74
-		},
-		"p_candy": {
-			"type": "image",
-			"path": "image/p_candy.png",
-			"width": 68,
-			"height": 38
-		},
 		"p_gold": {
 			"type": "image",
 			"path": "image/p_gold.png",
-			"width": 74,
-			"height": 78
-		},
-		"p_plush": {
-			"type": "image",
-			"path": "image/p_plush.png",
-			"width": 121,
-			"height": 110
+			"width": 76,
+			"height": 76
 		},
 		"sparkle": {
 			"type": "image",
@@ -259,6 +223,120 @@
 			"type": "script",
 			"path": "script/parameterObject.js",
 			"global": true
+		},
+		"front_panel": {
+			"type": "image",
+			"path": "image/front_panel.png",
+			"width": 1280,
+			"height": 74
+		},
+		"marker": {
+			"type": "image",
+			"path": "image/marker.png",
+			"width": 120,
+			"height": 48
+		},
+		"coin": {
+			"type": "audio",
+			"path": "audio/coin",
+			"systemId": "sound",
+			"duration": 310,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"jolt": {
+			"type": "audio",
+			"path": "audio/jolt",
+			"systemId": "sound",
+			"duration": 80,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"pop": {
+			"type": "audio",
+			"path": "audio/pop",
+			"systemId": "sound",
+			"duration": 120,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"rip": {
+			"type": "audio",
+			"path": "audio/rip",
+			"systemId": "sound",
+			"duration": 180,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"thud": {
+			"type": "audio",
+			"path": "audio/thud",
+			"systemId": "sound",
+			"duration": 120,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"cap_black_bottom": {
+			"type": "image",
+			"path": "image/cap_black_bottom.png",
+			"width": 120,
+			"height": 64
+		},
+		"cap_black_top": {
+			"type": "image",
+			"path": "image/cap_black_top.png",
+			"width": 120,
+			"height": 64
+		},
+		"cap_gold_bottom": {
+			"type": "image",
+			"path": "image/cap_gold_bottom.png",
+			"width": 120,
+			"height": 64
+		},
+		"cap_gold_top": {
+			"type": "image",
+			"path": "image/cap_gold_top.png",
+			"width": 120,
+			"height": 64
+		},
+		"kuji": {
+			"type": "image",
+			"path": "image/kuji.png",
+			"width": 170,
+			"height": 150
+		},
+		"kuji_open": {
+			"type": "image",
+			"path": "image/kuji_open.png",
+			"width": 260,
+			"height": 170
+		},
+		"p_black": {
+			"type": "image",
+			"path": "image/p_black.png",
+			"width": 76,
+			"height": 76
 		}
 	},
 	"environment": {

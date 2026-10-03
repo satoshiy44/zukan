@@ -5,16 +5,9 @@ const fs = require("fs");
 const path = require("path");
 
 const OUT = path.join(__dirname, "..", "image");
-const TANUKI = path.join(__dirname, "..", "..", "game", "image");
 
-function drawAll(srcs) {
+function drawAll() {
 	return (async () => {
-		const imgs = {};
-		await Promise.all(Object.entries(srcs).map(([k, s]) => new Promise((ok) => {
-			const im = new Image();
-			im.onload = () => { imgs[k] = im; ok(); };
-			im.src = s;
-		})));
 		const out = {};
 		const make = (name, w, h, fn) => {
 			const c = document.createElement("canvas");
@@ -64,81 +57,94 @@ function drawAll(srcs) {
 		let seed = 77;
 		const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
 
-		// ---- 背景(クレーンゲームの中) ----
+		// ---- 背景(クレーンゲームの中を奥行きつきで描く) ----
+		// src/main.ts の project() と同じ計算で、3Dの点を画面の点にする
+		const F = 520, Z0 = 420, CAM_H = 430, HY = 117;
+		const P = (x, y, z) => {
+			const k = F / (z + Z0);
+			return [640 + x * k, HY + (CAM_H - y) * k];
+		};
+		const quad = (ctx, pts, fill, stroke, lw) => {
+			ctx.beginPath();
+			pts.forEach((q, i) => {
+				const v = P(q[0], q[1], q[2]);
+				if (i === 0) ctx.moveTo(v[0], v[1]); else ctx.lineTo(v[0], v[1]);
+			});
+			ctx.closePath();
+			if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+			if (stroke) { ctx.lineWidth = lw || 3; ctx.strokeStyle = stroke; ctx.stroke(); }
+		};
+		const XL = -400, XR = 400, ZB = 500, TOP = 900, CHX = -230, CHZ = 170, BH = 80;
 		make("bg", 1280, 720, (ctx, w, h) => {
 			// 外枠(ゲームセンターの機械)
-			ctx.fillStyle = "#e8407a";
+			const cab = ctx.createLinearGradient(0, 0, w, 0);
+			cab.addColorStop(0, "#c2245e");
+			cab.addColorStop(0.5, "#ff6aa0");
+			cab.addColorStop(1, "#c2245e");
+			ctx.fillStyle = cab;
 			ctx.fillRect(0, 0, w, h);
-			// 中の奥のかべ
-			const back = ctx.createLinearGradient(0, 0, 0, 640);
+			// 奥のかべ
+			const back = ctx.createLinearGradient(0, 40, 0, 380);
 			back.addColorStop(0, "#3b2a7a");
 			back.addColorStop(1, "#6a4ac0");
-			ctx.fillStyle = back;
-			ctx.fillRect(110, 0, 1060, 640);
-			// 水玉もよう
-			ctx.fillStyle = "rgba(255,255,255,0.07)";
-			for (let y = 30; y < 640; y += 60) {
-				for (let x = 130 + ((y / 60) % 2) * 30; x < 1170; x += 60) ellipse(ctx, x, y, 12, 12, 0, "rgba(255,255,255,0.07)");
-			}
-			// 左右の柱とネオン
-			const pillar = (x) => {
-				const g = ctx.createLinearGradient(x, 0, x + 110, 0);
-				g.addColorStop(0, "#c2245e");
-				g.addColorStop(0.5, "#ff6aa0");
-				g.addColorStop(1, "#c2245e");
-				ctx.fillStyle = g;
-				ctx.fillRect(x, 0, 110, h);
-				for (let y = 40; y < h; y += 46) {
-					const c = ["#fff36a", "#6af0ff", "#ffffff"][Math.floor(y / 46) % 3];
-					ellipse(ctx, x + 55, y, 9, 9, 0, c);
-					ellipse(ctx, x + 55, y, 16, 16, 0, "rgba(255,255,255,0.18)");
+			quad(ctx, [[XL, 0, ZB], [XR, 0, ZB], [XR, TOP, ZB], [XL, TOP, ZB]], back);
+			for (let y = 40; y < TOP; y += 70) {
+				for (let x = XL + 40 + ((y / 70) % 2) * 35; x < XR; x += 70) {
+					const v = P(x, y, ZB);
+					ellipse(ctx, v[0], v[1], 7, 7, 0, "rgba(255,255,255,0.08)");
 				}
-			};
-			pillar(0);
-			pillar(1170);
-			// レール
+			}
+			// 左右のかべ
+			quad(ctx, [[XL, 0, 0], [XL, 0, ZB], [XL, TOP, ZB], [XL, TOP, 0]], "#7a5ad0");
+			quad(ctx, [[XR, 0, 0], [XR, 0, ZB], [XR, TOP, ZB], [XR, TOP, 0]], "#7a5ad0");
+			// かべの光
+			for (let z = 40; z < ZB; z += 70) {
+				[XL, XR].forEach((x) => {
+					const v = P(x, 330, z);
+					ellipse(ctx, v[0], v[1], 9 * F / (z + Z0), 9 * F / (z + Z0), 0, ["#fff36a", "#6af0ff", "#ffffff"][Math.floor(z / 70) % 3]);
+				});
+			}
+			// 床(景品が乗る台)。奥行きが分かるように格子を描く
+			const floor = ctx.createLinearGradient(0, 380, 0, 650);
+			floor.addColorStop(0, "#e8b830");
+			floor.addColorStop(1, "#ffd84a");
+			quad(ctx, [[XL, 0, 0], [XR, 0, 0], [XR, 0, ZB], [XL, 0, ZB]], floor);
+			ctx.strokeStyle = "rgba(160,100,0,0.35)";
+			ctx.lineWidth = 2;
+			for (let x = XL; x <= XR; x += 100) {
+				const a = P(x, 0, 0), b = P(x, 0, ZB);
+				ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+			}
+			for (let z = 0; z <= ZB; z += 100) {
+				const a = P(XL, 0, z), b = P(XR, 0, z);
+				ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+			}
+			// とりだし口の穴
+			quad(ctx, [[XL, 0, 0], [CHX, 0, 0], [CHX, 0, CHZ], [XL, 0, CHZ]], "#120a20");
+			// 仕切りのアクリル板(奥と右)
+			quad(ctx, [[XL, 0, CHZ], [CHX, 0, CHZ], [CHX, BH, CHZ], [XL, BH, CHZ]], "rgba(200,240,255,0.45)", "rgba(255,255,255,0.9)", 3);
+			quad(ctx, [[CHX, 0, 0], [CHX, 0, CHZ], [CHX, BH, CHZ], [CHX, BH, 0]], "rgba(200,240,255,0.45)", "rgba(255,255,255,0.9)", 3);
+			// 天井のレール
 			ctx.fillStyle = "#c9ced6";
-			ctx.fillRect(110, 52, 1060, 16);
-			ctx.fillStyle = "#7d8592";
-			ctx.fillRect(110, 66, 1060, 5);
-			// 床(景品が乗る台)
-			const floor = ctx.createLinearGradient(0, 640, 0, h);
-			floor.addColorStop(0, "#ffd84a");
-			floor.addColorStop(1, "#d89a1a");
-			ctx.fillStyle = floor;
-			ctx.fillRect(110, 640, 1060, 80);
-			ctx.fillStyle = "#ffeaa0";
-			ctx.fillRect(110, 640, 1060, 6);
-			// とりだし口(穴)
-			const hole = ctx.createLinearGradient(0, 600, 0, h);
-			hole.addColorStop(0, "#1a0f2a");
-			hole.addColorStop(1, "#000000");
-			ctx.fillStyle = hole;
-			ctx.fillRect(116, 600, 186, 120);
-			ctx.strokeStyle = "#ffffff";
-			ctx.lineWidth = 6;
-			ctx.setLineDash([18, 12]);
-			ctx.strokeRect(119, 603, 180, 114);
-			ctx.setLineDash([]);
+			ctx.fillRect(0, 0, w, 14);
 		});
-
-		// とりだし口の手前のふた(落ちた景品を隠す)
-		make("chute_front", 200, 90, (ctx, w, h) => {
+		// 手前のパネル(とりだし口に落ちた景品を隠す)
+		make("front_panel", 1280, 74, (ctx, w, h) => {
 			const g = ctx.createLinearGradient(0, 0, 0, h);
 			g.addColorStop(0, "#ff7aa8");
 			g.addColorStop(1, "#c2245e");
-			roundRect(ctx, 4, 4, w - 8, h - 8, 14, g, "#7a0a3a", 6);
-			text(ctx, "とりだし口", w / 2, h / 2 + 2, 34, "#ffffff", "#7a0a3a", 9);
-		});
-		// 仕切りのアクリル板
-		make("barrier", 16, 130, (ctx, w, h) => {
-			ctx.fillStyle = "rgba(200,240,255,0.55)";
+			ctx.fillStyle = g;
 			ctx.fillRect(0, 0, w, h);
-			ctx.fillStyle = "rgba(255,255,255,0.8)";
-			ctx.fillRect(2, 0, 4, h);
-			ctx.strokeStyle = "rgba(80,140,180,0.9)";
-			ctx.lineWidth = 3;
-			ctx.strokeRect(1, 1, w - 2, h - 2);
+			ctx.fillStyle = "#ffeaa0";
+			ctx.fillRect(0, 0, w, 5);
+			for (let x = 30; x < w; x += 50) ellipse(ctx, x, 60, 6, 6, 0, ["#fff36a", "#6af0ff", "#ffffff"][Math.floor(x / 50) % 3]);
+			roundRect(ctx, 196, 8, 210, 46, 12, "#5a0a3a", "#ffffff", 4);
+			text(ctx, "とりだし口", 301, 32, 32, "#ffffff", "#5a0a3a", 6);
+		});
+		// アームの下りる場所の目印
+		make("marker", 120, 48, (ctx, w, h) => {
+			ellipse(ctx, w / 2, h / 2, 54, 18, 0, "rgba(255,40,120,0.18)", "rgba(255,40,120,0.95)", 5);
+			ellipse(ctx, w / 2, h / 2, 10, 4, 0, "rgba(255,40,120,0.95)");
 		});
 
 		// ---- クレーン ----
@@ -168,102 +174,75 @@ function drawAll(srcs) {
 			ellipse(ctx, 14, 8, 8, 8, 0, "#6a7280", "#3a404a", 3);
 		});
 
-		// ---- 景品 ----
-		// あめ
-		make("p_candy", 72, 44, (ctx, w, h) => {
-			const wrap = (x, dir) => {
+		// ---- 景品(カプセル) ----
+		// つやのある球。half: "top" / "bottom" / undefined(まるごと)
+		const capsule = (ctx, cx, cy, R, gold, half) => {
+			ctx.save();
+			if (half) {
 				ctx.beginPath();
-				ctx.moveTo(x, h / 2);
-				ctx.lineTo(x + dir * 18, 6);
-				ctx.lineTo(x + dir * 18, h - 6);
-				ctx.closePath();
-				ctx.fillStyle = "#ff9ac0";
-				ctx.fill();
-				ctx.lineWidth = 3;
-				ctx.strokeStyle = "#b02a62";
-				ctx.stroke();
-			};
-			wrap(22, -1);
-			wrap(50, 1);
-			ellipse(ctx, 36, 22, 18, 17, 0, "#ff5a8a", "#b02a62", 3);
-			ctx.strokeStyle = "#ffffff";
-			ctx.lineWidth = 4;
+				if (half === "top") ctx.rect(cx - R - 4, cy - R - 4, R * 2 + 8, R + 4);
+				else ctx.rect(cx - R - 4, cy, R * 2 + 8, R + 4);
+				ctx.clip();
+			}
+			const g = ctx.createRadialGradient(cx - R * 0.35, cy - R * 0.4, R * 0.1, cx, cy, R);
+			if (gold) {
+				g.addColorStop(0, "#fffbd0");
+				g.addColorStop(0.35, "#ffd23a");
+				g.addColorStop(0.8, "#d89a00");
+				g.addColorStop(1, "#8a5a00");
+			} else {
+				g.addColorStop(0, "#8a8a9a");
+				g.addColorStop(0.3, "#3a3a46");
+				g.addColorStop(0.8, "#121218");
+				g.addColorStop(1, "#000000");
+			}
+			ellipse(ctx, cx, cy, R, R, 0, g, gold ? "#6a4000" : "#000000", 3);
+			// 合わせ目
+			ctx.fillStyle = gold ? "#b07a00" : "#2a2a34";
+			ctx.fillRect(cx - R, cy - 3, R * 2, 6);
+			ctx.fillStyle = gold ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.18)";
+			ctx.fillRect(cx - R, cy - 3, R * 2, 2);
+			// 光
+			ellipse(ctx, cx - R * 0.38, cy - R * 0.45, R * 0.28, R * 0.16, -0.6, "rgba(255,255,255,0.85)");
+			ellipse(ctx, cx + R * 0.45, cy + R * 0.5, R * 0.1, R * 0.06, -0.6, "rgba(255,255,255,0.4)");
+			ctx.restore();
+		};
+		make("p_black", 80, 80, (ctx) => capsule(ctx, 40, 40, 36, false));
+		make("p_gold", 80, 80, (ctx) => capsule(ctx, 40, 40, 36, true));
+		[["black", false], ["gold", true]].forEach((c) => {
+			make("cap_" + c[0] + "_top", 120, 64, (ctx) => capsule(ctx, 60, 62, 56, c[1], "top"));
+			make("cap_" + c[0] + "_bottom", 120, 64, (ctx) => capsule(ctx, 60, 2, 56, c[1], "bottom"));
+		});
+		// 三角くじ(閉じている)
+		make("kuji", 170, 150, (ctx) => {
 			ctx.beginPath();
-			ctx.arc(36, 22, 9, 0.5, 4);
-			ctx.stroke();
-		});
-		// おかしの箱
-		make("p_box", 90, 74, (ctx, w, h) => {
-			const g = ctx.createLinearGradient(0, 0, 0, h);
-			g.addColorStop(0, "#5ad0ff");
-			g.addColorStop(1, "#1e88e5");
-			roundRect(ctx, 3, 3, w - 6, h - 6, 8, g, "#0a3a7a", 5);
-			ctx.fillStyle = "#ffe14a";
-			ctx.fillRect(6, 40, w - 12, 14);
-			text(ctx, "おかし", w / 2, 24, 24, "#ffffff", "#0a3a7a", 6);
-			ellipse(ctx, 24, 62, 6, 6, 0, "#ff7a3a");
-			ellipse(ctx, 66, 62, 6, 6, 0, "#ff7a3a");
-		});
-		// たぬきのぬいぐるみ
-		make("p_plush", 150, 150, (ctx, w, h) => {
-			ctx.drawImage(imgs.idle, 0, 0, 140, 146);
-			// タグ
-			roundRect(ctx, 100, 96, 30, 24, 4, "#ffffff", "#e8407a", 3);
-			ctx.fillStyle = "#e8407a";
-			ctx.font = "bold 14px IPAGothic";
-			ctx.textAlign = "center";
-			ctx.textBaseline = "middle";
-			ctx.fillText("♥", 115, 109);
-		});
-		// 大きなくまのぬいぐるみ
-		make("p_big", 156, 140, (ctx, w, h) => {
-			const fur = "#c8844a", dark = "#6a3a14";
-			ellipse(ctx, 34, 28, 22, 22, 0, fur, dark, 5);
-			ellipse(ctx, 122, 28, 22, 22, 0, fur, dark, 5);
-			ellipse(ctx, 34, 28, 11, 11, 0, "#f2c08a");
-			ellipse(ctx, 122, 28, 11, 11, 0, "#f2c08a");
-			ellipse(ctx, 78, 96, 66, 42, 0, fur, dark, 5);
-			ellipse(ctx, 78, 62, 56, 48, 0, fur, dark, 5);
-			ellipse(ctx, 78, 78, 24, 17, 0, "#f2d0a8", dark, 3);
-			ellipse(ctx, 78, 72, 8, 6, 0, "#2a1408");
-			ellipse(ctx, 56, 54, 7, 8, 0, "#2a1408");
-			ellipse(ctx, 100, 54, 7, 8, 0, "#2a1408");
-			ellipse(ctx, 54, 51, 2.5, 2.5, 0, "#ffffff");
-			ellipse(ctx, 98, 51, 2.5, 2.5, 0, "#ffffff");
-			ellipse(ctx, 44, 74, 9, 6, 0, "rgba(255,120,140,0.5)");
-			ellipse(ctx, 112, 74, 9, 6, 0, "rgba(255,120,140,0.5)");
-			// リボン
-			ctx.fillStyle = "#e83a5a";
-			ctx.beginPath();
-			ctx.moveTo(78, 108); ctx.lineTo(54, 96); ctx.lineTo(54, 122); ctx.closePath();
-			ctx.moveTo(78, 108); ctx.lineTo(102, 96); ctx.lineTo(102, 122); ctx.closePath();
-			ctx.fill();
-			ellipse(ctx, 78, 108, 8, 8, 0, "#ff6a8a", "#8a0a2a", 2);
-		});
-		// 金のたぬき
-		make("p_gold", 100, 100, (ctx, w, h) => {
-			ctx.drawImage(imgs.idle, 0, 0, 92, 96);
-			ctx.globalCompositeOperation = "source-atop";
-			const g = ctx.createLinearGradient(0, 0, w, h);
-			g.addColorStop(0, "#fff27a");
-			g.addColorStop(0.5, "#ffc400");
-			g.addColorStop(1, "#c88a00");
+			ctx.moveTo(85, 8); ctx.lineTo(162, 142); ctx.lineTo(8, 142); ctx.closePath();
+			const g = ctx.createLinearGradient(0, 8, 0, 142);
+			g.addColorStop(0, "#ff6a8a");
+			g.addColorStop(1, "#e8205a");
 			ctx.fillStyle = g;
-			ctx.fillRect(0, 0, w, h);
-			// 元の絵の線を少し戻して、金色でも顔が見えるようにする
-			ctx.globalCompositeOperation = "multiply";
-			ctx.globalAlpha = 0.35;
-			ctx.drawImage(imgs.idle, 0, 0, 92, 96);
-			ctx.globalAlpha = 1;
-			ctx.globalCompositeOperation = "destination-in";
-			ctx.drawImage(imgs.idle, 0, 0, 92, 96);
-			ctx.globalCompositeOperation = "source-over";
-			ctx.fillStyle = "rgba(255,255,255,0.9)";
-			ctx.beginPath();
-			ctx.moveTo(18, 14); ctx.lineTo(21, 22); ctx.lineTo(29, 25); ctx.lineTo(21, 28);
-			ctx.lineTo(18, 36); ctx.lineTo(15, 28); ctx.lineTo(7, 25); ctx.lineTo(15, 22);
-			ctx.closePath();
 			ctx.fill();
+			ctx.lineJoin = "round";
+			ctx.lineWidth = 5;
+			ctx.strokeStyle = "#ffffff";
+			ctx.stroke();
+			// 折り目と、ミシン目
+			ctx.strokeStyle = "rgba(255,255,255,0.7)";
+			ctx.lineWidth = 3;
+			ctx.beginPath(); ctx.moveTo(85, 8); ctx.lineTo(85, 142); ctx.stroke();
+			ctx.setLineDash([6, 5]);
+			ctx.beginPath(); ctx.moveTo(30, 104); ctx.lineTo(140, 104); ctx.stroke();
+			ctx.setLineDash([]);
+			text(ctx, "くじ", 85, 82, 30, "#ffffff", "#a0103a", 7);
+		});
+		// 三角くじ(開いた紙)
+		make("kuji_open", 260, 170, (ctx, w, h) => {
+			roundRect(ctx, 6, 6, w - 12, h - 12, 10, "#fffdf4", "#e8205a", 6);
+			ctx.strokeStyle = "rgba(232,32,90,0.35)";
+			ctx.lineWidth = 2;
+			ctx.setLineDash([6, 5]);
+			ctx.strokeRect(18, 18, w - 36, h - 36);
+			ctx.setLineDash([]);
 		});
 		// キラキラ
 		make("sparkle", 40, 40, (ctx) => {
@@ -303,13 +282,10 @@ function drawAll(srcs) {
 }
 
 (async () => {
-	const dataUrl = (p) => "data:image/png;base64," + fs.readFileSync(p).toString("base64");
 	const browser = await chromium.launch();
 	const page = await browser.newPage();
 	await page.setContent("<html><body></body></html>");
-	const images = await page.evaluate(drawAll, {
-		idle: dataUrl(path.join(TANUKI, "tanuki_idle.png"))
-	});
+	const images = await page.evaluate(drawAll, {});
 	await browser.close();
 	fs.mkdirSync(OUT, { recursive: true });
 	for (const [name, url] of Object.entries(images)) {

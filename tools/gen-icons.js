@@ -169,6 +169,14 @@ function draw() {
 			ctx.quadraticCurveTo(S / 2 + dir * 120, 250, S / 2 + dir * 70, 310);
 			ctx.stroke();
 		};
+		// 金のカプセル
+		const cg = ctx.createRadialGradient(S / 2 - 20, 232, 6, S / 2, 250, 62);
+		cg.addColorStop(0, "#fffbd0");
+		cg.addColorStop(0.4, "#ffd23a");
+		cg.addColorStop(1, "#a06a00");
+		ctx.beginPath(); ctx.arc(S / 2, 252, 58, 0, Math.PI * 2); ctx.fillStyle = cg; ctx.fill();
+		ctx.lineWidth = 5; ctx.strokeStyle = "#6a4000"; ctx.stroke();
+		ctx.fillStyle = "#b07a00"; ctx.fillRect(S / 2 - 58, 248, 116, 8);
 		ctx.lineWidth = 22;
 		ctx.strokeStyle = "#2a2f38";
 		arm(-1); arm(1);
