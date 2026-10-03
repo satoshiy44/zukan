@@ -1,0 +1,276 @@
+{
+	"width": 1280,
+	"height": 720,
+	"fps": 30,
+	"main": "./script/_bootstrap.js",
+	"assets": {
+		"beep": {
+			"type": "audio",
+			"path": "audio/beep",
+			"systemId": "sound",
+			"duration": 120,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"bgm": {
+			"type": "audio",
+			"path": "audio/bgm",
+			"systemId": "music",
+			"duration": 13530,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			},
+			"loop": true
+		},
+		"down": {
+			"type": "audio",
+			"path": "audio/down",
+			"systemId": "sound",
+			"duration": 500,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"fever": {
+			"type": "audio",
+			"path": "audio/fever",
+			"systemId": "sound",
+			"duration": 740,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"finish": {
+			"type": "audio",
+			"path": "audio/finish",
+			"systemId": "sound",
+			"duration": 610,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"get": {
+			"type": "audio",
+			"path": "audio/get",
+			"systemId": "sound",
+			"duration": 580,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"go": {
+			"type": "audio",
+			"path": "audio/go",
+			"systemId": "sound",
+			"duration": 360,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"grab": {
+			"type": "audio",
+			"path": "audio/grab",
+			"systemId": "sound",
+			"duration": 100,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"jackpot": {
+			"type": "audio",
+			"path": "audio/jackpot",
+			"systemId": "sound",
+			"duration": 1540,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"miss": {
+			"type": "audio",
+			"path": "audio/miss",
+			"systemId": "sound",
+			"duration": 450,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"move": {
+			"type": "audio",
+			"path": "audio/move",
+			"systemId": "sound",
+			"duration": 250,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"refill": {
+			"type": "audio",
+			"path": "audio/refill",
+			"systemId": "sound",
+			"duration": 430,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"result": {
+			"type": "audio",
+			"path": "audio/result",
+			"systemId": "sound",
+			"duration": 900,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"slip": {
+			"type": "audio",
+			"path": "audio/slip",
+			"systemId": "sound",
+			"duration": 350,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"barrier": {
+			"type": "image",
+			"path": "image/barrier.png",
+			"width": 16,
+			"height": 130
+		},
+		"bg": {
+			"type": "image",
+			"path": "image/bg.png",
+			"width": 1280,
+			"height": 720
+		},
+		"chute_front": {
+			"type": "image",
+			"path": "image/chute_front.png",
+			"width": 200,
+			"height": 90
+		},
+		"claw_arm": {
+			"type": "image",
+			"path": "image/claw_arm.png",
+			"width": 40,
+			"height": 110
+		},
+		"claw_head": {
+			"type": "image",
+			"path": "image/claw_head.png",
+			"width": 110,
+			"height": 70
+		},
+		"logo": {
+			"type": "image",
+			"path": "image/logo.png",
+			"width": 1160,
+			"height": 250
+		},
+		"p_big": {
+			"type": "image",
+			"path": "image/p_big.png",
+			"width": 138,
+			"height": 137
+		},
+		"p_box": {
+			"type": "image",
+			"path": "image/p_box.png",
+			"width": 90,
+			"height": 74
+		},
+		"p_candy": {
+			"type": "image",
+			"path": "image/p_candy.png",
+			"width": 68,
+			"height": 38
+		},
+		"p_gold": {
+			"type": "image",
+			"path": "image/p_gold.png",
+			"width": 74,
+			"height": 78
+		},
+		"p_plush": {
+			"type": "image",
+			"path": "image/p_plush.png",
+			"width": 121,
+			"height": 110
+		},
+		"sparkle": {
+			"type": "image",
+			"path": "image/sparkle.png",
+			"width": 40,
+			"height": 40
+		},
+		"_bootstrap": {
+			"type": "script",
+			"path": "script/_bootstrap.js",
+			"global": true
+		},
+		"main": {
+			"type": "script",
+			"path": "script/main.js",
+			"global": true
+		},
+		"parameterObject": {
+			"type": "script",
+			"path": "script/parameterObject.js",
+			"global": true
+		}
+	},
+	"environment": {
+		"sandbox-runtime": "3",
+		"nicolive": {
+			"supportedModes": [
+				"ranking"
+			],
+			"preferredSessionParameters": {
+				"totalTimeLimit": 75
+			}
+		}
+	},
+	"globalScripts": []
+}
