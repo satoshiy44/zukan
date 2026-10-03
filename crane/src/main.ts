@@ -272,7 +272,17 @@ export function main(param: GameMainParameterObject): void {
 		const drops = createDrops(param.random, 1500);
 		// つかむたびのホールド力(6〜10)と、落ちるかどうかのくじ。共通乱数なので全員同じ順番
 		const holdSeq: number[] = [];
-		for (let i = 0; i < 300; i++) holdSeq.push(6 + Math.floor(param.random.generate() * 5));
+		// 3〜7がよく出て、8〜10はたまに出る
+		const holdWeights = [14, 16, 18, 16, 14, 10, 7, 5]; // ホールド力 3,4,5,…,10 の出やすさ
+		const pickHold = (u: number): number => {
+			let acc = 0;
+			for (let k = 0; k < holdWeights.length; k++) {
+				acc += holdWeights[k] / 100;
+				if (u < acc) return 3 + k;
+			}
+			return 10;
+		};
+		for (let i = 0; i < 300; i++) holdSeq.push(pickHold(param.random.generate()));
 		const rollSeq: number[] = [];
 		for (let i = 0; i < 1500; i++) rollSeq.push(param.random.generate());
 		let rollIdx = 0;
@@ -343,7 +353,7 @@ export function main(param: GameMainParameterObject): void {
 			scoreLabel.modified();
 		};
 		// ホールド力の表示(アームの横について動く)
-		const holdColors = ["#ff3a3a", "#ff8a1a", "#ffe14a", "#5af08a", "#6af0ff"];
+		const holdColors = ["#ff2a2a", "#ff5a2a", "#ff8a1a", "#ffb42a", "#ffe14a", "#c8f04a", "#5af08a", "#6af0ff"]; // 3〜10
 		const holdFonts = holdColors.map((c) => makeFont(c, "#2a0a2a"));
 		const holdBox = new g.E({ scene });
 		fxLayer.append(holdBox);
@@ -357,7 +367,7 @@ export function main(param: GameMainParameterObject): void {
 		}
 		holdBox.hide();
 		const showHold = (): void => {
-			const c = hold - 6;
+			const c = hold - 3;
 			holdLabel.font = holdFonts[c];
 			setText(holdLabel, "ホールド力 " + hold);
 			holdBars.forEach((b, i) => {
@@ -365,7 +375,7 @@ export function main(param: GameMainParameterObject): void {
 				b.modified();
 			});
 			holdBox.show();
-			if (hold >= 10 || hold <= 6) popup(hold >= 10 ? "MAX!!" : "弱い…", holdFonts[c], 48, clawE.x, clawE.y - 220, 0.9);
+			if (hold >= 10 || hold <= 4) popup(hold >= 10 ? "MAX!!" : "弱い…", holdFonts[c], 48, clawE.x, clawE.y - 220, 0.9);
 		};
 		const updateMult = (): void => setText(multLabel, streak > 0 ? "れんぞく " + streak + " ×" + mult().toFixed(1) : "");
 
@@ -675,15 +685,16 @@ export function main(param: GameMainParameterObject): void {
 				// つかみが甘いと、持ち上げる途中で落ちる。ギリギリだと上で「ガクッ」と止まったときに落ちる
 				// 落ちる確率: ホールド力が弱いほど、つかみが甘いほど、大きいほど落ちやすい
 				const q = grip / Math.max(0.01, p.t.need);
-				const chance = Math.max(0, Math.min(0.95, (10 - hold) * 0.1 + (q < 1 ? (1 - q) * 0.9 : 0) + p.t.need * 0.3 - 0.06));
+				const weak = Math.pow((10 - hold) / 7, 1.2) * 0.9; // 3で0.9、6で約0.46、10で0
+				const chance = Math.max(0, Math.min(0.97, weak + (q < 1 ? (1 - q) * 0.9 : 0) + p.t.need * 0.3 - 0.06));
 				const r1 = rollSeq[rollIdx++ % rollSeq.length];
 				const r2 = rollSeq[rollIdx++ % rollSeq.length];
 				p.slipAt = 2;
 				p.weak = false;
 				if (r1 < chance) {
-					// 3回に1回は上で「ガクッ」と止まったとき、それ以外は運んでいる途中のどこかで落ちる
-					if (r2 < 0.33) p.weak = true;
-					else p.slipAt = 0.1 + r2 * 0.85;
+					// 4割は上で「ガクッ」と止まったとき、それ以外は持ち上げ中〜運ぶ途中で落ちる
+					if (r2 < 0.4) p.weak = true;
+					else p.slipAt = 0.05 + r2 * 0.6;
 				}
 			});
 			// アームが山に突っ込んだ勢いで、まわりのぬいぐるみがはじかれて転がる
@@ -948,10 +959,10 @@ export function main(param: GameMainParameterObject): void {
 			panel.append(new g.FilledRect({ scene, cssColor: "#e8407a", width: 760, height: 80 }));
 			label("取ったぬいぐるみ", fontWhite, 48, 380, 12, panel, "center");
 			label(score + " 点", fontPink, 96, 380, 96, panel, "center");
-			const title = stats.got >= 35 ? "クレーンの神"
-				: stats.got >= 25 ? "クレーン名人"
-					: stats.got >= 15 ? "上級者"
-						: stats.got >= 8 ? "常連さん" : "ビギナー";
+			const title = stats.got >= 28 ? "クレーンの神"
+				: stats.got >= 20 ? "クレーン名人"
+					: stats.got >= 12 ? "上級者"
+						: stats.got >= 6 ? "常連さん" : "ビギナー";
 			label("称号: " + title, fontYellow, 44, 380, 206, panel, "center");
 			[
 				"取ったぬいぐるみ " + stats.got + "こ (" + stats.tries + "回中)",
