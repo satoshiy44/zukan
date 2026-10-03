@@ -25,14 +25,14 @@ const SWAY_DAMP = 3.2;
 const SWAY_GAIN = 0.0065;
 const SWAY_LEN = 200; // ゆれの角度を出すための、ひもの長さ
 const MAX_GRAB = 6; // 1回でつかめる最大の数
-const ARM = 1.5; // アームの大きさ(つかめる広さもこれに合わせて広がる)
+const ARM = 2; // アームの大きさ(つかめる広さもこれに合わせて広がる)
 const REACH = 30 * ARM; // ぬいぐるみの半径より、どれだけ外までつかめるか
 const PUSH = 90 * ARM; // 山に突っ込んだとき、はじく範囲
 const START_PLUSH = 170;
 const REFILL_BELOW = 130; // ぬいぐるみがこれより少なくなったら補充
 const INTRO_SEC = 4;
 const RESULT_SEC = 10;
-const FEVER_SEC = 15;
+const FEVER_SEC = 20;
 
 // 3Dの点 → 画面の点(遠近法)。tools/gen-images.js の背景も同じ計算で描いている
 const FOCAL = 520;
@@ -1066,7 +1066,7 @@ export function main(param: GameMainParameterObject): void {
 				if (!fever && playLeft <= FEVER_SEC) {
 					fever = true;
 					se("fever");
-					bigText("ラスト15秒! 得点2倍!!", fontYellow, 70, 1.3, 250);
+					bigText("ラスト20秒! 得点2倍!!", fontYellow, 70, 1.3, 250);
 					setText(feverLabel, "得点×2");
 					refill(90, "ぬいぐるみ 大放出!!", 400);
 				}

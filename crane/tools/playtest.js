@@ -4,7 +4,7 @@ const { chromium } = require("playwright");
 const path = require("path");
 
 const outDir = process.argv[2] || ".";
-const shots = [8, 12, 30, 50, 51, 52, 54, 58, 62];
+const shots = [8, 10, 12, 30, 41, 42, 44, 50, 62];
 
 (async () => {
 	const browser = await chromium.launch();
