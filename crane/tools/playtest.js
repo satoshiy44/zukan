@@ -4,7 +4,7 @@ const { chromium } = require("playwright");
 const path = require("path");
 
 const outDir = process.argv[2] || ".";
-const shots = [3, 6, 10, 20, 40, 70, 100, 130, 145];
+const shots = [8, 12, 30, 50, 51, 52, 54, 58, 62];
 
 (async () => {
 	const browser = await chromium.launch();
@@ -23,7 +23,7 @@ const shots = [3, 6, 10, 20, 40, 70, 100, 130, 145];
 			shotIdx++;
 		}
 	};
-	while (sec() < 152) {
+	while (sec() < 76) {
 		await page.mouse.move(box.x + box.width / 2, box.y + box.height * 0.6);
 		await page.mouse.down();
 		const hold = 150 + Math.random() * 900;

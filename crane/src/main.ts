@@ -24,12 +24,15 @@ const SWAY_W2 = 30; // アームのゆれ(振り子)の強さ
 const SWAY_DAMP = 3.2;
 const SWAY_GAIN = 0.0065;
 const SWAY_LEN = 200; // ゆれの角度を出すための、ひもの長さ
-const MAX_GRAB = 4; // 1回でつかめる最大の数
+const MAX_GRAB = 6; // 1回でつかめる最大の数
+const ARM = 1.5; // アームの大きさ(つかめる広さもこれに合わせて広がる)
+const REACH = 30 * ARM; // ぬいぐるみの半径より、どれだけ外までつかめるか
+const PUSH = 90 * ARM; // 山に突っ込んだとき、はじく範囲
 const START_PLUSH = 170;
 const REFILL_BELOW = 130; // ぬいぐるみがこれより少なくなったら補充
 const INTRO_SEC = 4;
 const RESULT_SEC = 10;
-const FEVER_SEC = 10;
+const FEVER_SEC = 15;
 
 // 3Dの点 → 画面の点(遠近法)。tools/gen-images.js の背景も同じ計算で描いている
 const FOCAL = 520;
@@ -117,6 +120,7 @@ interface Prize {
 	offZ: number;
 	slipAt: number; // つかまれてから落ちるまでの進み具合(1以上なら落ちない)
 	weak: boolean; // 上で「ガクッ」と止まったときに落ちる
+	still: number; // 止まっているフレーム数(長く止まっているものは計算を間引く)
 }
 
 export function main(param: GameMainParameterObject): void {
@@ -389,6 +393,8 @@ export function main(param: GameMainParameterObject): void {
 			for (let i = 0; i < prizes.length; i++) {
 				const q = prizes[i];
 				if (q === self || q.state !== "pile" || top(q) > y + 2) continue;
+				const lim = r + q.t.r;
+				if (x - q.x > lim || q.x - x > lim || z - q.z > lim || q.z - z > lim) continue;
 				if (dist(x, z, q.x, q.z) >= (r + q.t.r) * 0.85) continue;
 				// 球なので、真上ほど高く乗る
 				const d = dist(x, z, q.x, q.z) / ((r + q.t.r) * 0.85);
@@ -412,7 +418,7 @@ export function main(param: GameMainParameterObject): void {
 			dotLayer.append(dot);
 			const p: Prize = {
 				t, x, y, z, vx: 0, vy: 0, vz: 0, ang: 0, spin: 0, squash: 0, state: "pile",
-				sprite, dot, off: 0, offX: 0, offZ: 0, slipAt: 2, weak: false
+				sprite, dot, off: 0, offX: 0, offZ: 0, slipAt: 2, weak: false, still: 0
 			};
 			prizes.push(p);
 			return p;
@@ -455,10 +461,10 @@ export function main(param: GameMainParameterObject): void {
 		}
 		let refillQueue = 0;
 		let refillTimer = 0;
-		const refill = (n: number): void => {
+		const refill = (n: number, text = "ぬいぐるみ 補充!", y = 250): void => {
 			refillQueue += n;
 			se("refill");
-			bigText("ぬいぐるみ 補充!", fontBlue, 64, 0.9, 250);
+			bigText(text, fontBlue, 64, 1.1, y);
 		};
 
 		const collect = (p: Prize): void => {
@@ -484,13 +490,24 @@ export function main(param: GameMainParameterObject): void {
 			if (p.t.big) bigText(p.t.name + "!!", fontYellow, 110, 1.2, 300);
 		};
 
+		// まわりのぬいぐるみを「起こす」(止まっていて計算を間引いていたものも、また毎フレーム動かす)
+		const wake = (x: number, z: number, radius: number): void => {
+			for (let i = 0; i < prizes.length; i++) {
+				const q = prizes[i];
+				if (q.still > 0 && dist(q.x, q.z, x, z) < radius + q.t.r) q.still = 0;
+			}
+		};
+		let frameNo = 0;
 		const settle = (): void => {
+			frameNo++;
 			// 下にあるぬいぐるみから順に、支えがなければ落とす
 			const pile = prizes.filter((p) => p.state === "pile" || p.state === "chute");
 			pile.sort((a, b) => a.y - b.y);
 			for (let i = 0; i < pile.length; i++) {
 				const p = pile[i];
 				p.squash = Math.max(0, p.squash - dt * 2.5);
+				// 長く止まっているものは、8フレームに1回だけ調べる
+				if (p.state === "pile" && p.still > 20 && (frameNo + i) % 8 !== 0) continue;
 				if (p.state === "chute") {
 					p.vy += GRAVITY * dt;
 					p.y -= p.vy * dt;
@@ -526,6 +543,7 @@ export function main(param: GameMainParameterObject): void {
 				}
 				const rest = restOf(p, p.t.r, p.x, p.y, p.z);
 				if (p.y > rest.y + 0.5 || p.vy < 0) {
+					p.still = 0;
 					// 空中: 落ちながら回る
 					p.vy += GRAVITY * dt;
 					p.y -= p.vy * dt;
@@ -554,6 +572,7 @@ export function main(param: GameMainParameterObject): void {
 					p.x += p.vx * dt;
 					p.z += p.vz * dt;
 					p.ang += (0 - p.ang) * Math.min(1, 6 * dt);
+					let moving = Math.abs(p.vx) + Math.abs(p.vz) > 3;
 					// 真ん中が下のぬいぐるみからはみ出していたら、ころがり落ちる
 					if (rest.under.length === 1) {
 						const q = rest.under[0];
@@ -564,7 +583,14 @@ export function main(param: GameMainParameterObject): void {
 							p.z += (p.z - q.z) * k;
 							p.ang += (p.x > q.x ? 1 : -1) * 260 * dt;
 							if (inChute(p.x, p.z) && p.y >= BH * 0.5) popup("ころがりゲット!?", fontBlue, 40, 300, 440, 0.9);
+							moving = true;
 						}
+					}
+					if (moving) {
+						if (p.still > 20) wake(p.x, p.z, p.t.r * 2);
+						p.still = 0;
+					} else {
+						p.still++;
 					}
 				}
 			}
@@ -600,7 +626,7 @@ export function main(param: GameMainParameterObject): void {
 			const a = swayAngle();
 			clawE.x = screenX(tipX, tipZ);
 			clawE.y = screenY(clawY, tipZ);
-			clawE.scaleX = clawE.scaleY = k;
+			clawE.scaleX = clawE.scaleY = k * ARM;
 			clawE.angle = -a;
 			clawE.tag = tipZ * 1000 - clawY - 0.5;
 			const ang = 4 + open * 30;
@@ -611,15 +637,15 @@ export function main(param: GameMainParameterObject): void {
 			clawE.modified();
 			// ケーブル: 台車から頭の上まで
 			const rad = -a * Math.PI / 180;
-			const hx = clawE.x + 150 * k * Math.sin(-rad) * -1;
-			const hy = clawE.y - 150 * k * Math.cos(rad);
+			const hx = clawE.x + 150 * k * ARM * Math.sin(rad);
+			const hy = clawE.y - 150 * k * ARM * Math.cos(rad);
 			const rx = screenX(clawX, clawZ);
 			const dx = hx - rx, dy = hy - RAIL_Y;
 			cable.x = rx;
 			cable.y = RAIL_Y;
 			cable.height = Math.max(1, Math.sqrt(dx * dx + dy * dy));
 			cable.angle = Math.atan2(-dx, dy) * 180 / Math.PI;
-			cable.width = 7 * k;
+			cable.width = 7 * k * ARM;
 			cable.tag = clawE.tag + 0.1;
 			cable.modified();
 			trolley.x = rx;
@@ -631,7 +657,7 @@ export function main(param: GameMainParameterObject): void {
 				const below = restOf(null, 4, tipX, clawY, tipZ).y;
 				marker.x = screenX(tipX, tipZ);
 				marker.y = screenY(below, tipZ);
-				marker.scaleX = marker.scaleY = k;
+				marker.scaleX = marker.scaleY = k * ARM;
 				guide.x = marker.x - 1.5;
 				guide.y = clawE.y;
 				guide.height = Math.max(1, marker.y - clawE.y);
@@ -665,7 +691,7 @@ export function main(param: GameMainParameterObject): void {
 			for (let i = 0; i < prizes.length; i++) {
 				const q = prizes[i];
 				if (q.state !== "pile") continue;
-				if (dist(q.x, q.z, tipX, tipZ) < q.t.r * 0.8 + 8) target = Math.max(target, top(q));
+				if (dist(q.x, q.z, tipX, tipZ) < q.t.r * 0.8 + 8 * ARM) target = Math.max(target, top(q));
 			}
 			downTo = Math.max(4, target - 34);
 		};
@@ -676,7 +702,7 @@ export function main(param: GameMainParameterObject): void {
 			for (let i = 0; i < prizes.length; i++) {
 				const p = prizes[i];
 				if (p.state !== "pile") continue;
-				if (Math.abs(top(p) - tipTop) > 40 || dist(p.x, p.z, tipX, tipZ) > p.t.r + 30) continue;
+				if (Math.abs(top(p) - tipTop) > 40 || dist(p.x, p.z, tipX, tipZ) > p.t.r + REACH) continue;
 				cand.push(p);
 			}
 			cand.sort((a, b) => dist(a.x, a.z, tipX, tipZ) - dist(b.x, b.z, tipX, tipZ));
@@ -684,7 +710,7 @@ export function main(param: GameMainParameterObject): void {
 			hold = holdSeq[stats.tries % holdSeq.length];
 			if (grabbed.length > 0) showHold();
 			grabbed.forEach((p) => {
-				const grip = Math.max(0, 1 - dist(p.x, p.z, tipX, tipZ) / (p.t.r + 30));
+				const grip = Math.max(0, 1 - dist(p.x, p.z, tipX, tipZ) / (p.t.r + REACH));
 				p.state = "held";
 				p.off = p.y - clawY;
 				p.offX = (p.x - tipX) * 0.4;
@@ -705,19 +731,20 @@ export function main(param: GameMainParameterObject): void {
 					else p.slipAt = 0.05 + r2 * 0.6;
 				}
 			});
+			wake(tipX, tipZ, PUSH + 120);
 			// アームが山に突っ込んだ勢いで、まわりのぬいぐるみがはじかれて転がる
 			let pushed = 0;
 			for (let i = 0; i < prizes.length; i++) {
 				const p = prizes[i];
 				if (p.state !== "pile") continue;
 				const d = dist(p.x, p.z, tipX, tipZ);
-				if (d > p.t.r + 90 || Math.abs(top(p) - tipTop) > 110) continue;
-				const k = (1 - d / (p.t.r + 90)) * 260 / Math.max(1, d);
+				if (d > p.t.r + PUSH || Math.abs(top(p) - tipTop) > 110) continue;
+				const k = (1 - d / (p.t.r + PUSH)) * 260 / Math.max(1, d);
 				// とりだし口の方へは、少し強めに転がる
 				const toChute = p.x < tipX && p.z < tipZ + 60 ? 1.4 : 1;
 				p.vx += (p.x - tipX) * k * toChute;
 				p.vz += (p.z - tipZ) * k * toChute;
-				p.vy = -160 - 140 * (1 - d / (p.t.r + 90));
+				p.vy = -160 - 140 * (1 - d / (p.t.r + PUSH));
 				p.spin = (p.x > tipX ? 1 : -1) * 300;
 				pushed++;
 			}
@@ -732,6 +759,7 @@ export function main(param: GameMainParameterObject): void {
 				const p = prizes[i];
 				if (p.state !== "held" || !cond(p)) continue;
 				p.state = "pile";
+				p.still = 0;
 				// アームの勢いのまま飛んでいく
 				p.vx = tipVX;
 				p.vz = tipVZ;
@@ -761,7 +789,7 @@ export function main(param: GameMainParameterObject): void {
 			updateMult();
 			tryGot = 0;
 			holdBox.hide();
-			if (pileCount() < REFILL_BELOW && refillQueue === 0) refill(30);
+			if (pileCount() < REFILL_BELOW && refillQueue === 0) refill(50);
 			claw = "ready";
 			if (queued && pressing) {
 				claw = "moveX";
@@ -1029,7 +1057,7 @@ export function main(param: GameMainParameterObject): void {
 					const p = makePrize(d, at.x, 520, at.z);
 					p.spin = (cosmeticRandom.generate() - 0.5) * 400;
 					refillQueue--;
-					refillTimer = 0.05;
+					refillTimer = 0.03;
 				}
 			}
 			if (phase === "play") {
@@ -1038,9 +1066,9 @@ export function main(param: GameMainParameterObject): void {
 				if (!fever && playLeft <= FEVER_SEC) {
 					fever = true;
 					se("fever");
-					bigText("ラスト10秒! 得点2倍!!", fontYellow, 70, 1.3, 250);
+					bigText("ラスト15秒! 得点2倍!!", fontYellow, 70, 1.3, 250);
 					setText(feverLabel, "得点×2");
-					refill(30);
+					refill(90, "ぬいぐるみ 大放出!!", 400);
 				}
 				if (fever) {
 					timeLabel.opacity = Math.floor(playLeft * 4) % 2 === 0 ? 1 : 0.55;
