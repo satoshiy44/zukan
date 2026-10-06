@@ -504,7 +504,7 @@ export function main(param: GameMainParameterObject): void {
 				if (elapsed > INTRO_SEC - 3 && c !== lastCount && c > 0) {
 					lastCount = c;
 					setText(countLabel, String(c));
-					se("beep");
+					scene.asset.getAudioById("beep").play().changeVolume(0.35); // カウントダウンの音は小さめに
 				}
 				if (elapsed >= INTRO_SEC) {
 					phase = "play";
