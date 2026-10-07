@@ -1,0 +1,186 @@
+{
+	"width": 1280,
+	"height": 720,
+	"fps": 30,
+	"main": "./script/_bootstrap.js",
+	"assets": {
+		"beep": {
+			"type": "audio",
+			"path": "audio/beep",
+			"systemId": "sound",
+			"duration": 100,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"bgm": {
+			"type": "audio",
+			"path": "audio/bgm",
+			"systemId": "music",
+			"duration": 26667,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			},
+			"loop": true
+		},
+		"draw": {
+			"type": "audio",
+			"path": "audio/draw",
+			"systemId": "sound",
+			"duration": 140,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"finish": {
+			"type": "audio",
+			"path": "audio/finish",
+			"systemId": "sound",
+			"duration": 1100,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"found": {
+			"type": "audio",
+			"path": "audio/found",
+			"systemId": "sound",
+			"duration": 1800,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"go": {
+			"type": "audio",
+			"path": "audio/go",
+			"systemId": "sound",
+			"duration": 600,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"ng_se": {
+			"type": "audio",
+			"path": "audio/ng_se",
+			"systemId": "sound",
+			"duration": 300,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"ok_se": {
+			"type": "audio",
+			"path": "audio/ok_se",
+			"systemId": "sound",
+			"duration": 740,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"bg": {
+			"type": "image",
+			"path": "image/bg.png",
+			"width": 1280,
+			"height": 720
+		},
+		"coin1": {
+			"type": "image",
+			"path": "image/coin1.png",
+			"width": 12,
+			"height": 12
+		},
+		"coin2": {
+			"type": "image",
+			"path": "image/coin2.png",
+			"width": 12,
+			"height": 12
+		},
+		"coin3": {
+			"type": "image",
+			"path": "image/coin3.png",
+			"width": 12,
+			"height": 12
+		},
+		"dot": {
+			"type": "image",
+			"path": "image/dot.png",
+			"width": 10,
+			"height": 10
+		},
+		"key": {
+			"type": "image",
+			"path": "image/key.png",
+			"width": 160,
+			"height": 160
+		},
+		"logo": {
+			"type": "image",
+			"path": "image/logo.png",
+			"width": 1160,
+			"height": 250
+		},
+		"ng": {
+			"type": "image",
+			"path": "image/ng.png",
+			"width": 300,
+			"height": 300
+		},
+		"ok": {
+			"type": "image",
+			"path": "image/ok.png",
+			"width": 300,
+			"height": 300
+		},
+		"_bootstrap": {
+			"type": "script",
+			"path": "script/_bootstrap.js",
+			"global": true
+		},
+		"main": {
+			"type": "script",
+			"path": "script/main.js",
+			"global": true
+		},
+		"parameterObject": {
+			"type": "script",
+			"path": "script/parameterObject.js",
+			"global": true
+		}
+	},
+	"environment": {
+		"sandbox-runtime": "3",
+		"nicolive": {
+			"supportedModes": [
+				"ranking"
+			],
+			"preferredSessionParameters": {
+				"totalTimeLimit": 45
+			}
+		}
+	},
+	"globalScripts": []
+}
