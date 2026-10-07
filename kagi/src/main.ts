@@ -326,12 +326,13 @@ export function main(param: GameMainParameterObject): void {
 		// ---- イントロ ----
 		const introLayer = new g.E({ scene });
 		overLayer.append(introLayer);
-		introLayer.append(new g.FilledRect({ scene, cssColor: "rgba(20,22,27,0.9)", width: 1280, height: 720 }));
+		introLayer.append(new g.FilledRect({ scene, cssColor: "rgba(20,22,27,0.97)", width: 1280, height: 720 }));
 		const logo = new g.Sprite({ scene, src: img("logo"), x: 640, y: 120, anchorX: 0.5, anchorY: 0.5 });
 		logo.scaleX = logo.scaleY = 0.8;
 		introLayer.append(logo);
-		const introLines = ["指で丸く囲むと、その中に鍵があるか分かる", "あれば、囲んだぶんだけに しぼられる", "30秒で、どこまで しぼれるか"];
-		introLines.forEach((t, i) => label(t, i === 2 ? fontGold : fontCream, 52, 640, 270 + i * 90, introLayer, "center"));
+		// 開始画面は一言だけ
+		const intro = label("丸で囲んで鍵を探せ！", fontGold, 96, 640, 400, introLayer, "center");
+		intro.anchorY = 0.5;
 		const countLabel = label("", fontGold, 90, 640, 640, introLayer, "center");
 		countLabel.anchorY = 0.5;
 		let lastCount = -1;
