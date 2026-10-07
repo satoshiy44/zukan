@@ -105,7 +105,7 @@ function drawAll() {
 		ctx.textAlign = "center";
 		ctx.textBaseline = "middle";
 		ctx.fillStyle = "#e8e2d0";
-		ctx.fillText("一万枚の中の鍵", w / 2, 160);
+		ctx.fillText("囲んで鍵探し", w / 2, 160);
 		ctx.fillStyle = "#8a7a52";
 		ctx.fillRect(w / 2 - 300, 236, 600, 2);
 	});

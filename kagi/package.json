@@ -2,7 +2,7 @@
   "name": "ichiman-no-kagi",
   "private": true,
   "version": "0.1.0",
-  "description": "ニコ生ランキングゲーム「一万枚の中の鍵」",
+  "description": "ニコ生ランキングゲーム「囲んで鍵探し」",
   "scripts": {
     "postinstall": "npm run build",
     "build": "rimraf ./script && tsc && akashic scan asset script",

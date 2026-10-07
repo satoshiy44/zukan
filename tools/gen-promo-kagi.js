@@ -1,4 +1,4 @@
-// 一万枚の中の鍵の紹介画像(1280x720)とアイコン(320x320)を作る
+// 囲んで鍵探しの紹介画像(1280x720)とアイコン(320x320)を作る
 // 使い方: node tools/gen-promo-kagi.js tools/promo-shots/kagi.png
 const { chromium } = require("playwright");
 const fs = require("fs");
@@ -73,18 +73,18 @@ async function draw(srcs) {
 	ix.strokeStyle = "#e8e2d0";
 	ix.beginPath(); ix.ellipse(S / 2, S / 2 + 10, 110, 92, -0.2, 0.2, Math.PI * 2 - 0.1); ix.stroke();
 	ix.drawImage(imgs.key, S / 2 - 70, S / 2 - 60, 140, 140);
-	ix.font = "bold 58px IPAGothic";
+	ix.font = "bold 66px IPAGothic";
 	ix.textAlign = "center";
 	ix.textBaseline = "middle";
 	ix.lineJoin = "round";
 	ix.lineWidth = 12;
 	ix.strokeStyle = "#14161b";
-	ix.strokeText("一万枚", S / 2, 42);
+	ix.strokeText("囲んで", S / 2, 42);
 	ix.fillStyle = "#e8e2d0";
-	ix.fillText("一万枚", S / 2, 42);
-	ix.strokeText("の中の鍵", S / 2, 282);
+	ix.fillText("囲んで", S / 2, 42);
+	ix.strokeText("鍵探し", S / 2, 282);
 	ix.fillStyle = "#c9b06a";
-	ix.fillText("の中の鍵", S / 2, 282);
+	ix.fillText("鍵探し", S / 2, 282);
 	// アイコンは100KB以内にするため JPEG にする
 	return { promo, icon: ic.toDataURL("image/jpeg", 0.88) };
 }
@@ -100,7 +100,7 @@ async function draw(srcs) {
 		fs.writeFileSync(path.join(ROOT, p), buf);
 		console.log("wrote", p, Math.round(buf.length / 1024) + "KB");
 	};
-	save("dist/ichiman-no-kagi_promo.png", out.promo);
-	save("dist/ichiman-no-kagi_icon.jpg", out.icon);
+	save("dist/kakonde-kagisagashi_promo.png", out.promo);
+	save("dist/kakonde-kagisagashi_icon.jpg", out.icon);
 	save("kagi/submission/icon.jpg", out.icon);
 })();
