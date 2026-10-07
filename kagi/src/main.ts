@@ -85,6 +85,7 @@ export function main(param: GameMainParameterObject): void {
 		fieldLayer.append(keySprite);
 
 		// ---- 右側 ----
+		const roundLabel = label("1周目   見つけた鍵 0本", fontGold, 30, 970, 18, uiLayer, "center");
 		label("のこり", fontDim, 30, 970, 74, uiLayer, "center");
 		const timeLabel = label("", fontCream, 64, 970, 106, uiLayer, "center");
 		label("いまの候補", fontDim, 30, 970, 186, uiLayer, "center");
@@ -105,7 +106,9 @@ export function main(param: GameMainParameterObject): void {
 		const history: string[] = [];
 		const stats = { hits: 0, misses: 0 };
 
-		const scoreOf = (n: number): number => Math.floor(100000 / n);
+		let keys = 0; // 見つけた鍵の数(=終わった周の数)
+		// 1本見つけるごとに10万点。いまの周は 100000 ÷ のこり枚数
+		const scoreOf = (n: number): number => keys * 100000 + Math.floor(100000 / n);
 		const setScore = (v: number): void => {
 			g.game.vars.gameState.score = v; // 常に最新のスコアを入れておく
 			setText(scoreLabel, v + " 点");
@@ -256,9 +259,10 @@ export function main(param: GameMainParameterObject): void {
 				});
 			});
 		};
-		// 鍵だけになった
+		// 鍵だけになった: 鍵を見せてから、そのまま次の周へ
 		const found = (): void => {
-			phase = "end";
+			keys++;
+			lock = 99;
 			se("found", 0.8);
 			field.opacity = 1;
 			field.modified();
@@ -270,10 +274,28 @@ export function main(param: GameMainParameterObject): void {
 				keySprite.scaleX = keySprite.scaleY = 0.2 + 1.3 * ease(p);
 				keySprite.modified();
 			});
-			// 残り時間ぶんのボーナス
-			const bonus = Math.floor(playLeft * 1000);
-			setScore(scoreOf(1) + bonus);
-			setText(msgLabel, "見つけた!  時間ボーナス +" + bonus);
+			setScore(keys * 100000);
+			setText(msgLabel, "見つけた! " + keys + "本目");
+			pushHistory("鍵 " + keys + "本目 発見");
+			setText(roundLabel, (keys + 1) + "周目   見つけた鍵 " + keys + "本");
+			scene.setTimeout(() => {
+				if (phase !== "play") return;
+				animate(0.3, (p) => {
+					keySprite.opacity = 1 - p;
+					keySprite.modified();
+				}, () => {
+					keySprite.hide();
+					keySprite.opacity = 1;
+					scatter(COINS);
+					updateRatio();
+					setText(msgLabel, (keys + 1) + "周目、もう一度 1万枚から");
+					lock = 0;
+					animate(0.4, (p) => {
+						field.opacity = p;
+						field.modified();
+					});
+				});
+			}, 1300);
 		};
 
 		const touch = new g.E({ scene, x: FX, y: FY, width: FS, height: FS, touchable: true });
