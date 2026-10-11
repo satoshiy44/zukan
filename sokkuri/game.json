@@ -1,0 +1,444 @@
+{
+	"width": 1280,
+	"height": 720,
+	"fps": 30,
+	"main": "./script/_bootstrap.js",
+	"assets": {
+		"beep": {
+			"type": "audio",
+			"path": "audio/beep",
+			"systemId": "sound",
+			"duration": 100,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"bgm": {
+			"type": "audio",
+			"path": "audio/bgm",
+			"systemId": "music",
+			"duration": 20000,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			},
+			"loop": true
+		},
+		"check": {
+			"type": "audio",
+			"path": "audio/check",
+			"systemId": "sound",
+			"duration": 250,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"finish": {
+			"type": "audio",
+			"path": "audio/finish",
+			"systemId": "sound",
+			"duration": 1060,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"go": {
+			"type": "audio",
+			"path": "audio/go",
+			"systemId": "sound",
+			"duration": 500,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"great": {
+			"type": "audio",
+			"path": "audio/great",
+			"systemId": "sound",
+			"duration": 710,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"pick": {
+			"type": "audio",
+			"path": "audio/pick",
+			"systemId": "sound",
+			"duration": 80,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"put": {
+			"type": "audio",
+			"path": "audio/put",
+			"systemId": "sound",
+			"duration": 100,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"round": {
+			"type": "audio",
+			"path": "audio/round",
+			"systemId": "sound",
+			"duration": 800,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"bg_autumn": {
+			"type": "image",
+			"path": "image/bg_autumn.png",
+			"width": 640,
+			"height": 480
+		},
+		"bg_room": {
+			"type": "image",
+			"path": "image/bg_room.png",
+			"width": 640,
+			"height": 480
+		},
+		"bg_spring": {
+			"type": "image",
+			"path": "image/bg_spring.png",
+			"width": 640,
+			"height": 480
+		},
+		"bg_summer": {
+			"type": "image",
+			"path": "image/bg_summer.png",
+			"width": 640,
+			"height": 480
+		},
+		"bg_winter": {
+			"type": "image",
+			"path": "image/bg_winter.png",
+			"width": 640,
+			"height": 480
+		},
+		"dot": {
+			"type": "image",
+			"path": "image/dot.png",
+			"width": 8,
+			"height": 8
+		},
+		"frame": {
+			"type": "image",
+			"path": "image/frame.png",
+			"width": 680,
+			"height": 520
+		},
+		"frame_s": {
+			"type": "image",
+			"path": "image/frame_s.png",
+			"width": 340,
+			"height": 260
+		},
+		"ghost": {
+			"type": "image",
+			"path": "image/ghost.png",
+			"width": 40,
+			"height": 40
+		},
+		"logo": {
+			"type": "image",
+			"path": "image/logo.png",
+			"width": 1160,
+			"height": 250
+		},
+		"p_ball": {
+			"type": "image",
+			"path": "image/p_ball.png",
+			"width": 86,
+			"height": 86
+		},
+		"p_bird": {
+			"type": "image",
+			"path": "image/p_bird.png",
+			"width": 99,
+			"height": 55
+		},
+		"p_butterfly": {
+			"type": "image",
+			"path": "image/p_butterfly.png",
+			"width": 88,
+			"height": 65
+		},
+		"p_cat": {
+			"type": "image",
+			"path": "image/p_cat.png",
+			"width": 116,
+			"height": 88
+		},
+		"p_clock": {
+			"type": "image",
+			"path": "image/p_clock.png",
+			"width": 96,
+			"height": 96
+		},
+		"p_cloud": {
+			"type": "image",
+			"path": "image/p_cloud.png",
+			"width": 151,
+			"height": 96
+		},
+		"p_dango": {
+			"type": "image",
+			"path": "image/p_dango.png",
+			"width": 46,
+			"height": 122
+		},
+		"p_himawari_l": {
+			"type": "image",
+			"path": "image/p_himawari_l.png",
+			"width": 112,
+			"height": 201
+		},
+		"p_himawari_s": {
+			"type": "image",
+			"path": "image/p_himawari_s.png",
+			"width": 80,
+			"height": 139
+		},
+		"p_hiyoko": {
+			"type": "image",
+			"path": "image/p_hiyoko.png",
+			"width": 73,
+			"height": 68
+		},
+		"p_kabuto": {
+			"type": "image",
+			"path": "image/p_kabuto.png",
+			"width": 93,
+			"height": 71
+		},
+		"p_kamakura": {
+			"type": "image",
+			"path": "image/p_kamakura.png",
+			"width": 170,
+			"height": 86
+		},
+		"p_kinoko": {
+			"type": "image",
+			"path": "image/p_kinoko.png",
+			"width": 90,
+			"height": 72
+		},
+		"p_lamp": {
+			"type": "image",
+			"path": "image/p_lamp.png",
+			"width": 84,
+			"height": 180
+		},
+		"p_momi": {
+			"type": "image",
+			"path": "image/p_momi.png",
+			"width": 128,
+			"height": 190
+		},
+		"p_momiji": {
+			"type": "image",
+			"path": "image/p_momiji.png",
+			"width": 192,
+			"height": 194
+		},
+		"p_moon": {
+			"type": "image",
+			"path": "image/p_moon.png",
+			"width": 106,
+			"height": 106
+		},
+		"p_nyudo": {
+			"type": "image",
+			"path": "image/p_nyudo.png",
+			"width": 151,
+			"height": 124
+		},
+		"p_parasol": {
+			"type": "image",
+			"path": "image/p_parasol.png",
+			"width": 154,
+			"height": 155
+		},
+		"p_picture": {
+			"type": "image",
+			"path": "image/p_picture.png",
+			"width": 128,
+			"height": 108
+		},
+		"p_plant": {
+			"type": "image",
+			"path": "image/p_plant.png",
+			"width": 92,
+			"height": 142
+		},
+		"p_robin": {
+			"type": "image",
+			"path": "image/p_robin.png",
+			"width": 89,
+			"height": 66
+		},
+		"p_sakura": {
+			"type": "image",
+			"path": "image/p_sakura.png",
+			"width": 202,
+			"height": 194
+		},
+		"p_snowman": {
+			"type": "image",
+			"path": "image/p_snowman.png",
+			"width": 98,
+			"height": 166
+		},
+		"p_sofa": {
+			"type": "image",
+			"path": "image/p_sofa.png",
+			"width": 222,
+			"height": 122
+		},
+		"p_sori": {
+			"type": "image",
+			"path": "image/p_sori.png",
+			"width": 135,
+			"height": 57
+		},
+		"p_star": {
+			"type": "image",
+			"path": "image/p_star.png",
+			"width": 90,
+			"height": 85
+		},
+		"p_suika": {
+			"type": "image",
+			"path": "image/p_suika.png",
+			"width": 100,
+			"height": 53
+		},
+		"p_sun": {
+			"type": "image",
+			"path": "image/p_sun.png",
+			"width": 124,
+			"height": 124
+		},
+		"p_sun_s": {
+			"type": "image",
+			"path": "image/p_sun_s.png",
+			"width": 140,
+			"height": 140
+		},
+		"p_susuki": {
+			"type": "image",
+			"path": "image/p_susuki.png",
+			"width": 80,
+			"height": 172
+		},
+		"p_table": {
+			"type": "image",
+			"path": "image/p_table.png",
+			"width": 174,
+			"height": 122
+		},
+		"p_tonbo": {
+			"type": "image",
+			"path": "image/p_tonbo.png",
+			"width": 97,
+			"height": 46
+		},
+		"p_tulip_r": {
+			"type": "image",
+			"path": "image/p_tulip_r.png",
+			"width": 50,
+			"height": 108
+		},
+		"p_tulip_y": {
+			"type": "image",
+			"path": "image/p_tulip_y.png",
+			"width": 50,
+			"height": 108
+		},
+		"p_usagi": {
+			"type": "image",
+			"path": "image/p_usagi.png",
+			"width": 82,
+			"height": 97
+		},
+		"p_usagi2": {
+			"type": "image",
+			"path": "image/p_usagi2.png",
+			"width": 70,
+			"height": 83
+		},
+		"p_window": {
+			"type": "image",
+			"path": "image/p_window.png",
+			"width": 158,
+			"height": 138
+		},
+		"p_yukigumo": {
+			"type": "image",
+			"path": "image/p_yukigumo.png",
+			"width": 160,
+			"height": 102
+		},
+		"p_yukiusagi": {
+			"type": "image",
+			"path": "image/p_yukiusagi.png",
+			"width": 90,
+			"height": 70
+		},
+		"_bootstrap": {
+			"type": "script",
+			"path": "script/_bootstrap.js",
+			"global": true
+		},
+		"main": {
+			"type": "script",
+			"path": "script/main.js",
+			"global": true
+		},
+		"parameterObject": {
+			"type": "script",
+			"path": "script/parameterObject.js",
+			"global": true
+		}
+	},
+	"environment": {
+		"sandbox-runtime": "3",
+		"nicolive": {
+			"supportedModes": [
+				"ranking"
+			],
+			"preferredSessionParameters": {
+				"totalTimeLimit": 85
+			}
+		}
+	},
+	"globalScripts": []
+}
