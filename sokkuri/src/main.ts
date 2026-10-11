@@ -8,19 +8,22 @@ const PH = 480;
 const RX = 720; // おてほんの左上(半分の大きさで表示)
 const RY = 40;
 const RS = 0.5;
-const TX = 712; // パーツ置き場の左上
+const TX = 702; // パーツ置き場の左上
 const TY = 318;
-const TCW = 140; // パーツ置き場の1マス
+const TCOLS = 5;
+const TCW = 113; // パーツ置き場の1マス(5×2)
 const TCH = 196;
 const INTRO_SEC = 4;
-const PLAY_SEC = 30;
 const REVIEW_SEC = 6.5;
-const NEXT_SEC = 2.4; // 2枚目の名前を出す時間
+const NEXT_SEC = 2.4; // 次の絵の名前を出す時間
+// 1枚目は野原、2枚目はおへや、3枚目はサーカス。だんだん長く、パーツも多くなる
+interface RoundDef { sec: number; min: number; max: number; }
+const ROUNDS: RoundDef[] = [{ sec: 25, min: 5, max: 7 }, { sec: 30, min: 6, max: 8 }, { sec: 35, min: 7, max: 9 }];
 const FULL_DIST = 160; // これより離れると0点
 const PERFECT_DIST = 10; // これより近いとピッタリ
 const MM_PER_PX = 0.5;
 
-type Zone = "sky" | "tree" | "ground" | "wall" | "tall" | "floor";
+type Zone = "sky" | "tree" | "ground" | "wall" | "tall" | "floor" | "air" | "stagetall" | "stage";
 interface PartDef { id: string; zone: Zone; }
 interface SceneDef { name: string; bg: string; parts: PartDef[]; }
 const SCENES: SceneDef[] = [
@@ -60,9 +63,18 @@ const ROOM: SceneDef = {
 		{ id: "p_plant", zone: "tall" }, { id: "p_sofa", zone: "floor" }
 	]
 };
+const CIRCUS: SceneDef = {
+	name: "サーカス", bg: "bg_circus", parts: [
+		{ id: "p_clown_a", zone: "stagetall" }, { id: "p_clown_b", zone: "stagetall" }, { id: "p_elephant", zone: "stagetall" },
+		{ id: "p_lion", zone: "stage" }, { id: "p_ring", zone: "stagetall" }, { id: "p_seal", zone: "stage" },
+		{ id: "p_monkey", zone: "stagetall" }, { id: "p_bear", zone: "stagetall" }, { id: "p_trapeze", zone: "air" },
+		{ id: "p_drum", zone: "stage" }, { id: "p_star_c", zone: "air" }
+	]
+};
 // 置き場所の高さ(絵の中の中心のy)
 const ZONE_Y: { [z: string]: number[] } = {
-	sky: [55, 185], tree: [230, 300], ground: [335, 430], wall: [70, 210], tall: [300, 360], floor: [345, 420]
+	sky: [55, 185], tree: [230, 300], ground: [335, 430], wall: [70, 210], tall: [300, 360], floor: [345, 420],
+	air: [80, 190], stagetall: [270, 340], stage: [350, 420]
 };
 
 interface Part {
@@ -77,15 +89,15 @@ interface Part {
 
 export function main(param: GameMainParameterObject): void {
 	const partIds: string[] = [];
-	SCENES.concat([ROOM]).forEach((s) => s.parts.forEach((p) => partIds.push(p.id)));
+	SCENES.concat([ROOM, CIRCUS]).forEach((s) => s.parts.forEach((p) => partIds.push(p.id)));
 	const scene = new g.Scene({
 		game: g.game,
 		assetIds: [
-			"bg_spring", "bg_summer", "bg_autumn", "bg_winter", "bg_room", "frame", "frame_s", "ghost", "dot", "logo",
+			"bg_spring", "bg_summer", "bg_autumn", "bg_winter", "bg_room", "bg_circus", "frame", "frame_s", "ghost", "dot", "logo",
 			"pick", "put", "check", "great", "round", "beep", "go", "finish", "bgm"
 		].concat(partIds)
 	});
-	let time = 90;
+	let time = 130;
 	if (param.sessionParameter.totalTimeLimit) {
 		time = param.sessionParameter.totalTimeLimit;
 	}
@@ -177,19 +189,25 @@ export function main(param: GameMainParameterObject): void {
 		let phase: "intro" | "play" | "review" | "next" | "end" = "intro";
 		let elapsed = 0;
 		let phaseT = 0;
-		let round = 0; // 0 = 1枚目、1 = 2枚目
+		let round = 0; // 0 = 1枚目、1 = 2枚目、2 = 3枚目
 		// 制限時間が短いときは、1枚あたりの時間を短くする
-		const playSec = Math.max(10, Math.min(PLAY_SEC, (time - INTRO_SEC - REVIEW_SEC * 2 - NEXT_SEC - 6) / 2));
-		let playLeft = playSec;
+		// 制限時間が短いときは、どの絵の時間も同じ割合で短くする
+		let need = INTRO_SEC + 6;
+		ROUNDS.forEach((r) => {
+			need += r.sec + REVIEW_SEC + NEXT_SEC;
+		});
+		const timeRate = Math.min(1, time / need);
+		const playSecOf = (r: number): number => Math.max(8, ROUNDS[r].sec * timeRate);
+		let playLeft = playSecOf(0);
 		let score = 0;
 		let parts: Part[] = [];
 		let reviewPanel: g.E | null = null;
-		// 1枚目は季節をえらぶ。2枚目はおへや
+		// 1枚目は季節をえらぶ。2枚目はおへや、3枚目はサーカス
 		const firstScene = SCENES[Math.floor(rand() * SCENES.length)];
-		const sceneOf = (r: number): SceneDef => (r === 0 ? firstScene : ROOM);
+		const sceneOf = (r: number): SceneDef => (r === 0 ? firstScene : r === 1 ? ROOM : CIRCUS);
 
-		const slotPos = (i: number): number[] => [TX + (i % 4) * TCW + TCW / 2, TY + Math.floor(i / 4) * TCH + TCH / 2];
-		const trayScaleOf = (s: g.Sprite): number => Math.min(1, (TCW - 18) / s.width, (TCH - 30) / s.height);
+		const slotPos = (i: number): number[] => [TX + (i % TCOLS) * TCW + TCW / 2, TY + Math.floor(i / TCOLS) * TCH + TCH / 2];
+		const trayScaleOf = (s: g.Sprite): number => Math.min(1, (TCW - 12) / s.width, (TCH - 30) / s.height);
 
 		// おてほんの配置を作る(毎回ちがう)
 		const setupRound = (r: number): void => {
@@ -203,7 +221,7 @@ export function main(param: GameMainParameterObject): void {
 			setImage(paintBg, img(sc.bg));
 			setImage(refBg, img(sc.bg));
 			setText(titleLabel, (r + 1) + "枚目  " + sc.name);
-			setText(roundLabel, (r + 1) + "枚目 / 2枚");
+			setText(roundLabel, (r + 1) + "枚目 / " + ROUNDS.length + "枚");
 			// 6〜8個を、ばらばらの順でえらぶ
 			const pool = sc.parts.slice();
 			for (let i = pool.length - 1; i > 0; i--) {
@@ -212,7 +230,7 @@ export function main(param: GameMainParameterObject): void {
 				pool[i] = pool[j];
 				pool[j] = t;
 			}
-			const n = 6 + Math.floor(rand() * 3);
+			const n = ROUNDS[r].min + Math.floor(rand() * (ROUNDS[r].max - ROUNDS[r].min + 1));
 			const picked = pool.slice(0, n);
 			const placed: number[][] = []; // x, y, 半径
 			picked.forEach((def, i) => {
@@ -407,7 +425,7 @@ export function main(param: GameMainParameterObject): void {
 		const startPlay = (): void => {
 			phase = "play";
 			phaseT = 0;
-			playLeft = playSec;
+			playLeft = playSecOf(round);
 			setText(hintLabel, "おてほんを見て、パーツを額縁に置こう");
 			se("go", 0.6);
 		};
@@ -421,7 +439,7 @@ export function main(param: GameMainParameterObject): void {
 			box.append(new g.FilledRect({ scene, cssColor: "rgba(40,28,20,0.85)", y: 240, width: 1280, height: 240 }));
 			const sub = label("おてほんと同じ配置に置こう!", fontCream, 44, 640, 300, box, "center");
 			sub.anchorY = 0.5;
-			const l = label("2枚目  " + sceneOf(round).name, fontGold, 80, 640, 400, box, "center");
+			const l = label((round + 1) + "枚目  " + sceneOf(round).name, fontGold, 80, 640, 400, box, "center");
 			l.anchorY = 0.5;
 			animate(NEXT_SEC, (q) => {
 				box.opacity = q < 0.8 ? 1 : 1 - (q - 0.8) / 0.2;
@@ -477,7 +495,7 @@ export function main(param: GameMainParameterObject): void {
 					bgm.play().changeVolume(0.35);
 					startPlay();
 				}
-				setText(timeLabel, String(Math.ceil(playSec)));
+				setText(timeLabel, String(Math.ceil(playSecOf(0))));
 				return;
 			}
 			if (phase === "play") {
@@ -487,7 +505,7 @@ export function main(param: GameMainParameterObject): void {
 				timeLabel.modified();
 				if (playLeft <= 0) review();
 			} else if (phase === "review" && phaseT >= REVIEW_SEC) {
-				if (round === 0) nextRound();
+				if (round < ROUNDS.length - 1) nextRound();
 				else finish();
 			} else if (phase === "next" && phaseT >= NEXT_SEC) {
 				startPlay();

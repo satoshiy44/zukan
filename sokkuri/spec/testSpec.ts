@@ -2,14 +2,15 @@ import * as path from "path";
 import { GameContext } from "@akashic/headless-akashic";
 
 describe("そっくり絵合わせ", () => {
-	it("おてほんどおりに置くと高得点、2枚目まで進み、スコアが整数で残る", async () => {
+	it("おてほんどおりに置くと高得点、3枚目まで進み、スコアが整数で残る", async () => {
 		const context = new GameContext<3>({ gameJsonPath: path.join(__dirname, "..", "game.json") });
 		const client = await context.getGameClient();
 		const game = client.game!;
 		await client.advanceUntil(() => game.scene()!.local !== "full-local" && game.scene()!.name !== "_bootstrap");
 		await context.advance(4500);
 		const scores: number[] = [];
-		for (let round = 0; round < 2; round++) {
+		const secs = [25, 30, 35];
+		for (let round = 0; round < 3; round++) {
 			const scene = game.scene()! as any;
 			const uiLayer = scene.children[2];
 			const ref = uiLayer.children.find((e: any) => e.scaleX === 0.5);
@@ -29,14 +30,15 @@ describe("そっくり絵合わせ", () => {
 				client.sendPointUp(30 + target.x, 120 + target.y, 1);
 				await context.advance(100);
 			}
-			await context.advance(32000 + 9500 - 34 * 7 * sprites.length);
+			await context.advance(secs[round] * 1000 + 9200 - (34 * 6 + 100) * (sprites.length - 1));
 			scores.push(game.vars.gameState.score);
 		}
 		console.log("scores", scores.join(","));
 		expect(Number.isInteger(scores[1])).toBe(true);
-		// 6〜8個のうち1個を置かずに、残りをピッタリ置いたので、1枚あたり 5×1500 点以上
-		expect(scores[0]).toBeGreaterThanOrEqual(7500);
-		expect(scores[1] - scores[0]).toBeGreaterThanOrEqual(7500);
+				// 1枚目は5〜7個、2枚目は6〜8個、3枚目は7〜9個。1個は置かずに、残りをピッタリ置いた
+		expect(scores[0]).toBeGreaterThanOrEqual(4 * 1500);
+		expect(scores[1] - scores[0]).toBeGreaterThanOrEqual(5 * 1500);
+		expect(scores[2] - scores[1]).toBeGreaterThanOrEqual(6 * 1500);
 		await context.destroy();
-	}, 180000);
+	}, 300000);
 });

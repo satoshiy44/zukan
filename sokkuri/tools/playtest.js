@@ -18,11 +18,13 @@ const outDir = process.argv[2] || ".";
 	await page.waitForTimeout(1500);
 	await shot("00_intro");
 	await page.waitForTimeout(3000);
-	for (let round = 0; round < 2; round++) {
+	const secs = [25, 30, 35];
+	for (let round = 0; round < 3; round++) {
+		const t0 = Date.now();
 		await shot((round + 1) + "_a_start");
-		// 置き場のマス(4×2)から、額縁のあちこちへ
-		for (let i = 0; i < 8; i++) {
-			const sx = 712 + (i % 4) * 140 + 70, sy = 318 + Math.floor(i / 4) * 196 + 98;
+		// 置き場のマス(5×2)から、額縁のあちこちへ
+		for (let i = 0; i < 9; i++) {
+			const sx = 702 + (i % 5) * 113 + 56, sy = 318 + Math.floor(i / 5) * 196 + 98;
 			const tx = 120 + Math.random() * 460, ty = 170 + Math.random() * 380;
 			let p = at(sx, sy);
 			await page.mouse.move(p[0], p[1]);
@@ -32,17 +34,15 @@ const outDir = process.argv[2] || ".";
 				await page.mouse.move(p[0], p[1]);
 				await page.waitForTimeout(16);
 			}
-			if (i === 3) await shot((round + 1) + "_b_drag");
 			await page.mouse.up();
-			await page.waitForTimeout(150);
+			await page.waitForTimeout(120);
 		}
 		await shot((round + 1) + "_c_placed");
-		await page.waitForTimeout(round === 0 ? 30000 - 8 * 500 - 500 : 27000);
-		await page.waitForTimeout(2600);
+		await page.waitForTimeout(secs[round] * 1000 - (Date.now() - t0) + 4200);
 		await shot((round + 1) + "_d_review");
-		await page.waitForTimeout(round === 0 ? 4200 : 2000);
-		if (round === 0) await shot("1_e_next");
-		if (round === 0) await page.waitForTimeout(1800);
+		await page.waitForTimeout(2300 + 1000);
+		if (round < 2) await shot((round + 1) + "_e_next");
+		await page.waitForTimeout(1500);
 	}
 	await shot("9_end");
 	await browser.close();

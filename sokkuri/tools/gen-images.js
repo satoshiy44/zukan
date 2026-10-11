@@ -322,6 +322,123 @@ function drawAll() {
 		R(ctx, 2, 40, 34, 70, 12, "#5a7ac0", INK, 3); R(ctx, 184, 40, 34, 70, 12, "#5a7ac0", INK, 3);
 		line(ctx, [[30, 102], [30, 124]], "#5a3a20", 7); line(ctx, [[190, 102], [190, 124]], "#5a3a20", 7);
 	});
+	// サーカス
+	const clown = (ctx, cx, cy, suit1, suit2, hair) => {
+		poly(ctx, [[cx - 34, cy + 10], [cx + 34, cy + 10], [cx + 44, cy + 86], [cx - 44, cy + 86]], suit1, INK, 3);
+		poly(ctx, [[cx, cy + 10], [cx + 34, cy + 10], [cx + 44, cy + 86], [cx, cy + 86]], suit2, INK, 3);
+		[0, 1, 2].forEach((i) => E(ctx, cx, cy + 26 + i * 20, 5, 5, "#ffffff", INK, 1.5));
+		R(ctx, cx - 40, cy + 86, 34, 12, 6, "#c8402a", INK, 2.5); R(ctx, cx + 6, cy + 86, 34, 12, 6, "#c8402a", INK, 2.5);
+		E(ctx, cx - 26, cy - 22, 14, 12, hair, INK, 2); E(ctx, cx + 26, cy - 22, 14, 12, hair, INK, 2);
+		E(ctx, cx, cy - 18, 24, 24, "#fff6ee", INK, 2.5);
+		poly(ctx, [[cx - 16, cy - 36], [cx, cy - 76], [cx + 16, cy - 36]], suit2, INK, 2.5);
+		E(ctx, cx, cy - 78, 6, 6, "#ffe14a", INK, 1.5);
+		E(ctx, cx, cy - 14, 7, 7, "#ff3a3a");
+		E(ctx, cx - 9, cy - 24, 2.5, 3, "#3a2a20"); E(ctx, cx + 9, cy - 24, 2.5, 3, "#3a2a20");
+		ctx.beginPath(); ctx.arc(cx, cy - 8, 10, 0.3, Math.PI - 0.3); ctx.strokeStyle = "#e84a5a"; ctx.lineWidth = 3; ctx.stroke();
+		poly(ctx, [[cx - 18, cy + 6], [cx, cy + 14], [cx + 18, cy + 6], [cx, cy - 2]], "#ffffff", INK, 1.5);
+	};
+	make("bg_circus", 640, 480, (ctx, w, h) => {
+		ctx.fillStyle = "#2a1a3a"; ctx.fillRect(0, 0, w, h);
+		for (let i = 0; i < 12; i++) poly(ctx, [[320, -40], [i * 58 - 20, 150], [(i + 1) * 58 - 20, 150]], i % 2 ? "#f4ece0" : "#c8303a");
+		for (let i = 0; i < 12; i++) E(ctx, i * 58 + 9, 150, 30, 14, i % 2 ? "#f4ece0" : "#c8303a");
+		poly(ctx, [[120, 0], [60, 480], [260, 480]], "rgba(255,240,180,0.10)");
+		poly(ctx, [[520, 0], [380, 480], [580, 480]], "rgba(255,240,180,0.10)");
+		E(ctx, 320, 420, 330, 90, "#b8402a");
+		E(ctx, 320, 410, 310, 80, "#e8c070", "#8a5a1a", 4);
+		E(ctx, 320, 410, 220, 54, null, "rgba(138,90,26,0.5)", 3);
+		for (let i = 0; i < 16; i++) poly(ctx, [[i * 42, 176], [i * 42 + 42, 176], [i * 42 + 21, 200]], ["#ffd23a", "#3a8aff", "#5ab04a", "#ff7aa8"][i % 4]);
+		line(ctx, [[0, 176], [640, 176]], "#f4ece0", 2);
+	}, true);
+	make("p_clown_a", 120, 200, (ctx) => {
+		clown(ctx, 60, 90, "#3a8aff", "#ffd23a", "#ff7a1a");
+		[[20, 6, "#ff5a5a"], [60, -2, "#5ab04a"], [100, 6, "#b07aff"]].forEach((q) => E(ctx, q[0], q[1] + 10, 9, 9, q[2], INK, 2));
+	});
+	make("p_clown_b", 110, 220, (ctx) => {
+		ctx.translate(0, 10);
+		clown(ctx, 55, 80, "#5ab04a", "#ff7aa8", "#3a8aff");
+		R(ctx, 10, 176, 90, 14, 7, "#8a6a4a", INK, 2.5);
+		E(ctx, 30, 196, 12, 12, "#4a4a5a", INK, 2); E(ctx, 80, 196, 12, 12, "#4a4a5a", INK, 2);
+	});
+	make("p_elephant", 170, 200, (ctx) => {
+		const g2 = ctx.createRadialGradient(70, 140, 5, 85, 150, 46);
+		g2.addColorStop(0, "#ffffff"); g2.addColorStop(0.5, "#ff5a5a"); g2.addColorStop(1, "#c8303a");
+		E(ctx, 85, 150, 40, 38, g2, INK, 3);
+		R(ctx, 46, 92, 16, 30, 6, "#a8b4d8", "#56628a", 2.5); R(ctx, 96, 92, 16, 30, 6, "#a8b4d8", "#56628a", 2.5);
+		E(ctx, 80, 70, 52, 40, "#a8b4d8", "#56628a", 3);
+		E(ctx, 130, 52, 28, 26, "#a8b4d8", "#56628a", 3);
+		E(ctx, 116, 50, 16, 22, "#c8d0ec", "#56628a", 2.5);
+		line(ctx, [[150, 60], [164, 40], [160, 20]], "#56628a", 13); line(ctx, [[150, 60], [164, 40], [160, 20]], "#a8b4d8", 7);
+		E(ctx, 138, 44, 3, 3.5, "#3a2a20");
+		poly(ctx, [[70, 30], [90, 4], [104, 32]], "#ff7aa8", INK, 2);
+	});
+	make("p_lion", 150, 120, (ctx) => {
+		E(ctx, 60, 64, 46, 24, "#e8a040", INK, 3);
+		line(ctx, [[16, 60], [2, 40]], "#e8a040", 7); E(ctx, 4, 38, 6, 6, "#a8601a");
+		for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6; E(ctx, 112 + Math.cos(a) * 24, 50 + Math.sin(a) * 24, 12, 12, "#a8601a", INK, 1.5); }
+		E(ctx, 112, 50, 24, 24, "#e8a040", "#a8601a", 3);
+		E(ctx, 104, 44, 2.5, 3, "#3a2a20"); E(ctx, 120, 44, 2.5, 3, "#3a2a20"); E(ctx, 112, 56, 5, 3.5, "#5a3a1a");
+		line(ctx, [[30, 80], [16, 108]], "#e8a040", 10); line(ctx, [[86, 80], [104, 106]], "#e8a040", 10);
+	});
+	make("p_ring", 130, 170, (ctx) => {
+		line(ctx, [[65, 120], [65, 166]], "#8a6a4a", 6);
+		E(ctx, 65, 68, 46, 54, null, "#c8402a", 8);
+		for (let i = 0; i < 14; i++) {
+			const a = i * Math.PI / 7;
+			const x = 65 + Math.cos(a) * 46, y = 68 + Math.sin(a) * 54;
+			poly(ctx, [[x - 6, y], [x, y - 16], [x + 6, y]], "#ffb43a");
+			poly(ctx, [[x - 3, y], [x, y - 9], [x + 3, y]], "#fff36a");
+		}
+	});
+	make("p_seal", 130, 120, (ctx) => {
+		E(ctx, 70, 82, 46, 28, "#5a6a80", "#2a3a50", 3);
+		E(ctx, 46, 50, 24, 24, "#5a6a80", "#2a3a50", 3);
+		poly(ctx, [[100, 90], [128, 76], [124, 104]], "#5a6a80", "#2a3a50", 2.5);
+		E(ctx, 40, 44, 2.5, 3, "#1a1a20"); E(ctx, 30, 54, 4, 3, "#1a1a20");
+		const g3 = ctx.createRadialGradient(36, 10, 2, 40, 14, 14);
+		g3.addColorStop(0, "#ffffff"); g3.addColorStop(1, "#3a8aff");
+		E(ctx, 40, 14, 13, 13, g3, INK, 2);
+	});
+	make("p_monkey", 100, 175, (ctx) => {
+		E(ctx, 50, 152, 18, 18, "#4a4a5a", INK, 3); E(ctx, 50, 152, 6, 6, "#c8c8d0");
+		line(ctx, [[50, 134], [50, 104]], "#8a8a9a", 5);
+		R(ctx, 36, 98, 28, 8, 4, "#c8402a", INK, 2);
+		E(ctx, 50, 76, 20, 24, "#a8683a", INK, 2.5);
+		E(ctx, 50, 40, 20, 18, "#a8683a", INK, 2.5);
+		E(ctx, 30, 38, 7, 7, "#e8b888", INK, 2); E(ctx, 70, 38, 7, 7, "#e8b888", INK, 2);
+		E(ctx, 50, 44, 12, 10, "#e8b888");
+		E(ctx, 45, 38, 2, 2.5, "#3a2a20"); E(ctx, 55, 38, 2, 2.5, "#3a2a20");
+		poly(ctx, [[38, 24], [50, 4], [62, 24]], "#3a8aff", INK, 2);
+		line(ctx, [[34, 70], [16, 54]], "#a8683a", 6); line(ctx, [[66, 70], [84, 54]], "#a8683a", 6);
+	});
+	make("p_bear", 140, 165, (ctx) => {
+		E(ctx, 70, 130, 30, 30, "#3a8aff", INK, 3);
+		[0, 1, 2].forEach((i) => line(ctx, [[48 + i * 22, 108], [48 + i * 22, 152]], "rgba(255,255,255,0.6)", 4));
+		E(ctx, 70, 72, 34, 30, "#8a5a32", INK, 3);
+		E(ctx, 50, 16, 9, 9, "#8a5a32", INK, 2); E(ctx, 90, 16, 9, 9, "#8a5a32", INK, 2);
+		E(ctx, 70, 34, 26, 24, "#8a5a32", INK, 3);
+		E(ctx, 70, 42, 11, 8, "#d8b08a"); E(ctx, 70, 38, 4, 3, "#3a2a20");
+		E(ctx, 61, 28, 2.5, 3, "#3a2a20"); E(ctx, 79, 28, 2.5, 3, "#3a2a20");
+		poly(ctx, [[56, 58], [70, 66], [84, 58], [70, 52]], "#ffd23a", INK, 1.5);
+	});
+	make("p_trapeze", 140, 165, (ctx) => {
+		line(ctx, [[30, 0], [30, 120]], "#c8c8d0", 3); line(ctx, [[110, 0], [110, 120]], "#c8c8d0", 3);
+		line(ctx, [[26, 120], [114, 120]], "#c8402a", 7);
+		E(ctx, 70, 106, 12, 12, "#fff6ee", INK, 2);
+		E(ctx, 70, 100, 12, 6, "#3a2a20");
+		poly(ctx, [[58, 122], [82, 122], [88, 150], [52, 150]], "#ff7aa8", INK, 2.5);
+		line(ctx, [[58, 124], [36, 118]], "#fff6ee", 5); line(ctx, [[82, 124], [104, 118]], "#fff6ee", 5);
+		line(ctx, [[62, 150], [56, 160]], "#fff6ee", 5); line(ctx, [[78, 150], [84, 160]], "#fff6ee", 5);
+	});
+	make("p_drum", 110, 90, (ctx) => {
+		R(ctx, 8, 20, 94, 64, 6, "#3a8aff", INK, 3);
+		E(ctx, 55, 20, 47, 14, "#ffd23a", INK, 3);
+		for (let i = 0; i < 6; i++) E(ctx, 18 + i * 15, 52, 5, 5, "#ffffff");
+	});
+	make("p_star_c", 90, 90, (ctx) => {
+		const pts = [];
+		for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? 16 : 40; pts.push([45 + Math.cos(a) * r, 45 + Math.sin(a) * r]); }
+		poly(ctx, pts, "#ffd23a", "#c8902a", 3);
+	});
 	// ---- 結果の丸 ----
 	make("ghost", 40, 40, (ctx) => { E(ctx, 20, 20, 16, 16, null, "#ffffff", 4); E(ctx, 20, 20, 4, 4, "#ffffff"); }, true);
 	make("dot", 8, 8, (ctx) => E(ctx, 4, 4, 3.5, 3.5, "#ffffff"), true);
