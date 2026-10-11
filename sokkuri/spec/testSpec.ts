@@ -29,7 +29,7 @@ describe("そっくり絵合わせ", () => {
 				client.sendPointUp(30 + target.x, 120 + target.y, 1);
 				await context.advance(100);
 			}
-			await context.advance(32000 + 7000 - 34 * 7 * sprites.length);
+			await context.advance(32000 + 9500 - 34 * 7 * sprites.length);
 			scores.push(game.vars.gameState.score);
 		}
 		console.log("scores", scores.join(","));

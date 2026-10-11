@@ -40,7 +40,7 @@ const outDir = process.argv[2] || ".";
 		await page.waitForTimeout(round === 0 ? 30000 - 8 * 500 - 500 : 27000);
 		await page.waitForTimeout(2600);
 		await shot((round + 1) + "_d_review");
-		await page.waitForTimeout(round === 0 ? 2200 : 2000);
+		await page.waitForTimeout(round === 0 ? 4200 : 2000);
 		if (round === 0) await shot("1_e_next");
 		if (round === 0) await page.waitForTimeout(1800);
 	}

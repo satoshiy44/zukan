@@ -14,7 +14,7 @@ const TCW = 140; // パーツ置き場の1マス
 const TCH = 196;
 const INTRO_SEC = 4;
 const PLAY_SEC = 30;
-const REVIEW_SEC = 4.5;
+const REVIEW_SEC = 6.5;
 const NEXT_SEC = 2.4; // 2枚目の名前を出す時間
 const FULL_DIST = 160; // これより離れると0点
 const PERFECT_DIST = 10; // これより近いとピッタリ
@@ -85,7 +85,7 @@ export function main(param: GameMainParameterObject): void {
 			"pick", "put", "check", "great", "round", "beep", "go", "finish", "bgm"
 		].concat(partIds)
 	});
-	let time = 85;
+	let time = 90;
 	if (param.sessionParameter.totalTimeLimit) {
 		time = param.sessionParameter.totalTimeLimit;
 	}
@@ -183,6 +183,7 @@ export function main(param: GameMainParameterObject): void {
 		let playLeft = playSec;
 		let score = 0;
 		let parts: Part[] = [];
+		let reviewPanel: g.E | null = null;
 		// 1枚目は季節をえらぶ。2枚目はおへや
 		const firstScene = SCENES[Math.floor(rand() * SCENES.length)];
 		const sceneOf = (r: number): SceneDef => (r === 0 ? firstScene : ROOM);
@@ -195,6 +196,8 @@ export function main(param: GameMainParameterObject): void {
 			const sc = sceneOf(r);
 			parts.forEach((p) => p.sprite.destroy());
 			parts = [];
+			if (reviewPanel) reviewPanel.destroy();
+			reviewPanel = null;
 			refParts.children?.slice().forEach((c) => c.destroy());
 			reviewLayer.children?.slice().forEach((c) => c.destroy());
 			setImage(paintBg, img(sc.bg));
@@ -329,15 +332,6 @@ export function main(param: GameMainParameterObject): void {
 		};
 
 		// ---- 答え合わせ ----
-		const popup = (text: string, font: g.Font, size: number, x: number, y: number, dur = 1.0): void => {
-			const l = label(text, font, size, x, y, fxLayer, "center");
-			l.anchorY = 0.5;
-			animate(dur, (q) => {
-				l.y = y - 30 * q;
-				l.opacity = q > 0.7 ? 1 - (q - 0.7) / 0.3 : 1;
-				l.modified();
-			}, () => l.destroy());
-		};
 		const review = (): void => {
 			phase = "review";
 			phaseT = 0;
@@ -348,8 +342,23 @@ export function main(param: GameMainParameterObject): void {
 			setText(hintLabel, "こたえあわせ");
 			let total = 0;
 			let accSum = 0;
+			// パーツ置き場の上に、1つずつ「点数とずれ」をならべる。置かなかったパーツは隠す
+			parts.forEach((p) => {
+				if (!p.placed) p.sprite.hide();
+			});
+			const panel = new g.E({ scene, x: 700, y: 316 });
+			fxLayer.append(panel);
+			reviewPanel = panel;
+			panel.append(new g.FilledRect({ scene, cssColor: "#2e2219", width: 572, height: 400 }));
+			panel.append(new g.FilledRect({ scene, cssColor: "rgba(242,212,138,0.5)", y: 340, width: 572, height: 2 }));
+			const rowH = Math.min(41, 328 / parts.length);
+			const totalLabel = label("", fontGold, 40, 286, 348, panel, "center");
 			parts.forEach((p, i) => {
 				scene.setTimeout(() => {
+					const ry = 8 + i * rowH;
+					const icon = new g.Sprite({ scene, src: img(p.id), x: 40, y: ry + rowH / 2, anchorX: 0.5, anchorY: 0.5 });
+					icon.scaleX = icon.scaleY = Math.min((rowH - 4) / icon.width, (rowH - 4) / icon.height);
+					panel.append(icon);
 					// おてほんの位置をうすく出して、置いた場所と線でつなぐ
 					const ghost = new g.Sprite({ scene, src: img(p.id), x: p.tx, y: p.ty, anchorX: 0.5, anchorY: 0.5 });
 					ghost.opacity = 0.45;
@@ -369,16 +378,15 @@ export function main(param: GameMainParameterObject): void {
 						}
 						// ずれを分かりやすく mm で出す(額縁の横幅640pxを、32cmの絵とみなす)
 						const mm = Math.round(d * MM_PER_PX);
-						if (d < PERFECT_DIST) {
-							pts += 500;
-							popup("ピッタリ! +" + pts + "  ずれ" + mm + "mm", fontGold, 30, p.sprite.x, p.sprite.y - 50, 1.6);
-							se("great", 0.6);
-						} else {
-							popup("+" + pts + "  ずれ" + mm + "mm", pts >= 500 ? fontGreen : fontCream, 28, p.sprite.x, p.sprite.y - 40, 1.6);
-							se("check", 0.5);
-						}
+						const perfect = d < PERFECT_DIST;
+						if (perfect) pts += 500;
+						const font = perfect ? fontGold : pts >= 500 ? fontGreen : fontCream;
+						label("ずれ " + mm + "mm", font, 28, 90, ry + rowH / 2 - 16, panel);
+						label((perfect ? "ピッタリ! " : "") + "+" + pts + "点", font, 28, 550, ry + rowH / 2 - 16, panel, "right");
+						se(perfect ? "great" : "check", perfect ? 0.6 : 0.5);
 					} else {
-						popup("置いてない", fontCream, 28, PX + p.tx, PY + p.ty, 1.4);
+						label("置いてない", fontCream, 28, 90, ry + rowH / 2 - 16, panel);
+						label("0点", fontCream, 28, 550, ry + rowH / 2 - 16, panel, "right");
 						se("check", 0.3);
 					}
 					total += pts;
@@ -388,7 +396,8 @@ export function main(param: GameMainParameterObject): void {
 					setText(scoreLabel, String(score));
 					if (i === parts.length - 1) {
 						const rate = Math.round(accSum / parts.length * 100);
-						setText(hintLabel, "そっくり度 " + rate + "%   +" + total + "点");
+						setText(hintLabel, "そっくり度 " + rate + "%");
+						setText(totalLabel, "この絵の点数  " + total + "点");
 						se("round", 0.6);
 					}
 				}, 250 + i * 300);
