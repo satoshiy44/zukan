@@ -6,7 +6,7 @@ const path = require("path");
 
 const ROOT = path.join(__dirname, "..");
 const dataUrl = (p) => "data:image/png;base64," + fs.readFileSync(p).toString("base64");
-const I = (n) => dataUrl(path.join(ROOT, "sokkuri/image/" + n + ".png"));
+const I = (n) => dataUrl(path.join(ROOT, "sokkuri/image/" + n + (n.indexOf("bg_") === 0 ? ".jpg" : ".png")));
 const srcs = {
 	shot: dataUrl(process.argv[2]), logo: I("logo"), frame: I("frame"), bg: I("bg_spring"),
 	sakura: I("p_sakura"), sun: I("p_sun"), tulip: I("p_tulip_r"), butterfly: I("p_butterfly"),

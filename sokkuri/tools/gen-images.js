@@ -25,12 +25,95 @@ function drawAll() {
 		o.getContext("2d").drawImage(c, -x0 + 1, -y0 + 1);
 		return o;
 	};
+	// ---- 古い絵本のような仕上げ(セピアがかった色・こげ茶のふち線・斜線の陰・紙の目) ----
+	const INKD = "#3b2616";
+	const grade = (c, amt) => {
+		const x = c.getContext("2d");
+		const im = x.getImageData(0, 0, c.width, c.height);
+		const d = im.data;
+		for (let i = 0; i < d.length; i += 4) {
+			if (d[i + 3] === 0) continue;
+			const l = 0.3 * d[i] + 0.59 * d[i + 1] + 0.11 * d[i + 2];
+			let r = d[i] + (l - d[i]) * amt, gg = d[i + 1] + (l - d[i + 1]) * amt, b = d[i + 2] + (l - d[i + 2]) * amt;
+			r = r * 1.0 + 6; gg = gg * 0.94 + 4; b = b * 0.8 + 2;
+			// 白は生成り色に、黒はこげ茶に
+			d[i] = Math.min(255, r * 0.94 + 10); d[i + 1] = Math.min(255, gg * 0.94 + 8); d[i + 2] = Math.min(255, b * 0.94 + 4);
+		}
+		x.putImageData(im, 0, 0);
+	};
+	const hatch = (x, w, h, step, color, lw) => {
+		x.strokeStyle = color; x.lineWidth = lw;
+		x.beginPath();
+		for (let k = -h; k < w; k += step) { x.moveTo(k, h); x.lineTo(k + h, 0); }
+		x.stroke();
+	};
+	let grainSeed = 7;
+	const grainRnd = () => { grainSeed = (grainSeed * 1103515245 + 12345) & 0x7fffffff; return grainSeed / 0x7fffffff; };
+	const grain = (x, w, h, n, alpha) => {
+		for (let i = 0; i < n; i++) {
+			x.fillStyle = grainRnd() < 0.5 ? "rgba(80,50,20," + alpha + ")" : "rgba(255,245,220," + alpha + ")";
+			x.fillRect(grainRnd() * w, grainRnd() * h, 1 + grainRnd() * 2, 1 + grainRnd() * 2);
+		}
+	};
+	const stylePart = (c) => {
+		const w = c.width, h = c.height;
+		grade(c, 0.36);
+		const x = c.getContext("2d");
+		x.save();
+		x.globalCompositeOperation = "source-atop";
+		const sh = x.createLinearGradient(0, 0, w, h);
+		sh.addColorStop(0, "rgba(255,240,200,0.18)");
+		sh.addColorStop(0.55, "rgba(255,240,200,0)");
+		sh.addColorStop(1, "rgba(70,40,15,0.30)");
+		x.fillStyle = sh; x.fillRect(0, 0, w, h);
+		x.save();
+		x.beginPath(); x.moveTo(w * 0.35, h); x.lineTo(w, h * 0.35); x.lineTo(w, h); x.closePath(); x.clip();
+		hatch(x, w, h, 5, "rgba(60,35,12,0.16)", 1.2);
+		x.restore();
+		grain(x, w, h, w * h / 30, 0.10);
+		x.restore();
+		// こげ茶のふち線
+		const sil = document.createElement("canvas");
+		sil.width = w; sil.height = h;
+		const sx = sil.getContext("2d");
+		sx.drawImage(c, 0, 0);
+		sx.globalCompositeOperation = "source-in";
+		sx.fillStyle = INKD; sx.fillRect(0, 0, w, h);
+		x.save();
+		x.globalCompositeOperation = "destination-over";
+		for (let k = 0; k < 12; k++) {
+			const a = k * Math.PI / 6;
+			x.drawImage(sil, Math.cos(a) * 2.6, Math.sin(a) * 2.6);
+		}
+		x.restore();
+	};
+	const styleBg = (c) => {
+		const w = c.width, h = c.height;
+		grade(c, 0.32);
+		const x = c.getContext("2d");
+		hatch(x, w, h, 7, "rgba(70,45,20,0.05)", 1);
+		grain(x, w, h, 9000, 0.07);
+		const v = x.createRadialGradient(w / 2, h / 2, h * 0.35, w / 2, h / 2, h * 0.85);
+		v.addColorStop(0, "rgba(60,35,15,0)");
+		v.addColorStop(1, "rgba(60,35,15,0.38)");
+		x.fillStyle = v; x.fillRect(0, 0, w, h);
+	};
+	const PLAIN = ["ghost", "dot", "spark", "ring", "glow", "logo", "frame", "frame_s"];
 	const make = (name, w, h, fn, noCrop) => {
 		const c = document.createElement("canvas");
-		c.width = w;
-		c.height = h;
-		fn(c.getContext("2d"), w, h);
-		out[name] = (noCrop ? c : crop(c)).toDataURL("image/png");
+		const pad = noCrop ? 0 : 8;
+		c.width = w + pad * 2;
+		c.height = h + pad * 2;
+		const ctx = c.getContext("2d");
+		ctx.translate(pad, pad);
+		fn(ctx, w, h);
+		ctx.setTransform(1, 0, 0, 1, 0, 0);
+		if (PLAIN.indexOf(name) < 0) {
+			if (name.indexOf("bg_") === 0) styleBg(c);
+			else stylePart(c);
+		}
+		// 背景は写真のように色数が多いので、軽い JPEG で保存する
+		out[name] = name.indexOf("bg_") === 0 ? c.toDataURL("image/jpeg", 0.86) : (noCrop ? c : crop(c)).toDataURL("image/png");
 	};
 	const E = (ctx, x, y, rx, ry, fill, stroke, lw, rot) => {
 		ctx.beginPath();
@@ -61,7 +144,7 @@ function drawAll() {
 		E(ctx, x - gap, y, r, r * 1.2, "#3a2a20");
 		E(ctx, x + gap, y, r, r * 1.2, "#3a2a20");
 	};
-	const INK = "#5a4632";
+	const INK = "#4a3020";
 	const sun = (ctx, cx, cy, r, c1, c2) => {
 		for (let i = 0; i < 12; i++) {
 			const a = i * Math.PI / 6;
@@ -101,54 +184,194 @@ function drawAll() {
 		E(ctx, cx - 12, cy - 12, 2.5, 3, "#3a2a20");
 		E(ctx, cx - 20, cy - 4, 4, 2.5, "#f0a0a8");
 	};
-	// ---- 背景(640x480) ----
-	const meadow = (name, sky1, sky2, hill1, hill2, ground, extra) => make(name, 640, 480, (ctx, w, h) => {
-		const g = ctx.createLinearGradient(0, 0, 0, 300);
-		g.addColorStop(0, sky1); g.addColorStop(1, sky2);
-		ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
-		ctx.fillStyle = hill1;
-		ctx.beginPath(); ctx.moveTo(0, 270); ctx.quadraticCurveTo(160, 200, 340, 255); ctx.quadraticCurveTo(500, 210, 640, 250); ctx.lineTo(640, 480); ctx.lineTo(0, 480); ctx.fill();
-		ctx.fillStyle = hill2;
-		ctx.beginPath(); ctx.moveTo(0, 300); ctx.quadraticCurveTo(220, 260, 420, 295); ctx.quadraticCurveTo(540, 280, 640, 300); ctx.lineTo(640, 480); ctx.lineTo(0, 480); ctx.fill();
-		ctx.fillStyle = ground; ctx.fillRect(0, 330, w, 150);
-		if (extra) extra(ctx, w, h);
-	}, true);
+	// ---- 背景(640x480): ヨーロッパの古い町なみが見える野原 ----
 	let seed = 5;
 	const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
-	meadow("bg_spring", "#bfe4ff", "#eaf7ff", "#a8dc8a", "#8cd070", "#9ad67a", (ctx) => {
-		for (let i = 0; i < 40; i++) E(ctx, rnd() * 640, 340 + rnd() * 130, 3, 3, ["#fff", "#ffd0e0", "#fff3a0"][i % 3]);
-	});
-	meadow("bg_summer", "#5ab8ff", "#bfe8ff", "#5ab04a", "#4aa03a", "#6ac050", (ctx) => {
-		for (let i = 0; i < 50; i++) line(ctx, [[i * 13, 480], [i * 13 + 4, 466 - rnd() * 14]], "#3a8a2a", 3);
-	});
-	meadow("bg_autumn", "#2a3260", "#6a5a8a", "#8a7a4a", "#a08a50", "#b49a5a", (ctx) => {
-		for (let i = 0; i < 60; i++) E(ctx, rnd() * 640, rnd() * 220, 1.4, 1.4, "rgba(255,255,230,0.8)");
-	});
-	meadow("bg_winter", "#a8bcd8", "#e4ecf6", "#f4f8ff", "#e8f0fa", "#f8fbff", (ctx) => {
-		for (let i = 0; i < 70; i++) E(ctx, rnd() * 640, rnd() * 470, 2.5, 2.5, "rgba(255,255,255,0.9)");
-	});
-	make("bg_room", 640, 480, (ctx, w, h) => {
-		ctx.fillStyle = "#f4e6cc"; ctx.fillRect(0, 0, w, 300);
-		for (let x = 0; x < w; x += 40) { ctx.fillStyle = "rgba(200,170,120,0.18)"; ctx.fillRect(x, 0, 20, 300); }
-		ctx.fillStyle = "#b07a48"; ctx.fillRect(0, 300, w, 180);
-		for (let y = 300; y < h; y += 30) { ctx.fillStyle = "rgba(90,50,20,0.25)"; ctx.fillRect(0, y, w, 2); }
-		ctx.fillStyle = "#8a5a32"; ctx.fillRect(0, 290, w, 14);
-	}, true);
-	// ---- 額縁 ----
-	make("frame", 680, 520, (ctx, w, h) => {
-		const g = ctx.createLinearGradient(0, 0, w, h);
-		g.addColorStop(0, "#d8b468"); g.addColorStop(0.5, "#a8803a"); g.addColorStop(1, "#d8b468");
+	// 遠くの町(家・教会の塔・風車)
+	const house = (ctx, x, base, w, h, wall, roof, win, snow) => {
+		R(ctx, x, base - h, w, h, 0, wall, INK, 1.5);
+		poly(ctx, [[x - 4, base - h], [x + w / 2, base - h - w * 0.7], [x + w + 4, base - h]], roof, INK, 1.5);
+		if (snow) poly(ctx, [[x - 4, base - h], [x + w / 2, base - h - w * 0.7], [x + w + 4, base - h], [x + w / 2, base - h - w * 0.45]], "#f4f0e6");
+		R(ctx, x + w * 0.62, base - h - w * 0.55, 5, 12, 0, wall, INK, 1);
+		for (let r = 0; r < Math.floor(h / 13); r++) {
+			for (let c2 = 0; c2 < Math.floor(w / 11); c2++) R(ctx, x + 4 + c2 * 11, base - h + 5 + r * 13, 5, 7, 0, win);
+		}
+	};
+	const town = (ctx, base, wall, roof, win, snow) => {
+		const xs = [12, 46, 74, 112, 150, 330, 362, 396, 430, 470, 520, 556, 594];
+		xs.forEach((x, k) => house(ctx, x, base + (k % 3) * 3, 24 + (k * 7) % 16, 22 + (k * 11) % 20, wall[k % wall.length], roof[k % roof.length], win, snow));
+		// 教会
+		R(ctx, 196, base - 70, 26, 70, 0, wall[0], INK, 1.5);
+		poly(ctx, [[192, base - 70], [209, base - 122], [226, base - 70]], roof[1], INK, 1.5);
+		line(ctx, [[209, base - 122], [209, base - 134]], INK, 2); line(ctx, [[204, base - 129], [214, base - 129]], INK, 2);
+		E(ctx, 209, base - 54, 6, 6, "#f4ead0", INK, 1.2);
+		R(ctx, 222, base - 34, 60, 34, 0, wall[1], INK, 1.5);
+		poly(ctx, [[218, base - 34], [252, base - 56], [286, base - 34]], roof[0], INK, 1.5);
+		if (snow) poly(ctx, [[218, base - 34], [252, base - 56], [286, base - 34], [252, base - 46]], "#f4f0e6");
+		// 風車
+		R(ctx, 288, base - 46, 16, 46, 2, wall[2 % wall.length], INK, 1.5);
+		poly(ctx, [[286, base - 46], [296, base - 60], [306, base - 46]], roof[2 % roof.length], INK, 1.5);
+		[0.4, 1.97, 3.54, 5.11].forEach((a) => poly(ctx, [[296, base - 50], [296 + Math.cos(a) * 30 - Math.sin(a) * 5, base - 50 + Math.sin(a) * 30 + Math.cos(a) * 5],
+			[296 + Math.cos(a) * 30, base - 50 + Math.sin(a) * 30]], "#e8dcc0", INK, 1));
+		// 細い木(ポプラ)
+		[[170, 0], [318, 1], [500, 0], [624, 1]].forEach((q) => {
+			E(ctx, q[0], base - 26, 7, 24, q[1] ? "#6a7a3a" : "#7a8a44", INK, 1.2);
+			line(ctx, [[q[0], base - 4], [q[0], base + 4]], INK, 2);
+		});
+	};
+	const fence = (ctx, y, color) => {
+		line(ctx, [[0, y + 6], [640, y + 2]], color, 3);
+		line(ctx, [[0, y + 16], [640, y + 12]], color, 3);
+		for (let x = 6; x < 640; x += 34) R(ctx, x, y - 2 - x / 160, 6, 26, 1, color, INK, 1);
+	};
+	const path2 = (ctx, fill, stone) => {
+		ctx.fillStyle = fill;
+		ctx.beginPath(); ctx.moveTo(296, 300); ctx.quadraticCurveTo(250, 380, 300, 480); ctx.lineTo(420, 480); ctx.quadraticCurveTo(330, 390, 316, 300); ctx.fill();
+		for (let k = 0; k < 40; k++) {
+			const t = k / 40, y = 304 + t * 172;
+			const cx = 306 + (1 - t) * (1 - t) * 0 + 2 * (1 - t) * t * -40 + t * t * 54;
+			E(ctx, cx + (rnd() - 0.5) * 40 * t, y, 4 + t * 7, 2 + t * 3, stone, null);
+		}
+	};
+	const tufts = (ctx, n, y0, color, flowers) => {
+		for (let k = 0; k < n; k++) {
+			const x = rnd() * 640, y = y0 + rnd() * (470 - y0);
+			const s = 0.6 + (y - y0) / (470 - y0);
+			line(ctx, [[x - 4 * s, y], [x - 6 * s, y - 8 * s]], color, 1.6);
+			line(ctx, [[x, y], [x, y - 11 * s]], color, 1.6);
+			line(ctx, [[x + 4 * s, y], [x + 7 * s, y - 8 * s]], color, 1.6);
+			if (flowers && k % 3 === 0) E(ctx, x, y - 11 * s, 2.4 * s, 2.4 * s, flowers[k % flowers.length]);
+		}
+	};
+	const bushes = (ctx, color, dark, dots) => {
+		[[40, 336], [140, 344], [520, 338], [612, 346]].forEach((q) => {
+			E(ctx, q[0] - 14, q[1], 20, 14, color, dark, 1.5); E(ctx, q[0] + 12, q[1] + 2, 18, 12, color, dark, 1.5); E(ctx, q[0], q[1] - 8, 18, 14, color, dark, 1.5);
+			if (dots) for (let k = 0; k < 6; k++) E(ctx, q[0] - 20 + rnd() * 40, q[1] - 14 + rnd() * 20, 2.2, 2.2, dots);
+		});
+	};
+	const meadow = (name, o) => make(name, 640, 480, (ctx, w, h) => {
+		const g = ctx.createLinearGradient(0, 0, 0, 300);
+		g.addColorStop(0, o.sky1); g.addColorStop(1, o.sky2);
 		ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
-		ctx.clearRect(20, 20, w - 40, h - 40);
-		ctx.strokeStyle = "#6e4e1e"; ctx.lineWidth = 3;
-		ctx.strokeRect(1.5, 1.5, w - 3, h - 3); ctx.strokeRect(18.5, 18.5, w - 37, h - 37);
-		ctx.strokeStyle = "rgba(255,240,200,0.6)"; ctx.lineWidth = 2; ctx.strokeRect(8, 8, w - 16, h - 16);
+		if (o.sky) o.sky(ctx);
+		// 遠くの山
+		ctx.fillStyle = o.far;
+		ctx.beginPath(); ctx.moveTo(0, 230); ctx.lineTo(70, 196); ctx.lineTo(130, 214); ctx.lineTo(210, 180); ctx.lineTo(300, 220); ctx.lineTo(400, 186);
+		ctx.lineTo(480, 210); ctx.lineTo(560, 182); ctx.lineTo(640, 214); ctx.lineTo(640, 300); ctx.lineTo(0, 300); ctx.fill();
+		ctx.fillStyle = o.hill1;
+		ctx.beginPath(); ctx.moveTo(0, 262); ctx.quadraticCurveTo(160, 236, 340, 256); ctx.quadraticCurveTo(500, 238, 640, 252); ctx.lineTo(640, 480); ctx.lineTo(0, 480); ctx.fill();
+		town(ctx, 262, o.walls, o.roofs, o.win, o.snow);
+		ctx.fillStyle = o.hill2;
+		ctx.beginPath(); ctx.moveTo(0, 292); ctx.quadraticCurveTo(220, 266, 420, 290); ctx.quadraticCurveTo(540, 280, 640, 294); ctx.lineTo(640, 480); ctx.lineTo(0, 480); ctx.fill();
+		// 畑のうね
+		for (let k = 0; k < 7; k++) line(ctx, [[0, 300 + k * 5], [640, 296 + k * 5]], "rgba(60,40,20,0.10)", 1.5);
+		ctx.fillStyle = o.ground; ctx.fillRect(0, 326, w, 154);
+		path2(ctx, o.path, o.stone);
+		fence(ctx, 316, o.fence);
+		bushes(ctx, o.bush, o.bushDark, o.bushDots);
+		tufts(ctx, 70, 340, o.grass, o.flowers);
+		if (o.extra) o.extra(ctx, w, h);
 	}, true);
-	make("frame_s", 340, 260, (ctx, w, h) => {
-		ctx.fillStyle = "#a8803a"; ctx.fillRect(0, 0, w, h);
-		ctx.clearRect(10, 10, w - 20, h - 20);
-		ctx.strokeStyle = "#6e4e1e"; ctx.lineWidth = 2; ctx.strokeRect(1, 1, w - 2, h - 2); ctx.strokeRect(9, 9, w - 18, h - 18);
+	meadow("bg_spring", {
+		sky1: "#b8d8ec", sky2: "#eef2e6", far: "#a8b8c8", hill1: "#b4cc8a", hill2: "#9cc078", ground: "#a2c67c",
+		walls: ["#f0e2c4", "#e8d0a8", "#f4ead4"], roofs: ["#b8583a", "#8a4a32", "#c87a4a"], win: "#6a5a4a",
+		path: "#d8c49a", stone: "rgba(150,120,80,0.45)", fence: "#a07a4a", bush: "#f0b8c8", bushDark: "#c88898", bushDots: "#fff0f4",
+		grass: "#6a9a4a", flowers: ["#fff8f0", "#ffd0e0", "#fff0a0"]
+	});
+	meadow("bg_summer", {
+		sky1: "#6ab0e0", sky2: "#d4ecf4", far: "#7a9ab8", hill1: "#6aa84a", hill2: "#58983c", ground: "#6eb04e",
+		walls: ["#f4e8cc", "#e8d4ac", "#f8f0dc"], roofs: ["#c0502e", "#3a6a8a", "#d08a3a"], win: "#4a5a6a",
+		path: "#e0cc9a", stone: "rgba(150,120,80,0.45)", fence: "#b08850", bush: "#4a8a34", bushDark: "#2e6a22", bushDots: "#ffe060",
+		grass: "#3a7a2a", flowers: ["#ffe060", "#ffffff"]
+	});
+	meadow("bg_autumn", {
+		sky1: "#232848", sky2: "#6a587a", far: "#4a4458", hill1: "#7a6a40", hill2: "#94804a", ground: "#a88e56",
+		walls: ["#8a7a68", "#7a6a5a", "#9a8a74"], roofs: ["#5a3a2a", "#4a3a3a", "#6a4a32"], win: "#ffd27a",
+		path: "#b8a070", stone: "rgba(90,70,40,0.45)", fence: "#6a5032", bush: "#b8642a", bushDark: "#8a4a1a", bushDots: "#e8a040",
+		grass: "#6a5a2a", flowers: ["#e8a040", "#c86a2a"],
+		sky: (ctx) => { for (let k = 0; k < 70; k++) E(ctx, rnd() * 640, rnd() * 200, 1.3, 1.3, "rgba(255,250,220,0.85)"); }
+	});
+	meadow("bg_winter", {
+		sky1: "#98aac4", sky2: "#e2e6ee", far: "#c4ccd8", hill1: "#eef0f4", hill2: "#e4e8f0", ground: "#f2f4f8",
+		walls: ["#d8c8a8", "#c8b494", "#e4d8bc"], roofs: ["#7a4a3a", "#5a4a5a", "#8a5a3a"], win: "#ffd890", snow: true,
+		path: "#d8d4cc", stone: "rgba(120,110,100,0.35)", fence: "#8a6a4a", bush: "#e8ecf2", bushDark: "#a8b0c0", bushDots: null,
+		grass: "rgba(120,130,140,0.4)", flowers: null,
+		sky: (ctx) => { for (let k = 0; k < 90; k++) E(ctx, rnd() * 640, rnd() * 470, 2.2, 2.2, "rgba(255,255,255,0.9)"); }
+	});
+	// ---- 古い洋館の書斎 ----
+	make("bg_room", 640, 480, (ctx, w, h) => {
+		ctx.fillStyle = "#c8a878"; ctx.fillRect(0, 0, w, 300);
+		// 壁紙のもよう
+		for (let y = 10; y < 210; y += 40) {
+			for (let x = (y / 40) % 2 ? 20 : 0; x < w; x += 40) {
+				E(ctx, x, y, 7, 10, "rgba(120,70,40,0.22)");
+				E(ctx, x, y - 12, 3, 3, "rgba(120,70,40,0.22)");
+				line(ctx, [[x - 9, y + 8], [x, y + 14], [x + 9, y + 8]], "rgba(120,70,40,0.2)", 1.5);
+			}
+		}
+		for (let x = 0; x < w; x += 40) R(ctx, x, 0, 2, 210, 0, "rgba(120,70,40,0.12)");
+		// 天井の飾りぶち
+		R(ctx, 0, 0, w, 14, 0, "#8a5a32", INK, 1.5);
+		for (let x = 4; x < w; x += 12) R(ctx, x, 14, 6, 6, 1, "#a8784a", INK, 1);
+		// 腰板
+		R(ctx, 0, 206, w, 8, 0, "#7a4a2a", INK, 1.5);
+		R(ctx, 0, 214, w, 80, 0, "#8a5a36");
+		for (let x = 10; x < w; x += 80) R(ctx, x, 224, 64, 60, 3, "#946440", "#5a3a20", 2);
+		// 本棚(左右のはし)
+		[[0, 46], [594, 46]].forEach((q) => {
+			R(ctx, q[0], 40, q[1], 256, 0, "#6a3e22", INK, 2);
+			for (let r = 0; r < 5; r++) {
+				const y = 46 + r * 50;
+				R(ctx, q[0] + 2, y + 42, q[1] - 4, 5, 0, "#4a2a16");
+				let x = q[0] + 4;
+				let k = r;
+				while (x < q[0] + q[1] - 8) {
+					const bw = 5 + (k * 3) % 5, bh = 26 + (k * 7) % 14;
+					R(ctx, x, y + 42 - bh, bw, bh, 1, ["#8a3a2a", "#3a5a4a", "#a8843a", "#4a3a6a", "#6a4a2a"][k % 5], INK, 0.8);
+					x += bw + 1; k++;
+				}
+			}
+		});
+		// 床(板張り)
+		ctx.fillStyle = "#8a5a34"; ctx.fillRect(0, 296, w, 184);
+		for (let y = 296; y < h; y += 22) {
+			R(ctx, 0, y, w, 2, 0, "rgba(50,25,10,0.35)");
+			for (let x = ((y / 22) % 2) * 60; x < w; x += 120) R(ctx, x, y, 2, 22, 0, "rgba(50,25,10,0.25)");
+		}
+		R(ctx, 0, 290, w, 10, 0, "#5a3420", INK, 1.5);
+		// じゅうたん
+		E(ctx, 320, 410, 250, 54, "#8a2e2a", INK, 2);
+		E(ctx, 320, 410, 230, 46, null, "#d8a84a", 3);
+		E(ctx, 320, 410, 200, 36, "#a8443a", null);
+		for (let k = 0; k < 18; k++) {
+			const a = k * Math.PI / 9;
+			E(ctx, 320 + Math.cos(a) * 150, 410 + Math.sin(a) * 26, 6, 3, "#d8a84a");
+		}
+		E(ctx, 320, 410, 60, 14, null, "#d8a84a", 2);
+		// 窓からの光
+		poly(ctx, [[200, 0], [440, 0], [520, 480], [120, 480]], "rgba(255,240,200,0.06)");
 	}, true);
+	// ---- 額縁(金の飾りぶち) ----
+	const ornate = (ctx, w, h, b) => {
+		const g = ctx.createLinearGradient(0, 0, w, h);
+		g.addColorStop(0, "#e0c070"); g.addColorStop(0.3, "#a8803a"); g.addColorStop(0.6, "#d8b468"); g.addColorStop(1, "#8a6428");
+		ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+		ctx.clearRect(b, b, w - b * 2, h - b * 2);
+		ctx.strokeStyle = "#4a3014"; ctx.lineWidth = 2.5;
+		ctx.strokeRect(1.5, 1.5, w - 3, h - 3); ctx.strokeRect(b - 1.5, b - 1.5, w - b * 2 + 3, h - b * 2 + 3);
+		// 玉のもよう
+		const bead = Math.max(1.6, b * 0.14);
+		for (let x = b; x < w - b; x += bead * 4) { E(ctx, x, b * 0.5, bead, bead, "#f4dc98", "#6a4a1a", 1); E(ctx, x, h - b * 0.5, bead, bead, "#f4dc98", "#6a4a1a", 1); }
+		for (let y = b; y < h - b; y += bead * 4) { E(ctx, b * 0.5, y, bead, bead, "#f4dc98", "#6a4a1a", 1); E(ctx, w - b * 0.5, y, bead, bead, "#f4dc98", "#6a4a1a", 1); }
+		// 四すみの飾り
+		[[0, 0], [w, 0], [0, h], [w, h]].forEach((q) => {
+			const cx = q[0] + (q[0] ? -1 : 1) * b * 0.5, cy = q[1] + (q[1] ? -1 : 1) * b * 0.5;
+			E(ctx, cx, cy, b * 0.62, b * 0.62, "#e8c878", "#4a3014", 2);
+			E(ctx, cx, cy, b * 0.3, b * 0.3, "#a8803a", "#4a3014", 1.5);
+		});
+	};
+	make("frame", 680, 520, (ctx, w, h) => ornate(ctx, w, h, 20), true);
+	make("frame_s", 340, 260, (ctx, w, h) => ornate(ctx, w, h, 10), true);
 	// ---- パーツ ----
 	// 春
 	make("p_sakura", 200, 200, (ctx) => tree(ctx, 100, 10, 170, 180, "#ffc8dc", "#e890b0", "#ff8ab0"));
@@ -337,17 +560,59 @@ function drawAll() {
 		ctx.beginPath(); ctx.arc(cx, cy - 8, 10, 0.3, Math.PI - 0.3); ctx.strokeStyle = "#e84a5a"; ctx.lineWidth = 3; ctx.stroke();
 		poly(ctx, [[cx - 18, cy + 6], [cx, cy + 14], [cx + 18, cy + 6], [cx, cy - 2]], "#ffffff", INK, 1.5);
 	};
+	// ---- サーカス(テントの中、観客でいっぱい) ----
 	make("bg_circus", 640, 480, (ctx, w, h) => {
-		ctx.fillStyle = "#2a1a3a"; ctx.fillRect(0, 0, w, h);
-		for (let i = 0; i < 12; i++) poly(ctx, [[320, -40], [i * 58 - 20, 150], [(i + 1) * 58 - 20, 150]], i % 2 ? "#f4ece0" : "#c8303a");
-		for (let i = 0; i < 12; i++) E(ctx, i * 58 + 9, 150, 30, 14, i % 2 ? "#f4ece0" : "#c8303a");
-		poly(ctx, [[120, 0], [60, 480], [260, 480]], "rgba(255,240,180,0.10)");
-		poly(ctx, [[520, 0], [380, 480], [580, 480]], "rgba(255,240,180,0.10)");
-		E(ctx, 320, 420, 330, 90, "#b8402a");
-		E(ctx, 320, 410, 310, 80, "#e8c070", "#8a5a1a", 4);
-		E(ctx, 320, 410, 220, 54, null, "rgba(138,90,26,0.5)", 3);
-		for (let i = 0; i < 16; i++) poly(ctx, [[i * 42, 176], [i * 42 + 42, 176], [i * 42 + 21, 200]], ["#ffd23a", "#3a8aff", "#5ab04a", "#ff7aa8"][i % 4]);
-		line(ctx, [[0, 176], [640, 176]], "#f4ece0", 2);
+		ctx.fillStyle = "#2a1a2a"; ctx.fillRect(0, 0, w, h);
+		for (let i = 0; i < 12; i++) poly(ctx, [[320, -40], [i * 58 - 20, 150], [(i + 1) * 58 - 20, 150]], i % 2 ? "#ece0c8" : "#a8302e");
+		for (let i = 0; i < 12; i++) E(ctx, i * 58 + 9, 150, 30, 14, i % 2 ? "#ece0c8" : "#a8302e");
+		// 電球のひも
+		for (let r = 0; r < 2; r++) {
+			ctx.beginPath(); ctx.moveTo(0, 40 + r * 60);
+			for (let x = 0; x < 640; x += 80) ctx.quadraticCurveTo(x + 40, 70 + r * 60, x + 80, 40 + r * 60);
+			ctx.strokeStyle = "rgba(40,20,10,0.8)"; ctx.lineWidth = 1.5; ctx.stroke();
+			for (let x = 10; x < 640; x += 20) {
+				const t = (x % 80) / 80, y = 40 + r * 60 + 30 * t * (1 - t);
+				E(ctx, x, y + 3, 5, 5, "rgba(255,220,120,0.35)"); E(ctx, x, y + 3, 2.5, 2.5, "#fff0b0");
+			}
+		}
+		// 柱
+		[150, 490].forEach((px) => {
+			R(ctx, px - 5, 0, 10, 200, 2, "#c8a050", INK, 1.5);
+			for (let y = 10; y < 200; y += 24) line(ctx, [[px - 5, y], [px + 5, y + 12]], "#8a3a2a", 3);
+		});
+		// 観客席(人の頭がずらっと)
+		ctx.fillStyle = "#3a2430"; ctx.fillRect(0, 200, w, 150);
+		const cols = ["#5a3a3a", "#3a3a5a", "#4a4a3a", "#6a4a3a", "#3a4a4a"];
+		const skins = ["#d8b090", "#c89a78", "#e8c8a8", "#b8886a"];
+		for (let r = 0; r < 4; r++) {
+			const y = 214 + r * 26;
+			for (let x = (r % 2) * 9; x < w + 9; x += 18) {
+				const k = Math.floor(x / 18) + r * 7;
+				E(ctx, x, y + 14, 9, 9, cols[k % 5]);
+				E(ctx, x, y, 6, 7, skins[k % 4]);
+				if (k % 5 === 0) { R(ctx, x - 7, y - 7, 14, 3, 0, "#2a1a14"); R(ctx, x - 5, y - 15, 10, 9, 0, "#2a1a14"); }
+				if (k % 7 === 3) E(ctx, x, y - 5, 6.5, 3, ["#8a5a2a", "#3a2a1a", "#c8a050"][k % 3]);
+			}
+			R(ctx, 0, y + 20, w, 4, 0, "rgba(20,10,10,0.6)");
+		}
+		// スポットライト
+		poly(ctx, [[120, 0], [40, 480], [270, 480]], "rgba(255,240,180,0.12)");
+		poly(ctx, [[520, 0], [370, 480], [600, 480]], "rgba(255,240,180,0.12)");
+		// 舞台
+		E(ctx, 320, 420, 330, 90, "#8a2e22");
+		for (let k = 0; k < 24; k++) {
+			const a = Math.PI * k / 23;
+			E(ctx, 320 - Math.cos(a) * 322, 420 - Math.sin(a) * 86, 4, 4, "#ffe9a8");
+		}
+		E(ctx, 320, 410, 310, 80, "#dcb46a", "#7a4a1a", 4);
+		for (let k = 0; k < 16; k++) {
+			const a = k * Math.PI / 8;
+			line(ctx, [[320 + Math.cos(a) * 120, 410 + Math.sin(a) * 28], [320 + Math.cos(a) * 220, 410 + Math.sin(a) * 54]], "rgba(122,74,26,0.25)", 2);
+		}
+		E(ctx, 320, 410, 220, 54, null, "rgba(122,74,26,0.5)", 3);
+		E(ctx, 320, 410, 120, 28, null, "rgba(122,74,26,0.35)", 2);
+		for (let i = 0; i < 16; i++) poly(ctx, [[i * 42, 176], [i * 42 + 42, 176], [i * 42 + 21, 200]], ["#d8b03a", "#3a6aa8", "#4a8a3a", "#c8607a"][i % 4], INK, 1);
+		line(ctx, [[0, 176], [640, 176]], "#ece0c8", 2);
 	}, true);
 	make("p_clown_a", 120, 200, (ctx) => {
 		clown(ctx, 60, 90, "#3a8aff", "#ffd23a", "#ff7a1a");
@@ -498,7 +763,8 @@ function drawAll() {
 	fs.mkdirSync(OUT, { recursive: true });
 	for (const [name, url] of Object.entries(images)) {
 		const buf = Buffer.from(url.split(",")[1], "base64");
-		fs.writeFileSync(path.join(OUT, name + ".png"), buf);
+		const ext = url.indexOf("image/jpeg") >= 0 ? ".jpg" : ".png";
+		fs.writeFileSync(path.join(OUT, name + ext), buf);
 	}
 	console.log("wrote", Object.keys(images).length, "images");
 })();
