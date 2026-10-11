@@ -15,9 +15,10 @@ const TCH = 196;
 const INTRO_SEC = 4;
 const PLAY_SEC = 30;
 const REVIEW_SEC = 4.5;
-const NEXT_SEC = 1.8; // 2枚目の名前を出す時間
+const NEXT_SEC = 2.4; // 2枚目の名前を出す時間
 const FULL_DIST = 160; // これより離れると0点
 const PERFECT_DIST = 10; // これより近いとピッタリ
+const MM_PER_PX = 0.5;
 
 type Zone = "sky" | "tree" | "ground" | "wall" | "tall" | "floor";
 interface PartDef { id: string; zone: Zone; }
@@ -366,12 +367,14 @@ export function main(param: GameMainParameterObject): void {
 							const dx = px + (p.tx - px) * k / steps, dy = py + (p.ty - py) * k / steps;
 							reviewLayer.append(new g.Sprite({ scene, src: img("dot"), x: dx, y: dy, anchorX: 0.5, anchorY: 0.5 }));
 						}
+						// ずれを分かりやすく mm で出す(額縁の横幅640pxを、32cmの絵とみなす)
+						const mm = Math.round(d * MM_PER_PX);
 						if (d < PERFECT_DIST) {
 							pts += 500;
-							popup("ピッタリ! +" + pts, fontGold, 34, p.sprite.x, p.sprite.y - 50, 1.4);
+							popup("ピッタリ! +" + pts + "  ずれ" + mm + "mm", fontGold, 30, p.sprite.x, p.sprite.y - 50, 1.6);
 							se("great", 0.6);
 						} else {
-							popup("+" + pts, pts >= 500 ? fontGreen : fontCream, 32, p.sprite.x, p.sprite.y - 40, 1.4);
+							popup("+" + pts + "  ずれ" + mm + "mm", pts >= 500 ? fontGreen : fontCream, 28, p.sprite.x, p.sprite.y - 40, 1.6);
 							se("check", 0.5);
 						}
 					} else {
@@ -404,12 +407,17 @@ export function main(param: GameMainParameterObject): void {
 			phase = "next";
 			phaseT = 0;
 			setupRound(round);
-			const l = label("2枚目  " + sceneOf(round).name, fontGold, 80, 640, 360, overLayer, "center");
+			const box = new g.E({ scene });
+			overLayer.append(box);
+			box.append(new g.FilledRect({ scene, cssColor: "rgba(40,28,20,0.85)", y: 240, width: 1280, height: 240 }));
+			const sub = label("おてほんと同じ配置に置こう!", fontCream, 44, 640, 300, box, "center");
+			sub.anchorY = 0.5;
+			const l = label("2枚目  " + sceneOf(round).name, fontGold, 80, 640, 400, box, "center");
 			l.anchorY = 0.5;
 			animate(NEXT_SEC, (q) => {
-				l.opacity = q < 0.8 ? 1 : 1 - (q - 0.8) / 0.2;
-				l.modified();
-			}, () => l.destroy());
+				box.opacity = q < 0.8 ? 1 : 1 - (q - 0.8) / 0.2;
+				box.modified();
+			}, () => box.destroy());
 		};
 		const finish = (): void => {
 			phase = "end";

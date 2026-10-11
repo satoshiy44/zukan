@@ -1,4 +1,4 @@
-// そっくり額縁の紹介画像(1280x720)とアイコン(320x320)を作る
+// そっくり絵合わせの紹介画像(1280x720)とアイコン(320x320)を作る
 // 使い方: node tools/gen-promo-sokkuri.js tools/promo-shots/sokkuri.png
 const { chromium } = require("playwright");
 const fs = require("fs");
@@ -91,7 +91,7 @@ async function draw(srcs) {
 		fs.writeFileSync(path.join(ROOT, p), buf);
 		console.log("wrote", p, Math.round(buf.length / 1024) + "KB");
 	};
-	save("dist/sokkuri-gakubuchi_promo.png", out.promo);
-	save("dist/sokkuri-gakubuchi_icon.png", out.icon);
+	save("dist/sokkuri-eawase_promo.png", out.promo);
+	save("dist/sokkuri-eawase_icon.png", out.icon);
 	save("sokkuri/submission/icon.png", out.icon);
 })();

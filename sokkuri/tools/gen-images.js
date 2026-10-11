@@ -331,12 +331,12 @@ function drawAll() {
 		ctx.font = "bold 42px IPAGothic";
 		ctx.lineWidth = 10; ctx.strokeStyle = "#5a3a1a"; ctx.strokeText("おてほんと おなじ絵を つくろう", w / 2, 44);
 		ctx.fillStyle = "#fff6e0"; ctx.fillText("おてほんと おなじ絵を つくろう", w / 2, 44);
-		ctx.font = "bold 140px IPAGothic";
-		ctx.lineWidth = 28; ctx.strokeStyle = "#fff6e0"; ctx.strokeText("そっくり額縁", w / 2, 160);
-		ctx.lineWidth = 12; ctx.strokeStyle = "#6e4e1e"; ctx.strokeText("そっくり額縁", w / 2, 160);
+		ctx.font = "bold 120px IPAGothic";
+		ctx.lineWidth = 28; ctx.strokeStyle = "#fff6e0"; ctx.strokeText("そっくり絵合わせ", w / 2, 160);
+		ctx.lineWidth = 12; ctx.strokeStyle = "#6e4e1e"; ctx.strokeText("そっくり絵合わせ", w / 2, 160);
 		const g = ctx.createLinearGradient(0, 100, 0, 220);
 		g.addColorStop(0, "#f2dc9a"); g.addColorStop(1, "#b88a3a");
-		ctx.fillStyle = g; ctx.fillText("そっくり額縁", w / 2, 160);
+		ctx.fillStyle = g; ctx.fillText("そっくり絵合わせ", w / 2, 160);
 	}, true);
 	return out;
 }

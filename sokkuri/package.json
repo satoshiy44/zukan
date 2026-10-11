@@ -2,7 +2,7 @@
   "name": "sokkuri-gakubuchi",
   "private": true,
   "version": "0.1.0",
-  "description": "ニコ生ランキングゲーム「そっくり額縁」",
+  "description": "ニコ生ランキングゲーム「そっくり絵合わせ」",
   "scripts": {
     "postinstall": "npm run build",
     "build": "rimraf ./script && tsc && akashic scan asset script",

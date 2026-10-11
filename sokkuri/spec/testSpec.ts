@@ -1,7 +1,7 @@
 import * as path from "path";
 import { GameContext } from "@akashic/headless-akashic";
 
-describe("そっくり額縁", () => {
+describe("そっくり絵合わせ", () => {
 	it("おてほんどおりに置くと高得点、2枚目まで進み、スコアが整数で残る", async () => {
 		const context = new GameContext<3>({ gameJsonPath: path.join(__dirname, "..", "game.json") });
 		const client = await context.getGameClient();
