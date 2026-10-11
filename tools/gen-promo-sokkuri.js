@@ -10,7 +10,8 @@ const I = (n) => dataUrl(path.join(ROOT, "sokkuri/image/" + n + ".png"));
 const srcs = {
 	shot: dataUrl(process.argv[2]), logo: I("logo"), frame: I("frame"), bg: I("bg_spring"),
 	sakura: I("p_sakura"), sun: I("p_sun"), tulip: I("p_tulip_r"), butterfly: I("p_butterfly"),
-	snowman: I("p_snowman"), usagi: I("p_usagi"), himawari: I("p_himawari_l")
+	snowman: I("p_snowman"), usagi: I("p_usagi"), himawari: I("p_himawari_l"),
+	frameS: I("frame_s"), circus: I("bg_circus"), clown: I("p_clown_a"), elephant: I("p_elephant"), starc: I("p_star_c")
 };
 
 async function draw(srcs) {
@@ -62,21 +63,39 @@ async function draw(srcs) {
 	ctx.fillRect(0, 650, 1280, 70);
 	text(ctx, "おてほんを見て、同じ場所に置けるかな？", 640, 686, 46, "#fff6e0", "#5a3a1a");
 	const promo = c.toDataURL("image/png");
-	// ---- アイコン: 額縁の中に、春の絵とずれた花 ----
+	// ---- アイコン: 左の「おてほん」と右の「自分の絵」を見くらべる ----
 	const S = 320;
 	const ic = document.createElement("canvas");
 	ic.width = ic.height = S;
 	const ix = ic.getContext("2d");
 	wood(ix, S, S);
-	ix.drawImage(imgs.bg, 30, 40, 260, 195);
-	ix.drawImage(imgs.frame, 20, 30, 280, 215);
-	ix.drawImage(imgs.sun, 52, 54, 70, 70);
-	ix.globalAlpha = 0.45;
-	ix.drawImage(imgs.butterfly, 190, 70, 70, 56);
-	ix.globalAlpha = 1;
-	ix.drawImage(imgs.butterfly, 168, 92, 70, 56);
-	ix.drawImage(imgs.tulip, 120, 140, 50, 75);
-	text(ix, "そっくり", S / 2, 268, 56, "#f2d48a", "#5a3a1a");
+	const pic = (x, y, w, h, shift) => {
+		const k = w / 640;
+		ix.drawImage(imgs.circus, x, y, w, h);
+		const put = (im, px, py, sc, dx, dy) => {
+			const iw = im.width * k * sc, ih = im.height * k * sc;
+			if (shift && (dx || dy)) {
+				ix.globalAlpha = 0.4;
+				ix.drawImage(im, x + px * k - iw / 2, y + py * k - ih / 2, iw, ih);
+				ix.globalAlpha = 1;
+			}
+			ix.drawImage(im, x + (px + (shift ? dx : 0)) * k - iw / 2, y + (py + (shift ? dy : 0)) * k - ih / 2, iw, ih);
+		};
+		put(imgs.clown, 200, 300, 1.25, 0, 0);
+		put(imgs.elephant, 440, 300, 1.25, 90, -50);
+		put(imgs.starc, 330, 110, 1.25, 0, 0);
+		ix.drawImage(imgs.frameS, x - 7, y - 7, w + 14, h + 14);
+	};
+	pic(16, 30, 132, 99, false);
+	pic(172, 30, 132, 99, true);
+	text(ix, "?", 160, 80, 34, "#f2d48a", "#5a3a1a");
+	ix.font = "bold 18px IPAGothic";
+	ix.textAlign = "center";
+	ix.fillStyle = "#f2d48a";
+	ix.fillText("おてほん", 82, 152);
+	ix.fillText("じぶん", 238, 152);
+	text(ix, "そっくり", S / 2, 210, 64, "#f2d48a", "#5a3a1a");
+	text(ix, "絵合わせ", S / 2, 278, 56, "#fff6e0", "#5a3a1a");
 	return { promo, icon: ic.toDataURL("image/png") };
 }
 
