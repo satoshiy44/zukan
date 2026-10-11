@@ -9,7 +9,7 @@ describe("そっくり絵合わせ", () => {
 		await client.advanceUntil(() => game.scene()!.local !== "full-local" && game.scene()!.name !== "_bootstrap");
 		await context.advance(4500);
 		const scores: number[] = [];
-		const secs = [25, 30, 35];
+		const secs = [20, 25, 30];
 		for (let round = 0; round < 3; round++) {
 			const scene = game.scene()! as any;
 			const uiLayer = scene.children[2];

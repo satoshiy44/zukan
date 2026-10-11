@@ -18,7 +18,7 @@ const REVIEW_SEC = 6.5;
 const NEXT_SEC = 2.4; // 次の絵の名前を出す時間
 // 1枚目は野原、2枚目はおへや、3枚目はサーカス。だんだん長く、パーツも多くなる
 interface RoundDef { sec: number; min: number; max: number; }
-const ROUNDS: RoundDef[] = [{ sec: 25, min: 5, max: 7 }, { sec: 30, min: 6, max: 8 }, { sec: 35, min: 7, max: 9 }];
+const ROUNDS: RoundDef[] = [{ sec: 20, min: 5, max: 7 }, { sec: 25, min: 6, max: 8 }, { sec: 30, min: 7, max: 9 }];
 const FULL_DIST = 160; // これより離れると0点
 const PERFECT_DIST = 10; // これより近いとピッタリ
 const MM_PER_PX = 0.5;
@@ -97,7 +97,7 @@ export function main(param: GameMainParameterObject): void {
 			"pick", "put", "check", "great", "round", "beep", "go", "finish", "bgm"
 		].concat(partIds)
 	});
-	let time = 130;
+	let time = 115;
 	if (param.sessionParameter.totalTimeLimit) {
 		time = param.sessionParameter.totalTimeLimit;
 	}
