@@ -442,6 +442,37 @@ function drawAll() {
 	// ---- 結果の丸 ----
 	make("ghost", 40, 40, (ctx) => { E(ctx, 20, 20, 16, 16, null, "#ffffff", 4); E(ctx, 20, 20, 4, 4, "#ffffff"); }, true);
 	make("dot", 8, 8, (ctx) => E(ctx, 4, 4, 3.5, 3.5, "#ffffff"), true);
+	// ---- 答え合わせのエフェクト ----
+	// キラキラ(4方向にのびる星)
+	make("spark", 48, 48, (ctx) => {
+		const gr = ctx.createRadialGradient(24, 24, 0, 24, 24, 24);
+		gr.addColorStop(0, "#ffffff");
+		gr.addColorStop(0.35, "#fff2b0");
+		gr.addColorStop(1, "rgba(255,214,90,0)");
+		ctx.fillStyle = gr;
+		ctx.beginPath();
+		for (let k = 0; k < 8; k++) {
+			const r = k % 2 === 0 ? 24 : 5;
+			const a = k * Math.PI / 4 - Math.PI / 2;
+			ctx.lineTo(24 + Math.cos(a) * r, 24 + Math.sin(a) * r);
+		}
+		ctx.closePath();
+		ctx.fill();
+	}, true);
+	// ふわっと広がる輪
+	make("ring", 160, 160, (ctx) => {
+		E(ctx, 80, 80, 70, 70, null, "rgba(255,240,180,0.95)", 10);
+		E(ctx, 80, 80, 60, 60, null, "rgba(255,255,255,0.5)", 4);
+	}, true);
+	// 光の玉(パーツの後ろでぱっと光る)
+	make("glow", 200, 200, (ctx) => {
+		const gr = ctx.createRadialGradient(100, 100, 0, 100, 100, 100);
+		gr.addColorStop(0, "rgba(255,250,210,0.95)");
+		gr.addColorStop(0.5, "rgba(255,230,140,0.45)");
+		gr.addColorStop(1, "rgba(255,220,120,0)");
+		ctx.fillStyle = gr;
+		ctx.fillRect(0, 0, 200, 200);
+	}, true);
 	// ---- ロゴ ----
 	make("logo", 1160, 250, (ctx, w) => {
 		ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineJoin = "round";

@@ -139,6 +139,13 @@ save("beep", tone(note(81), 0.1, "sin", 0.25))
 save("go", mix(*[bell(note(n), 0.4, 0.25) for n in (76, 84)], offsets=[0, 0.1]))
 save("finish", mix(*[bell(note(n), 0.7, 0.25) for n in (84, 79, 76, 72)], offsets=[0, 0.12, 0.24, 0.36]))
 
+# ---- 答え合わせのキラキラ音(コンボが続くほど高くなる) ----
+for lv in range(5):
+    base = 84 + (0, 2, 4, 7, 9)[lv]
+    notes = [base, base + 7, base + 12]
+    save("kira%d" % lv, mix(*[bell(note(n), 0.45, 0.2) for n in notes], offsets=[0, 0.045, 0.09]))
+
+
 # ---- BGM: アップテンポでポップな曲(140BPM, 16小節, ドラム入り) ----
 def marimba(freq, dur, vol=0.3):
     out = []

@@ -94,7 +94,8 @@ export function main(param: GameMainParameterObject): void {
 		game: g.game,
 		assetIds: [
 			"bg_spring", "bg_summer", "bg_autumn", "bg_winter", "bg_room", "bg_circus", "frame", "frame_s", "ghost", "dot", "logo",
-			"pick", "put", "check", "great", "round", "beep", "go", "finish", "bgm"
+			"pick", "put", "check", "great", "round", "beep", "go", "finish", "bgm",
+			"kira0", "kira1", "kira2", "kira3", "kira4", "spark", "ring", "glow"
 		].concat(partIds)
 	});
 	let time = 115;
@@ -349,6 +350,103 @@ export function main(param: GameMainParameterObject): void {
 			}
 		};
 
+		// ---- 答え合わせのエフェクト ----
+		// 見た目だけに使う乱数(スコアや配置には影響しない)
+		let fxSeed = 12345;
+		const fxRand = (): number => {
+			fxSeed = (fxSeed * 1103515245 + 12345) & 0x7fffffff;
+			return fxSeed / 0x7fffffff;
+		};
+		const fxSprite = (id: string, x: number, y: number): g.Sprite => {
+			const s = new g.Sprite({ scene, src: img(id), x, y, anchorX: 0.5, anchorY: 0.5 });
+			fxLayer.append(s);
+			return s;
+		};
+		// 中心からキラキラを飛ばす
+		const burst = (x: number, y: number, n: number, dist: number): void => {
+			for (let k = 0; k < n; k++) {
+				const a = Math.PI * 2 * (k + fxRand() * 0.6) / n;
+				const r = dist * (0.6 + fxRand() * 0.6);
+				const sz = 0.5 + fxRand() * 0.6;
+				const s = fxSprite("spark", x, y);
+				animate(0.55 + fxRand() * 0.2, (q) => {
+					const e = ease(q);
+					s.x = x + Math.cos(a) * r * e;
+					s.y = y + Math.sin(a) * r * e;
+					s.scaleX = s.scaleY = sz * (1 - q * 0.7);
+					s.angle = q * 180;
+					s.opacity = q < 0.6 ? 1 : 1 - (q - 0.6) / 0.4;
+					s.modified();
+				}, () => s.destroy());
+			}
+		};
+		// 広がる輪
+		const ringFx = (x: number, y: number, size: number, dur: number): void => {
+			const s = fxSprite("ring", x, y);
+			animate(dur, (q) => {
+				s.scaleX = s.scaleY = size * (0.3 + ease(q) * 0.9);
+				s.opacity = 1 - q;
+				s.modified();
+			}, () => s.destroy());
+		};
+		// ぽんっと出て、上にうかんで消える文字
+		const popText = (text: string, font: g.Font, size: number, x: number, y: number): void => {
+			const l = label(text, font, size, x, y, fxLayer, "center");
+			l.anchorY = 0.5;
+			animate(1.1, (q) => {
+				const s = q < 0.15 ? 0.5 + q / 0.15 * 0.7 : q < 0.3 ? 1.2 - (q - 0.15) / 0.15 * 0.2 : 1;
+				l.scaleX = l.scaleY = s;
+				l.y = y - ease(q) * 40;
+				l.opacity = q < 0.7 ? 1 : 1 - (q - 0.7) / 0.3;
+				l.modified();
+			}, () => l.destroy());
+		};
+		// パーツがぴょんとはねる
+		const hop = (s: g.Sprite, power: number): void => {
+			animate(0.35, (q) => {
+				s.scaleX = s.scaleY = 1 + power * Math.sin(q * Math.PI);
+				s.modified();
+			}, () => {
+				s.scaleX = s.scaleY = 1;
+				s.modified();
+			});
+		};
+		// コンボ中は、額縁のあちこちがさりげなくキラッと光る
+		const twinkle = (n: number): void => {
+			for (let k = 0; k < n; k++) {
+				const s = fxSprite("spark", PX + 20 + fxRand() * (PW - 40), PY + 20 + fxRand() * (PH - 40));
+				const sz = 0.35 + fxRand() * 0.35;
+				s.opacity = 0;
+				s.modified();
+				const delay = fxRand() * 0.5;
+				animate(0.8 + delay, (q) => {
+					const t = Math.max(0, (q * (0.8 + delay) - delay) / 0.8);
+					s.scaleX = s.scaleY = sz * Math.sin(t * Math.PI);
+					s.opacity = Math.sin(t * Math.PI) * 0.9;
+					s.angle = t * 90;
+					s.modified();
+				}, () => s.destroy());
+			}
+		};
+		const comboLabel = label("", fontGold, 36, PX + 4, PY + PH + 34, fxLayer);
+		comboLabel.hide();
+		const showCombo = (n: number): void => {
+			setText(comboLabel, n + "コンボ!");
+			comboLabel.show();
+			comboLabel.opacity = 1;
+			animate(0.3, (q) => {
+				comboLabel.scaleX = comboLabel.scaleY = 1 + 0.2 * Math.sin(q * Math.PI);
+				comboLabel.modified();
+			});
+		};
+		const hideCombo = (): void => {
+			const startOp = comboLabel.opacity;
+			animate(0.3, (q) => {
+				comboLabel.opacity = startOp * (1 - q);
+				comboLabel.modified();
+			}, () => comboLabel.hide());
+		};
+
 		// ---- 答え合わせ ----
 		const review = (): void => {
 			phase = "review";
@@ -360,6 +458,7 @@ export function main(param: GameMainParameterObject): void {
 			setText(hintLabel, "こたえあわせ");
 			let total = 0;
 			let accSum = 0;
+			let combo = 0;
 			// パーツ置き場の上に、1つずつ「点数とずれ」をならべる。置かなかったパーツは隠す
 			parts.forEach((p) => {
 				if (!p.placed) p.sprite.hide();
@@ -401,8 +500,46 @@ export function main(param: GameMainParameterObject): void {
 						const font = perfect ? fontGold : pts >= 500 ? fontGreen : fontCream;
 						label("ずれ " + mm + "mm", font, 28, 90, ry + rowH / 2 - 16, panel);
 						label((perfect ? "ピッタリ! " : "") + "+" + pts + "点", font, 28, 550, ry + rowH / 2 - 16, panel, "right");
-						se(perfect ? "great" : "check", perfect ? 0.6 : 0.5);
+						// 合っているほど派手に。いい位置が続くとコンボになって、キラキラが増える
+						const sx = p.sprite.x, sy = p.sprite.y;
+						if (pts >= 500) {
+							combo++;
+							const lv = Math.min(4, combo - 1);
+							se("kira" + lv, 0.5);
+							if (perfect) {
+								se("great", 0.6);
+								const gl = fxSprite("glow", sx, sy);
+								animate(0.7, (q) => {
+									gl.scaleX = gl.scaleY = 0.6 + ease(q) * 1.2;
+									gl.opacity = 1 - q;
+									gl.modified();
+								}, () => gl.destroy());
+								ringFx(sx, sy, 1.4, 0.6);
+								burst(sx, sy, 12, 130);
+								popText("ピッタリ!", fontGold, 52, sx, sy - 50);
+								hop(p.sprite, 0.3);
+							} else {
+								ringFx(sx, sy, 1, 0.5);
+								burst(sx, sy, 7, 90);
+								popText(pts >= 800 ? "すごい!" : "いいね!", fontGreen, 44, sx, sy - 44);
+								hop(p.sprite, 0.18);
+							}
+							if (combo >= 2) {
+								showCombo(combo);
+								twinkle(Math.min(14, combo * 2));
+							}
+						} else {
+							if (combo >= 2) hideCombo();
+							combo = 0;
+							if (pts >= 150) {
+								ringFx(sx, sy, 0.7, 0.4);
+								popText("おしい!", fontCream, 36, sx, sy - 40);
+							}
+							se("check", 0.5);
+						}
 					} else {
+						if (combo >= 2) hideCombo();
+						combo = 0;
 						label("置いてない", fontCream, 28, 90, ry + rowH / 2 - 16, panel);
 						label("0点", fontCream, 28, 550, ry + rowH / 2 - 16, panel, "right");
 						se("check", 0.3);
@@ -432,6 +569,7 @@ export function main(param: GameMainParameterObject): void {
 		const nextRound = (): void => {
 			round++;
 			phase = "next";
+			comboLabel.hide();
 			phaseT = 0;
 			setupRound(round);
 			const box = new g.E({ scene });

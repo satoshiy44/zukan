@@ -499,6 +499,84 @@
 			"path": "image/p_trapeze.png",
 			"width": 98,
 			"height": 165
+		},
+		"kira0": {
+			"type": "audio",
+			"path": "audio/kira0",
+			"systemId": "sound",
+			"duration": 540,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"kira1": {
+			"type": "audio",
+			"path": "audio/kira1",
+			"systemId": "sound",
+			"duration": 540,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"kira2": {
+			"type": "audio",
+			"path": "audio/kira2",
+			"systemId": "sound",
+			"duration": 540,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"kira3": {
+			"type": "audio",
+			"path": "audio/kira3",
+			"systemId": "sound",
+			"duration": 540,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"kira4": {
+			"type": "audio",
+			"path": "audio/kira4",
+			"systemId": "sound",
+			"duration": 540,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"glow": {
+			"type": "image",
+			"path": "image/glow.png",
+			"width": 200,
+			"height": 200
+		},
+		"ring": {
+			"type": "image",
+			"path": "image/ring.png",
+			"width": 160,
+			"height": 160
+		},
+		"spark": {
+			"type": "image",
+			"path": "image/spark.png",
+			"width": 48,
+			"height": 48
 		}
 	},
 	"environment": {
