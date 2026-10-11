@@ -577,6 +577,540 @@
 			"path": "image/bg_winter.jpg",
 			"width": 640,
 			"height": 480
+		},
+		"bg_amuse": {
+			"type": "image",
+			"path": "image/bg_amuse.jpg",
+			"width": 640,
+			"height": 480
+		},
+		"bg_castle": {
+			"type": "image",
+			"path": "image/bg_castle.jpg",
+			"width": 640,
+			"height": 480
+		},
+		"bg_harbor": {
+			"type": "image",
+			"path": "image/bg_harbor.jpg",
+			"width": 640,
+			"height": 480
+		},
+		"bg_kitchen": {
+			"type": "image",
+			"path": "image/bg_kitchen.jpg",
+			"width": 640,
+			"height": 480
+		},
+		"bg_lab": {
+			"type": "image",
+			"path": "image/bg_lab.jpg",
+			"width": 640,
+			"height": 480
+		},
+		"bg_sea": {
+			"type": "image",
+			"path": "image/bg_sea.jpg",
+			"width": 640,
+			"height": 480
+		},
+		"bg_space": {
+			"type": "image",
+			"path": "image/bg_space.jpg",
+			"width": 640,
+			"height": 480
+		},
+		"bg_station": {
+			"type": "image",
+			"path": "image/bg_station.jpg",
+			"width": 640,
+			"height": 480
+		},
+		"bg_street": {
+			"type": "image",
+			"path": "image/bg_street.jpg",
+			"width": 640,
+			"height": 480
+		},
+		"p_alien": {
+			"type": "image",
+			"path": "image/p_alien.png",
+			"width": 72,
+			"height": 116
+		},
+		"p_anchor": {
+			"type": "image",
+			"path": "image/p_anchor.png",
+			"width": 98,
+			"height": 116
+		},
+		"p_apple": {
+			"type": "image",
+			"path": "image/p_apple.png",
+			"width": 74,
+			"height": 75
+		},
+		"p_astronaut": {
+			"type": "image",
+			"path": "image/p_astronaut.png",
+			"width": 94,
+			"height": 139
+		},
+		"p_balloons": {
+			"type": "image",
+			"path": "image/p_balloons.png",
+			"width": 106,
+			"height": 169
+		},
+		"p_barrel": {
+			"type": "image",
+			"path": "image/p_barrel.png",
+			"width": 80,
+			"height": 114
+		},
+		"p_bench": {
+			"type": "image",
+			"path": "image/p_bench.png",
+			"width": 184,
+			"height": 106
+		},
+		"p_bicycle": {
+			"type": "image",
+			"path": "image/p_bicycle.png",
+			"width": 170,
+			"height": 104
+		},
+		"p_books": {
+			"type": "image",
+			"path": "image/p_books.png",
+			"width": 100,
+			"height": 96
+		},
+		"p_booth": {
+			"type": "image",
+			"path": "image/p_booth.png",
+			"width": 136,
+			"height": 188
+		},
+		"p_bread": {
+			"type": "image",
+			"path": "image/p_bread.png",
+			"width": 132,
+			"height": 64
+		},
+		"p_cake": {
+			"type": "image",
+			"path": "image/p_cake.png",
+			"width": 122,
+			"height": 104
+		},
+		"p_candle": {
+			"type": "image",
+			"path": "image/p_candle.png",
+			"width": 74,
+			"height": 134
+		},
+		"p_cannon": {
+			"type": "image",
+			"path": "image/p_cannon.png",
+			"width": 150,
+			"height": 89
+		},
+		"p_cheese": {
+			"type": "image",
+			"path": "image/p_cheese.png",
+			"width": 116,
+			"height": 72
+		},
+		"p_comet": {
+			"type": "image",
+			"path": "image/p_comet.png",
+			"width": 159,
+			"height": 52
+		},
+		"p_cotton": {
+			"type": "image",
+			"path": "image/p_cotton.png",
+			"width": 82,
+			"height": 144
+		},
+		"p_crab": {
+			"type": "image",
+			"path": "image/p_crab.png",
+			"width": 114,
+			"height": 87
+		},
+		"p_cupride": {
+			"type": "image",
+			"path": "image/p_cupride.png",
+			"width": 138,
+			"height": 117
+		},
+		"p_dog": {
+			"type": "image",
+			"path": "image/p_dog.png",
+			"width": 130,
+			"height": 89
+		},
+		"p_dragon": {
+			"type": "image",
+			"path": "image/p_dragon.png",
+			"width": 162,
+			"height": 120
+		},
+		"p_firework": {
+			"type": "image",
+			"path": "image/p_firework.png",
+			"width": 144,
+			"height": 144
+		},
+		"p_fish_a": {
+			"type": "image",
+			"path": "image/p_fish_a.png",
+			"width": 88,
+			"height": 66
+		},
+		"p_fish_b": {
+			"type": "image",
+			"path": "image/p_fish_b.png",
+			"width": 67,
+			"height": 51
+		},
+		"p_fishbox": {
+			"type": "image",
+			"path": "image/p_fishbox.png",
+			"width": 133,
+			"height": 77
+		},
+		"p_flagpole": {
+			"type": "image",
+			"path": "image/p_flagpole.png",
+			"width": 92,
+			"height": 208
+		},
+		"p_flask": {
+			"type": "image",
+			"path": "image/p_flask.png",
+			"width": 92,
+			"height": 129
+		},
+		"p_flowerpot": {
+			"type": "image",
+			"path": "image/p_flowerpot.png",
+			"width": 86,
+			"height": 122
+		},
+		"p_fountain": {
+			"type": "image",
+			"path": "image/p_fountain.png",
+			"width": 172,
+			"height": 133
+		},
+		"p_fpan": {
+			"type": "image",
+			"path": "image/p_fpan.png",
+			"width": 165,
+			"height": 68
+		},
+		"p_gaslamp": {
+			"type": "image",
+			"path": "image/p_gaslamp.png",
+			"width": 56,
+			"height": 222
+		},
+		"p_globe": {
+			"type": "image",
+			"path": "image/p_globe.png",
+			"width": 105,
+			"height": 144
+		},
+		"p_gull": {
+			"type": "image",
+			"path": "image/p_gull.png",
+			"width": 112,
+			"height": 38
+		},
+		"p_horse": {
+			"type": "image",
+			"path": "image/p_horse.png",
+			"width": 170,
+			"height": 149
+		},
+		"p_hourglass": {
+			"type": "image",
+			"path": "image/p_hourglass.png",
+			"width": 72,
+			"height": 122
+		},
+		"p_icecream": {
+			"type": "image",
+			"path": "image/p_icecream.png",
+			"width": 60,
+			"height": 131
+		},
+		"p_jelly": {
+			"type": "image",
+			"path": "image/p_jelly.png",
+			"width": 88,
+			"height": 125
+		},
+		"p_kettle": {
+			"type": "image",
+			"path": "image/p_kettle.png",
+			"width": 117,
+			"height": 115
+		},
+		"p_kikyu": {
+			"type": "image",
+			"path": "image/p_kikyu.png",
+			"width": 106,
+			"height": 161
+		},
+		"p_knight": {
+			"type": "image",
+			"path": "image/p_knight.png",
+			"width": 112,
+			"height": 204
+		},
+		"p_ladle": {
+			"type": "image",
+			"path": "image/p_ladle.png",
+			"width": 64,
+			"height": 149
+		},
+		"p_lifebuoy": {
+			"type": "image",
+			"path": "image/p_lifebuoy.png",
+			"width": 100,
+			"height": 100
+		},
+		"p_lighthouse": {
+			"type": "image",
+			"path": "image/p_lighthouse.png",
+			"width": 50,
+			"height": 209
+		},
+		"p_mailbox": {
+			"type": "image",
+			"path": "image/p_mailbox.png",
+			"width": 72,
+			"height": 139
+		},
+		"p_map": {
+			"type": "image",
+			"path": "image/p_map.png",
+			"width": 140,
+			"height": 110
+		},
+		"p_merry": {
+			"type": "image",
+			"path": "image/p_merry.png",
+			"width": 126,
+			"height": 188
+		},
+		"p_microscope": {
+			"type": "image",
+			"path": "image/p_microscope.png",
+			"width": 100,
+			"height": 152
+		},
+		"p_moonflag": {
+			"type": "image",
+			"path": "image/p_moonflag.png",
+			"width": 81,
+			"height": 146
+		},
+		"p_octopus": {
+			"type": "image",
+			"path": "image/p_octopus.png",
+			"width": 118,
+			"height": 119
+		},
+		"p_oldcar": {
+			"type": "image",
+			"path": "image/p_oldcar.png",
+			"width": 202,
+			"height": 103
+		},
+		"p_owl": {
+			"type": "image",
+			"path": "image/p_owl.png",
+			"width": 72,
+			"height": 100
+		},
+		"p_pigeon": {
+			"type": "image",
+			"path": "image/p_pigeon.png",
+			"width": 103,
+			"height": 73
+		},
+		"p_pinwheel": {
+			"type": "image",
+			"path": "image/p_pinwheel.png",
+			"width": 78,
+			"height": 172
+		},
+		"p_planet": {
+			"type": "image",
+			"path": "image/p_planet.png",
+			"width": 172,
+			"height": 96
+		},
+		"p_popcorn": {
+			"type": "image",
+			"path": "image/p_popcorn.png",
+			"width": 82,
+			"height": 117
+		},
+		"p_poster": {
+			"type": "image",
+			"path": "image/p_poster.png",
+			"width": 110,
+			"height": 140
+		},
+		"p_pot": {
+			"type": "image",
+			"path": "image/p_pot.png",
+			"width": 142,
+			"height": 117
+		},
+		"p_puzzlebox": {
+			"type": "image",
+			"path": "image/p_puzzlebox.png",
+			"width": 94,
+			"height": 89
+		},
+		"p_rocket": {
+			"type": "image",
+			"path": "image/p_rocket.png",
+			"width": 94,
+			"height": 174
+		},
+		"p_rosebush": {
+			"type": "image",
+			"path": "image/p_rosebush.png",
+			"width": 136,
+			"height": 73
+		},
+		"p_rover": {
+			"type": "image",
+			"path": "image/p_rover.png",
+			"width": 130,
+			"height": 103
+		},
+		"p_sailboat": {
+			"type": "image",
+			"path": "image/p_sailboat.png",
+			"width": 142,
+			"height": 140
+		},
+		"p_satellite": {
+			"type": "image",
+			"path": "image/p_satellite.png",
+			"width": 158,
+			"height": 73
+		},
+		"p_seaweed": {
+			"type": "image",
+			"path": "image/p_seaweed.png",
+			"width": 64,
+			"height": 194
+		},
+		"p_shell": {
+			"type": "image",
+			"path": "image/p_shell.png",
+			"width": 90,
+			"height": 79
+		},
+		"p_shield": {
+			"type": "image",
+			"path": "image/p_shield.png",
+			"width": 88,
+			"height": 110
+		},
+		"p_sign": {
+			"type": "image",
+			"path": "image/p_sign.png",
+			"width": 120,
+			"height": 102
+		},
+		"p_signal": {
+			"type": "image",
+			"path": "image/p_signal.png",
+			"width": 68,
+			"height": 206
+		},
+		"p_starfish": {
+			"type": "image",
+			"path": "image/p_starfish.png",
+			"width": 92,
+			"height": 88
+		},
+		"p_stclock": {
+			"type": "image",
+			"path": "image/p_stclock.png",
+			"width": 112,
+			"height": 139
+		},
+		"p_steamship": {
+			"type": "image",
+			"path": "image/p_steamship.png",
+			"width": 200,
+			"height": 121
+		},
+		"p_teacup": {
+			"type": "image",
+			"path": "image/p_teacup.png",
+			"width": 117,
+			"height": 75
+		},
+		"p_telescope": {
+			"type": "image",
+			"path": "image/p_telescope.png",
+			"width": 165,
+			"height": 190
+		},
+		"p_tophat": {
+			"type": "image",
+			"path": "image/p_tophat.png",
+			"width": 104,
+			"height": 93
+		},
+		"p_train": {
+			"type": "image",
+			"path": "image/p_train.png",
+			"width": 207,
+			"height": 128
+		},
+		"p_treasure": {
+			"type": "image",
+			"path": "image/p_treasure.png",
+			"width": 124,
+			"height": 85
+		},
+		"p_trunk": {
+			"type": "image",
+			"path": "image/p_trunk.png",
+			"width": 130,
+			"height": 98
+		},
+		"p_turtle": {
+			"type": "image",
+			"path": "image/p_turtle.png",
+			"width": 144,
+			"height": 81
+		},
+		"p_ufo": {
+			"type": "image",
+			"path": "image/p_ufo.png",
+			"width": 152,
+			"height": 98
+		},
+		"p_umbrella": {
+			"type": "image",
+			"path": "image/p_umbrella.png",
+			"width": 144,
+			"height": 171
 		}
 	},
 	"environment": {

@@ -23,7 +23,8 @@ const FULL_DIST = 160; // これより離れると0点
 const PERFECT_DIST = 10; // これより近いとピッタリ
 const MM_PER_PX = 0.5;
 
-type Zone = "sky" | "tree" | "ground" | "wall" | "tall" | "floor" | "air" | "stagetall" | "stage";
+type Zone = "sky" | "tree" | "ground" | "wall" | "tall" | "floor" | "air" | "stagetall" | "stage"
+	| "sea" | "water" | "seabed" | "weed" | "table" | "space" | "surface";
 interface PartDef { id: string; zone: Zone; }
 interface SceneDef { name: string; bg: string; parts: PartDef[]; }
 const SCENES: SceneDef[] = [
@@ -71,10 +72,70 @@ const CIRCUS: SceneDef = {
 		{ id: "p_drum", zone: "stage" }, { id: "p_star_c", zone: "air" }
 	]
 };
+// 追加ステージ
+const P = (id: string, zone: Zone): PartDef => ({ id, zone });
+const MORE: SceneDef[] = [
+	{
+		name: "港町", bg: "bg_harbor", parts: [
+			P("p_sailboat", "sea"), P("p_steamship", "sea"), P("p_lighthouse", "tree"), P("p_gull", "sky"), P("p_kikyu", "sky"),
+			P("p_anchor", "ground"), P("p_barrel", "ground"), P("p_crab", "ground"), P("p_lifebuoy", "ground"), P("p_fishbox", "ground")
+		]
+	},
+	{
+		name: "駅のホーム", bg: "bg_station", parts: [
+			P("p_train", "floor"), P("p_stclock", "wall"), P("p_poster", "wall"), P("p_signal", "tall"), P("p_gaslamp", "tall"),
+			P("p_trunk", "floor"), P("p_bench", "floor"), P("p_pigeon", "floor"), P("p_tophat", "floor")
+		]
+	},
+	{
+		name: "海の中", bg: "bg_sea", parts: [
+			P("p_fish_a", "water"), P("p_fish_b", "water"), P("p_jelly", "water"), P("p_turtle", "water"), P("p_octopus", "seabed"),
+			P("p_starfish", "seabed"), P("p_shell", "seabed"), P("p_treasure", "seabed"), P("p_seaweed", "weed")
+		]
+	},
+	{
+		name: "台所", bg: "bg_kitchen", parts: [
+			P("p_fpan", "wall"), P("p_ladle", "wall"), P("p_pot", "table"), P("p_kettle", "table"), P("p_bread", "table"),
+			P("p_cheese", "table"), P("p_apple", "table"), P("p_teacup", "table"), P("p_cake", "table")
+		]
+	},
+	{
+		name: "お城の中庭", bg: "bg_castle", parts: [
+			P("p_knight", "tall"), P("p_flagpole", "tree"), P("p_fountain", "ground"), P("p_cannon", "ground"), P("p_horse", "ground"),
+			P("p_shield", "ground"), P("p_rosebush", "ground"), P("p_dragon", "sky"), P("p_owl", "sky")
+		]
+	},
+	{
+		name: "宇宙", bg: "bg_space", parts: [
+			P("p_planet", "space"), P("p_rocket", "space"), P("p_ufo", "space"), P("p_astronaut", "space"), P("p_comet", "space"),
+			P("p_satellite", "space"), P("p_alien", "surface"), P("p_moonflag", "surface"), P("p_rover", "surface")
+		]
+	},
+	{
+		name: "遊園地", bg: "bg_amuse", parts: [
+			P("p_balloons", "sky"), P("p_firework", "sky"), P("p_booth", "tree"), P("p_merry", "tree"), P("p_icecream", "ground"),
+			P("p_popcorn", "ground"), P("p_cotton", "ground"), P("p_cupride", "ground"), P("p_pinwheel", "ground")
+		]
+	},
+	{
+		name: "博士の研究室", bg: "bg_lab", parts: [
+			P("p_map", "wall"), P("p_telescope", "tall"), P("p_globe", "floor"), P("p_microscope", "floor"), P("p_flask", "floor"),
+			P("p_books", "floor"), P("p_candle", "floor"), P("p_hourglass", "floor"), P("p_puzzlebox", "floor")
+		]
+	},
+	{
+		name: "街角", bg: "bg_street", parts: [
+			P("p_sign", "sky"), P("p_oldcar", "ground"), P("p_bicycle", "ground"), P("p_dog", "ground"), P("p_mailbox", "ground"),
+			P("p_gaslamp", "tall"), P("p_umbrella", "ground"), P("p_flowerpot", "ground"), P("p_pigeon", "ground")
+		]
+	}
+];
+const ALL_SCENES: SceneDef[] = SCENES.concat([ROOM, CIRCUS], MORE);
 // 置き場所の高さ(絵の中の中心のy)
 const ZONE_Y: { [z: string]: number[] } = {
 	sky: [55, 185], tree: [230, 300], ground: [335, 430], wall: [70, 210], tall: [300, 360], floor: [345, 420],
-	air: [80, 190], stagetall: [270, 340], stage: [350, 420]
+	air: [80, 190], stagetall: [270, 340], stage: [350, 420],
+	sea: [250, 300], water: [70, 300], seabed: [385, 435], weed: [330, 380], table: [300, 430], space: [60, 320], surface: [395, 440]
 };
 
 interface Part {
@@ -89,14 +150,16 @@ interface Part {
 
 export function main(param: GameMainParameterObject): void {
 	const partIds: string[] = [];
-	SCENES.concat([ROOM, CIRCUS]).forEach((s) => s.parts.forEach((p) => partIds.push(p.id)));
+	ALL_SCENES.forEach((s) => s.parts.forEach((p) => {
+		if (partIds.indexOf(p.id) < 0) partIds.push(p.id);
+	}));
 	const scene = new g.Scene({
 		game: g.game,
 		assetIds: [
-			"bg_spring", "bg_summer", "bg_autumn", "bg_winter", "bg_room", "bg_circus", "frame", "frame_s", "ghost", "dot", "logo",
+			"frame", "frame_s", "ghost", "dot", "logo",
 			"pick", "put", "check", "great", "round", "beep", "go", "finish", "bgm",
 			"kira0", "kira1", "kira2", "kira3", "kira4", "spark", "ring", "glow"
-		].concat(partIds)
+		].concat(partIds, ALL_SCENES.map((sc) => sc.bg))
 	});
 	let time = 115;
 	if (param.sessionParameter.totalTimeLimit) {
@@ -203,9 +266,15 @@ export function main(param: GameMainParameterObject): void {
 		let score = 0;
 		let parts: Part[] = [];
 		let reviewPanel: g.E | null = null;
-		// 1枚目は季節をえらぶ。2枚目はおへや、3枚目はサーカス
-		const firstScene = SCENES[Math.floor(rand() * SCENES.length)];
-		const sceneOf = (r: number): SceneDef => (r === 0 ? firstScene : r === 1 ? ROOM : CIRCUS);
+		// 15種類の絵から、毎回ちがう3枚をえらぶ
+		const sceneOrder = ALL_SCENES.slice();
+		for (let i = sceneOrder.length - 1; i > 0; i--) {
+			const j = Math.floor(rand() * (i + 1));
+			const t = sceneOrder[i];
+			sceneOrder[i] = sceneOrder[j];
+			sceneOrder[j] = t;
+		}
+		const sceneOf = (r: number): SceneDef => sceneOrder[r];
 
 		const slotPos = (i: number): number[] => [TX + (i % TCOLS) * TCW + TCW / 2, TY + Math.floor(i / TCOLS) * TCH + TCH / 2];
 		const trayScaleOf = (s: g.Sprite): number => Math.min(1, (TCW - 12) / s.width, (TCH - 30) / s.height);
@@ -231,7 +300,7 @@ export function main(param: GameMainParameterObject): void {
 				pool[i] = pool[j];
 				pool[j] = t;
 			}
-			const n = ROUNDS[r].min + Math.floor(rand() * (ROUNDS[r].max - ROUNDS[r].min + 1));
+			const n = Math.min(pool.length, ROUNDS[r].min + Math.floor(rand() * (ROUNDS[r].max - ROUNDS[r].min + 1)));
 			const picked = pool.slice(0, n);
 			const placed: number[][] = []; // x, y, 半径
 			picked.forEach((def, i) => {
