@@ -139,32 +139,73 @@ save("beep", tone(note(81), 0.1, "sin", 0.25))
 save("go", mix(*[bell(note(n), 0.4, 0.25) for n in (76, 84)], offsets=[0, 0.1]))
 save("finish", mix(*[bell(note(n), 0.7, 0.25) for n in (84, 79, 76, 72)], offsets=[0, 0.12, 0.24, 0.36]))
 
-# ---- BGM: のんびりしたオルゴール風(96BPM, 8小節) ----
-def music_box(freq, dur, vol=0.3):
+# ---- BGM: アップテンポでポップな曲(140BPM, 16小節, ドラム入り) ----
+def marimba(freq, dur, vol=0.3):
     out = []
     for i in range(int(dur * SR)):
         t = i / SR
-        v = (math.sin(2 * math.pi * freq * t) + 0.35 * math.sin(2 * math.pi * freq * 3.01 * t) * math.exp(-t * 8)) * math.exp(-t * 3.5)
+        v = (math.sin(2 * math.pi * freq * t) + 0.3 * math.sin(2 * math.pi * freq * 4.0 * t) * math.exp(-t * 30)) * math.exp(-t * 9)
         out.append(v * vol)
     return out
 
 
-BPM = 96
+def snare(vol=0.3):
+    return [v * 0.6 for v in lowpass(noise(0.12, vol, 2.5), 0.5)]
+
+
+def hat(vol=0.1):
+    x = noise(0.04, vol, 3.0)
+    lp = lowpass(x, 0.6)
+    return [a - b for a, b in zip(x, lp)]
+
+
+BPM = 140
 beat = 60 / BPM
-bars = 8
+e8 = beat / 2
+# コード進行(1小節ごと): C G Am F / C G F G をくり返す
+chords = [(48, [60, 64, 67]), (43, [59, 62, 67]), (45, [60, 64, 69]), (41, [60, 65, 69]),
+          (48, [60, 64, 67]), (43, [59, 62, 67]), (41, [60, 65, 69]), (43, [59, 62, 67])] * 2
+# メロディ(8分音符単位, None=休み, -1=のばす)
+A = [72, 74, 76, 79, None, 76, 79, None, 74, None, 79, 77, 76, 74, 71, None,
+     69, 72, 76, None, 74, 72, 69, None, 72, None, 69, 72, 74, -1, None, None,
+     72, 74, 76, 79, None, 76, 79, 81, 79, None, 74, 76, 77, 76, 74, None,
+     77, 76, 74, 72, 74, None, 76, None, 74, 71, 74, 79, -1, -1, None, None]
+B = [84, None, 83, 81, 79, None, 76, 79, 79, 77, 76, 74, 74, None, 79, None,
+     81, None, 79, 76, 72, None, 76, 77, 77, 76, 74, 72, 72, None, None, None,
+     84, None, 83, 81, 79, None, 76, 79, 79, None, 81, 79, 77, 76, 74, None,
+     77, 79, 81, 77, 76, 74, 72, 74, 74, 76, 74, 71, 72, -1, -1, None]
+mel = A + B
+bars = len(chords)
 total = bars * 4 * beat
-mel = [79, 81, 84, None, 81, 79, 76, None, 77, 79, 81, None, 79, 77, 76, None,
-       79, 81, 84, 86, 88, 86, 84, None, 81, 84, 79, 76, 77, 74, 72, None]
 tracks, offs = [], []
 for i, n in enumerate(mel):
-    if n is None:
+    if n is None or n == -1:
         continue
-    tracks.append(music_box(note(n), beat * 1.5, 0.22))
-    offs.append(i * beat)
-bass = [48, 45, 41, 43, 48, 45, 41, 43]
-for b, n in enumerate(bass):
+    ln = 1
+    while i + ln < len(mel) and mel[i + ln] == -1:
+        ln += 1
+    tracks.append(marimba(note(n), e8 * ln + 0.15, 0.24))
+    offs.append(i * e8)
+    tracks.append(chip(note(n + 12), min(e8 * ln * 0.8, 0.5), 0.035))
+    offs.append(i * e8)
+for b, (root, ch) in enumerate(chords):
+    t0 = b * 4 * beat
+    for k in range(8):
+        tracks.append(tone(note(root + (0, 12)[k % 2] - 12), e8 * 0.9, "tri", 0.2, 0.003, e8 * 0.9))
+        offs.append(t0 + k * e8)
+    for k in (1, 3):
+        for m in ch:
+            tracks.append(chip(note(m), e8 * 0.7, 0.025))
+            offs.append(t0 + k * beat + e8)
     for k in range(4):
-        tracks.append(music_box(note(n + (0, 7, 12, 7)[k]), beat, 0.12))
-        offs.append((b * 4 + k) * beat)
-bgm = mix(*tracks, offsets=offs)[: int(total * SR)]
-save("bgm", bgm, 0.7)
+        tracks.append(kick(0.55) if k % 2 == 0 else snare(0.35))
+        offs.append(t0 + k * beat)
+    for k in range(8):
+        tracks.append(hat(0.12 if k % 2 else 0.06))
+        offs.append(t0 + k * e8)
+raw = mix(*tracks, offsets=offs)
+n = int(total * SR)
+bgm = raw[:n]
+for i in range(n, len(raw)):
+    bgm[i - n] += raw[i]
+save("bgm", bgm, 0.42)

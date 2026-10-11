@@ -20,7 +20,7 @@
 			"type": "audio",
 			"path": "audio/bgm",
 			"systemId": "music",
-			"duration": 20000,
+			"duration": 27408,
 			"hint": {
 				"extensions": [
 					".aac",
