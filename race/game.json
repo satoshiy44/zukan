@@ -155,12 +155,6 @@
 			"width": 248,
 			"height": 150
 		},
-		"coin": {
-			"type": "image",
-			"path": "image/coin.png",
-			"width": 84,
-			"height": 84
-		},
 		"cone": {
 			"type": "image",
 			"path": "image/cone.png",
@@ -184,12 +178,6 @@
 			"path": "image/gate.png",
 			"width": 1012,
 			"height": 288
-		},
-		"gem": {
-			"type": "image",
-			"path": "image/gem.png",
-			"width": 72,
-			"height": 89
 		},
 		"hills": {
 			"type": "image",
@@ -295,6 +283,282 @@
 			"type": "script",
 			"path": "script/parameterObject.js",
 			"global": true
+		},
+		"se_coin2": {
+			"type": "audio",
+			"path": "audio/se_coin2",
+			"systemId": "sound",
+			"duration": 300,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_jump": {
+			"type": "audio",
+			"path": "audio/se_jump",
+			"systemId": "sound",
+			"duration": 350,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_land": {
+			"type": "audio",
+			"path": "audio/se_land",
+			"systemId": "sound",
+			"duration": 120,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_splash": {
+			"type": "audio",
+			"path": "audio/se_splash",
+			"systemId": "sound",
+			"duration": 350,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"ball": {
+			"type": "image",
+			"path": "image/ball.png",
+			"width": 92,
+			"height": 92
+		},
+		"bike": {
+			"type": "image",
+			"path": "image/bike.png",
+			"width": 186,
+			"height": 157
+		},
+		"birds": {
+			"type": "image",
+			"path": "image/birds.png",
+			"width": 253,
+			"height": 64
+		},
+		"bld_a": {
+			"type": "image",
+			"path": "image/bld_a.png",
+			"width": 272,
+			"height": 378
+		},
+		"bld_b": {
+			"type": "image",
+			"path": "image/bld_b.png",
+			"width": 232,
+			"height": 298
+		},
+		"bld_c": {
+			"type": "image",
+			"path": "image/bld_c.png",
+			"width": 292,
+			"height": 438
+		},
+		"bld_d": {
+			"type": "image",
+			"path": "image/bld_d.png",
+			"width": 252,
+			"height": 328
+		},
+		"box": {
+			"type": "image",
+			"path": "image/box.png",
+			"width": 130,
+			"height": 97
+		},
+		"cactus": {
+			"type": "image",
+			"path": "image/cactus.png",
+			"width": 120,
+			"height": 215
+		},
+		"chicken": {
+			"type": "image",
+			"path": "image/chicken.png",
+			"width": 114,
+			"height": 107
+		},
+		"citynear": {
+			"type": "image",
+			"path": "image/citynear.png",
+			"width": 1280,
+			"height": 120
+		},
+		"drock": {
+			"type": "image",
+			"path": "image/drock.png",
+			"width": 202,
+			"height": 124
+		},
+		"dunes": {
+			"type": "image",
+			"path": "image/dunes.png",
+			"width": 1280,
+			"height": 110
+		},
+		"hwlamp": {
+			"type": "image",
+			"path": "image/hwlamp.png",
+			"width": 126,
+			"height": 318
+		},
+		"hwsign": {
+			"type": "image",
+			"path": "image/hwsign.png",
+			"width": 890,
+			"height": 305
+		},
+		"lamp": {
+			"type": "image",
+			"path": "image/lamp.png",
+			"width": 68,
+			"height": 293
+		},
+		"mesas": {
+			"type": "image",
+			"path": "image/mesas.png",
+			"width": 1280,
+			"height": 170
+		},
+		"oasis": {
+			"type": "image",
+			"path": "image/oasis.png",
+			"width": 252,
+			"height": 213
+		},
+		"puddle": {
+			"type": "image",
+			"path": "image/puddle.png",
+			"width": 260,
+			"height": 64
+		},
+		"ramp": {
+			"type": "image",
+			"path": "image/ramp.png",
+			"width": 232,
+			"height": 111
+		},
+		"roundtree": {
+			"type": "image",
+			"path": "image/roundtree.png",
+			"width": 144,
+			"height": 231
+		},
+		"shadow": {
+			"type": "image",
+			"path": "image/shadow.png",
+			"width": 120,
+			"height": 40
+		},
+		"signal": {
+			"type": "image",
+			"path": "image/signal.png",
+			"width": 112,
+			"height": 287
+		},
+		"skull": {
+			"type": "image",
+			"path": "image/skull.png",
+			"width": 128,
+			"height": 68
+		},
+		"sky_desert": {
+			"type": "image",
+			"path": "image/sky_desert.jpg",
+			"width": 1280,
+			"height": 340
+		},
+		"skyline": {
+			"type": "image",
+			"path": "image/skyline.png",
+			"width": 1280,
+			"height": 220
+		},
+		"splash": {
+			"type": "image",
+			"path": "image/splash.png",
+			"width": 108,
+			"height": 70
+		},
+		"truck": {
+			"type": "image",
+			"path": "image/truck.png",
+			"width": 278,
+			"height": 252
+		},
+		"tumble": {
+			"type": "image",
+			"path": "image/tumble.png",
+			"width": 120,
+			"height": 117
+		},
+		"vulture": {
+			"type": "image",
+			"path": "image/vulture.png",
+			"width": 194,
+			"height": 38
+		},
+		"wall": {
+			"type": "image",
+			"path": "image/wall.png",
+			"width": 304,
+			"height": 124
+		},
+		"yen1": {
+			"type": "image",
+			"path": "image/yen1.png",
+			"width": 76,
+			"height": 76
+		},
+		"yen10": {
+			"type": "image",
+			"path": "image/yen10.png",
+			"width": 86,
+			"height": 86
+		},
+		"yen100": {
+			"type": "image",
+			"path": "image/yen100.png",
+			"width": 90,
+			"height": 90
+		},
+		"yen5": {
+			"type": "image",
+			"path": "image/yen5.png",
+			"width": 82,
+			"height": 82
+		},
+		"yen50": {
+			"type": "image",
+			"path": "image/yen50.png",
+			"width": 82,
+			"height": 82
+		},
+		"yen500": {
+			"type": "image",
+			"path": "image/yen500.png",
+			"width": 102,
+			"height": 102
+		},
+		"ysign": {
+			"type": "image",
+			"path": "image/ysign.png",
+			"width": 180,
+			"height": 218
 		}
 	},
 	"environment": {

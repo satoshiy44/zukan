@@ -7,7 +7,11 @@ const path = require("path");
 const ROOT = path.join(__dirname, "..");
 const dataUrl = (p) => "data:image/" + (p.endsWith(".jpg") ? "jpeg" : "png") + ";base64," + fs.readFileSync(p).toString("base64");
 const I = (n) => dataUrl(path.join(ROOT, "race/image/" + n + (n === "sky" ? ".jpg" : ".png")));
-const srcs = { shot: dataUrl(process.argv[2]), logo: I("logo"), car: I("car_r"), coin: I("coin"), gem: I("gem"), sky: I("sky"), mountains: I("mountains"), tree: I("tree") };
+const shots = path.join(ROOT, "tools/promo-shots/");
+const srcs = {
+	shot: dataUrl(process.argv[2]), town: dataUrl(shots + "race_town.png"), hw: dataUrl(shots + "race_hw.png"), desert: dataUrl(shots + "race_desert.png"),
+	logo: I("logo"), car: I("car_r"), coin: I("yen500"), gem: I("yen100"), y1: I("yen1"), y10: I("yen10"), sky: I("sky"), mountains: I("mountains")
+};
 
 async function draw(srcs) {
 	const imgs = {};
@@ -31,10 +35,18 @@ async function draw(srcs) {
 	g.addColorStop(0, "rgba(40,24,14,0.75)"); g.addColorStop(1, "rgba(40,24,14,0)");
 	x.fillStyle = g; x.fillRect(0, 0, 1280, 300);
 	x.drawImage(imgs.logo, 640 - 520, 10, 1040, 224);
-	[[150, 330, 90], [1130, 300, 110], [1050, 470, 70]].forEach((q) => x.drawImage(imgs.coin, q[0] - q[2] / 2, q[1] - q[2] / 2, q[2], q[2]));
-	x.drawImage(imgs.gem, 210, 430, 100, 90);
+	// エリアの小窓
+	[["town", "まちなか"], ["hw", "こうそくどうろ"], ["desert", "さばく"]].forEach((q, k) => {
+		const wx = 1000, wy = 250 + k * 128, ww = 250, wh = 141;
+		x.save(); x.translate(wx, wy); x.rotate(-0.03 + k * 0.03);
+		x.fillStyle = "#fff8e8"; x.fillRect(-6, -6, ww + 12, wh + 12);
+		x.drawImage(imgs[q[0]], 0, 0, ww, wh);
+		x.restore();
+		text(x, q[1], wx + ww / 2, wy + 78, 30, "#ffe060", "#3b2616");
+	});
+	[[110, 330, 100, "coin"], [190, 450, 80, "gem"], [80, 520, 60, "y10"], [240, 330, 54, "y1"]].forEach((q) => x.drawImage(imgs[q[3]], q[0] - q[2] / 2, q[1] - q[2] / 2, q[2], q[2]));
 	x.fillStyle = "rgba(40,24,14,0.8)"; x.fillRect(0, 640, 1280, 80);
-	text(x, "コインを続けてひろって、コンボで点数アップ!", 640, 680, 46, "#fff8e8", "#3b2616");
+	text(x, "1円から500円まで、お金をひろってドライブ!", 640, 680, 46, "#fff8e8", "#3b2616");
 	const promo = c.toDataURL("image/png");
 	// ---- アイコン ----
 	const S = 320;
@@ -49,8 +61,7 @@ async function draw(srcs) {
 	ix.fillStyle = "#d8403a";
 	ix.beginPath(); ix.moveTo(140, 170); ix.lineTo(134, 170); ix.lineTo(-40, 320); ix.lineTo(-10, 320); ix.fill();
 	ix.beginPath(); ix.moveTo(180, 170); ix.lineTo(186, 170); ix.lineTo(360, 320); ix.lineTo(330, 320); ix.fill();
-	[[150, 188, 22], [128, 210, 32], [96, 244, 46]].forEach((q) => ix.drawImage(imgs.coin, q[0] - q[2] / 2, q[1] - q[2] / 2, q[2], q[2]));
-	ix.drawImage(imgs.gem, 178, 176, 30, 27);
+	[[150, 188, 22, "y1"], [128, 210, 32, "y10"], [92, 246, 52, "coin"]].forEach((q) => ix.drawImage(imgs[q[3]], q[0] - q[2] / 2, q[1] - q[2] / 2, q[2], q[2]));
 	ix.drawImage(imgs.car, 130, 214, 170, 111);
 	text(ix, "ひろって", S / 2, 52, 60, "#ffe060", "#3b2616");
 	text(ix, "ドライブ", S / 2, 116, 60, "#fff8e8", "#3b2616");

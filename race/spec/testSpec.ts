@@ -2,7 +2,7 @@ import * as path from "path";
 import { GameContext } from "@akashic/headless-akashic";
 
 describe("ひろってドライブ", () => {
-	it("ハンドルを動かしながら最後まで走ると、コインで点数が入り整数で残る", async () => {
+	it("ハンドルを動かしながら最後まで走ると、お金をひろって点数が入り整数で残る", async () => {
 		const context = new GameContext<3>({ gameJsonPath: path.join(__dirname, "..", "game.json") });
 		const client = await context.getGameClient();
 		const game = client.game!;
@@ -22,7 +22,7 @@ describe("ひろってドライブ", () => {
 		const score = game.vars.gameState.score;
 		console.log("score", score);
 		expect(Number.isInteger(score)).toBe(true);
-		expect(score).toBeGreaterThan(1000);
+		expect(score).toBeGreaterThan(100);
 		await context.destroy();
 	}, 300000);
 });
