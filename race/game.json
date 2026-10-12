@@ -1,0 +1,312 @@
+{
+	"width": 1280,
+	"height": 720,
+	"fps": 30,
+	"main": "./script/_bootstrap.js",
+	"assets": {
+		"bgm": {
+			"type": "audio",
+			"path": "audio/bgm",
+			"systemId": "music",
+			"duration": 25234,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			},
+			"loop": true
+		},
+		"se_beep": {
+			"type": "audio",
+			"path": "audio/se_beep",
+			"systemId": "sound",
+			"duration": 150,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_boost": {
+			"type": "audio",
+			"path": "audio/se_boost",
+			"systemId": "sound",
+			"duration": 500,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_coin": {
+			"type": "audio",
+			"path": "audio/se_coin",
+			"systemId": "sound",
+			"duration": 210,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_combo": {
+			"type": "audio",
+			"path": "audio/se_combo",
+			"systemId": "sound",
+			"duration": 460,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_crash": {
+			"type": "audio",
+			"path": "audio/se_crash",
+			"systemId": "sound",
+			"duration": 400,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_finish": {
+			"type": "audio",
+			"path": "audio/se_finish",
+			"systemId": "sound",
+			"duration": 920,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_gem": {
+			"type": "audio",
+			"path": "audio/se_gem",
+			"systemId": "sound",
+			"duration": 700,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_go": {
+			"type": "audio",
+			"path": "audio/se_go",
+			"systemId": "sound",
+			"duration": 500,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"barrier": {
+			"type": "image",
+			"path": "image/barrier.png",
+			"width": 220,
+			"height": 103
+		},
+		"billboard": {
+			"type": "image",
+			"path": "image/billboard.png",
+			"width": 300,
+			"height": 232
+		},
+		"boost": {
+			"type": "image",
+			"path": "image/boost.png",
+			"width": 244,
+			"height": 74
+		},
+		"bush": {
+			"type": "image",
+			"path": "image/bush.png",
+			"width": 178,
+			"height": 94
+		},
+		"car": {
+			"type": "image",
+			"path": "image/car.png",
+			"width": 244,
+			"height": 150
+		},
+		"car_l": {
+			"type": "image",
+			"path": "image/car_l.png",
+			"width": 248,
+			"height": 150
+		},
+		"car_r": {
+			"type": "image",
+			"path": "image/car_r.png",
+			"width": 248,
+			"height": 150
+		},
+		"coin": {
+			"type": "image",
+			"path": "image/coin.png",
+			"width": 84,
+			"height": 84
+		},
+		"cone": {
+			"type": "image",
+			"path": "image/cone.png",
+			"width": 84,
+			"height": 109
+		},
+		"dust": {
+			"type": "image",
+			"path": "image/dust.png",
+			"width": 60,
+			"height": 40
+		},
+		"flowers": {
+			"type": "image",
+			"path": "image/flowers.png",
+			"width": 180,
+			"height": 55
+		},
+		"gate": {
+			"type": "image",
+			"path": "image/gate.png",
+			"width": 1012,
+			"height": 288
+		},
+		"gem": {
+			"type": "image",
+			"path": "image/gem.png",
+			"width": 72,
+			"height": 89
+		},
+		"hills": {
+			"type": "image",
+			"path": "image/hills.png",
+			"width": 1280,
+			"height": 110
+		},
+		"house": {
+			"type": "image",
+			"path": "image/house.png",
+			"width": 228,
+			"height": 214
+		},
+		"logo": {
+			"type": "image",
+			"path": "image/logo.png",
+			"width": 1160,
+			"height": 250
+		},
+		"mountains": {
+			"type": "image",
+			"path": "image/mountains.png",
+			"width": 1280,
+			"height": 170
+		},
+		"pine": {
+			"type": "image",
+			"path": "image/pine.png",
+			"width": 158,
+			"height": 289
+		},
+		"rival_a": {
+			"type": "image",
+			"path": "image/rival_a.png",
+			"width": 222,
+			"height": 146
+		},
+		"rival_b": {
+			"type": "image",
+			"path": "image/rival_b.png",
+			"width": 222,
+			"height": 146
+		},
+		"rival_c": {
+			"type": "image",
+			"path": "image/rival_c.png",
+			"width": 222,
+			"height": 146
+		},
+		"rock": {
+			"type": "image",
+			"path": "image/rock.png",
+			"width": 156,
+			"height": 108
+		},
+		"sign_l": {
+			"type": "image",
+			"path": "image/sign_l.png",
+			"width": 154,
+			"height": 226
+		},
+		"sign_r": {
+			"type": "image",
+			"path": "image/sign_r.png",
+			"width": 154,
+			"height": 226
+		},
+		"sky": {
+			"type": "image",
+			"path": "image/sky.jpg",
+			"width": 1280,
+			"height": 340
+		},
+		"spark": {
+			"type": "image",
+			"path": "image/spark.png",
+			"width": 48,
+			"height": 48
+		},
+		"tree": {
+			"type": "image",
+			"path": "image/tree.png",
+			"width": 224,
+			"height": 273
+		},
+		"windmill": {
+			"type": "image",
+			"path": "image/windmill.png",
+			"width": 188,
+			"height": 312
+		},
+		"_bootstrap": {
+			"type": "script",
+			"path": "script/_bootstrap.js",
+			"global": true
+		},
+		"main": {
+			"type": "script",
+			"path": "script/main.js",
+			"global": true
+		},
+		"parameterObject": {
+			"type": "script",
+			"path": "script/parameterObject.js",
+			"global": true
+		}
+	},
+	"environment": {
+		"sandbox-runtime": "3",
+		"nicolive": {
+			"supportedModes": [
+				"ranking"
+			],
+			"preferredSessionParameters": {
+				"totalTimeLimit": 80
+			}
+		}
+	},
+	"globalScripts": []
+}
