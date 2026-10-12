@@ -703,6 +703,12 @@
 			"path": "image/yacht.png",
 			"width": 194,
 			"height": 189
+		},
+		"cpgate": {
+			"type": "image",
+			"path": "image/cpgate.png",
+			"width": 1012,
+			"height": 331
 		}
 	},
 	"environment": {

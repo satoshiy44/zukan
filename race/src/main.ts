@@ -26,7 +26,7 @@ const JUMP_SEC = 1.1;
 const JUMP_H = 190; // ジャンプの高さ(画面のpx)
 const MEDIAN = 0.55; // 分かれ道の真ん中の草地(半分の幅)
 
-type Kind = "yen" | "boost" | "jump" | "hit" | "slow" | "deco" | "fly" | "chest";
+type Kind = "yen" | "boost" | "jump" | "hit" | "slow" | "deco" | "fly" | "chest" | "goal";
 interface Obj {
 	id: string; off: number; size: number; kind: Kind; taken: boolean;
 	val?: number; alt?: number; vx?: number; act?: boolean; si?: number;
@@ -99,7 +99,7 @@ export function main(param: GameMainParameterObject): void {
 		"cone", "rock", "barrier", "box", "tree", "pine", "bush", "house", "windmill", "flowers", "sign_l", "sign_r", "billboard",
 		"gate", "ysign", "bld_a", "bld_b", "bld_c", "bld_d", "lamp", "signal", "roundtree", "hwlamp", "wall", "hwsign",
 		"cactus", "drock", "skull", "oasis", "chicken", "bike", "ball", "tumble", "birds", "vulture",
-		"spark", "dust", "shadow", "splash", "logo", "chest", "chest_tag", "chestglow", "cloud", "kikyu", "rainbow", "plane",
+		"spark", "dust", "shadow", "splash", "logo", "cpgate", "chest", "chest_tag", "chestglow", "cloud", "kikyu", "rainbow", "plane",
 		"clouds_far", "clouds_near", "sky_high", "sea_far", "waves", "buoy", "yacht", "island", "lighthouse", "dolphin", "crab"
 	];
 	const audioIds = [
@@ -443,6 +443,13 @@ export function main(param: GameMainParameterObject): void {
 			segs[k].objs.length = 0;
 			obj(k, "chest", pick(lanesAt(k)), "chest");
 		});
+		// ======== チェックポイント(エリアの切れ目。くぐると1000円) ========
+		for (let k = 100; k < segs.length - 100; k++) {
+			if (segs[k].zone !== segs[k - 1].zone) {
+				const o = obj(k, "cpgate", 0, "goal");
+				o.size = segs[k].w * 2 + 0.6;
+			}
+		}
 		// ======== 道ばたの景色 ========
 		obj(12, "gate", 0, "deco");
 		const deco = (k: number, id: string, off: number): void => {
@@ -732,7 +739,7 @@ export function main(param: GameMainParameterObject): void {
 				if (P1Y[n] === undefined) continue;
 				for (let k = 0; k < sg.objs.length; k++) {
 					const o = sg.objs[k];
-					if (o.taken || (o.kind === "deco" && n < 3)) continue;
+					if (o.taken || ((o.kind === "deco" || o.kind === "goal") && n < 3)) continue;
 					const cx = P1X[n] + w1 * o.off;
 					if (cx < -w1 * 3.5 || cx > W + w1 * 3.5) continue;
 					const up = w1 * (o.alt || 0);
@@ -860,6 +867,13 @@ export function main(param: GameMainParameterObject): void {
 					popText("ジャンプ!", fontW, 56, W / 2, 420);
 					speed = Math.max(speed, MAX_SPEED);
 				}
+			} else if (o.kind === "goal") {
+				o.act = true;
+				addScore(1000);
+				se("coin2", 0.6);
+				se("combo", 0.6);
+				popText("チェックポイント! +1000円", fontY, 64, W / 2, 360, 1.8);
+				sparks(W / 2, 520, 14);
 			} else if (o.kind === "chest") {
 				// 宝箱: 50%で今のお金が2倍、50%で0円
 				o.taken = true;
@@ -975,7 +989,7 @@ export function main(param: GameMainParameterObject): void {
 				zonePrev = zoneNow;
 				zoneNow = pSeg.zone;
 				fade = 0;
-				if (phase === "race") popText(ZONES[zoneNow].name + "に入った!", fontW, 60, W / 2, 230, 1.6);
+				if (phase === "race") popText(ZONES[zoneNow].name + "に入った!", fontW, 56, W / 2, 200, 1.6);
 			}
 			// ---- 横切るもの ----
 			const pz = position + PLAYER_Z;
@@ -998,6 +1012,11 @@ export function main(param: GameMainParameterObject): void {
 					for (let k = 0; k < sg.objs.length; k++) {
 						const o = sg.objs[k];
 						if (o.taken || o.kind === "deco" || o.kind === "fly") continue;
+						if (o.kind === "goal") {
+							// ゲートは横の位置に関係なく、くぐればOK
+							if (!o.act) touch(o);
+							continue;
+						}
 						const air = (o.alt || 0) > 0.08;
 						if (o.kind === "yen") {
 							// 空中のお金はジャンプ中だけ、地面のお金は地面にいるときだけ

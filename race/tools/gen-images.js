@@ -616,6 +616,19 @@ function drawAll() {
 		line(ctx, [[52, 32], [50, 20]], INK, 2); line(ctx, [[68, 32], [70, 20]], INK, 2);
 		E(ctx, 50, 18, 4, 4, "#fff", INK, 1.5); E(ctx, 70, 18, 4, 4, "#fff", INK, 1.5);
 	});
+	// チェックポイントのゲート(くぐると1000円)
+	make("cpgate", 1000, 320, (ctx) => {
+		[[20, "#3a7ac0"], [940, "#3a7ac0"]].forEach((q) => {
+			R(ctx, q[0], 60, 40, 256, 4, q[1], INK, 3);
+			for (let y = 80; y < 300; y += 30) R(ctx, q[0] + 6, y, 28, 12, 3, "#f8e070");
+		});
+		R(ctx, 0, 14, 1000, 110, 14, "#f8e070", INK, 4);
+		R(ctx, 12, 26, 976, 86, 10, null, "#d8403a", 4);
+		for (let k = 0; k < 20; k++) R(ctx, k * 50, 112, 25, 14, 0, k % 2 ? "#2a2a2e" : "#f8f8f8");
+		ctx.font = "bold 62px IPAGothic"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+		ctx.fillStyle = "#d8403a"; ctx.fillText("チェックポイント  +1000円", 500, 70);
+		[[90, 0], [910, 0]].forEach((q) => { for (let j = 0; j < 3; j++) poly(ctx, [[q[0] - 30 + j * 30, 14], [q[0] - 15 + j * 30, -10], [q[0] + j * 30, 14]], ["#e8505a", "#5a9ad8", "#6ac06a"][j], INK, 2); });
+	});
 	// ---- エフェクト ----
 	make("spark", 48, 48, (ctx) => {
 		const gr = ctx.createRadialGradient(24, 24, 0, 24, 24, 24);
