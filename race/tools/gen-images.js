@@ -482,6 +482,140 @@ function drawAll() {
 			for (let j = 0; j < 6; j++) { const a = j * Math.PI / 3 + 0.3; E(ctx, q[0] + (k ? 10 : -6) + Math.cos(a) * 30, q[1] - 130 + Math.sin(a) * 14, 32, 9, "#5aa04a", "#3a7a2a", 2, a); }
 		});
 	});
+	// ======== 宝箱(2倍か0倍) ========
+	make("chest", 180, 150, (ctx) => {
+		R(ctx, 10, 62, 160, 82, 6, "#a8642e", INK, 3);
+		ctx.beginPath(); ctx.moveTo(10, 66); ctx.quadraticCurveTo(90, -6, 170, 66); ctx.closePath();
+		ctx.fillStyle = "#c07a3a"; ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.stroke();
+		[40, 140].forEach((x) => R(ctx, x - 7, 30, 14, 114, 0, "#e8c050", INK, 2));
+		R(ctx, 10, 62, 160, 12, 0, "#e8c050", INK, 2);
+		R(ctx, 74, 70, 32, 36, 5, "#f8dc60", INK, 2.5);
+		E(ctx, 90, 84, 5, 5, INK); R(ctx, 88, 86, 4, 12, 1, INK);
+		E(ctx, 60, 40, 14, 6, "rgba(255,255,255,0.35)", null, 0, -0.3);
+	});
+	make("chest_tag", 300, 120, (ctx) => {
+		const gr = ctx.createRadialGradient(150, 60, 10, 150, 60, 150);
+		gr.addColorStop(0, "rgba(255,240,150,0.95)"); gr.addColorStop(0.5, "rgba(255,210,90,0.55)"); gr.addColorStop(1, "rgba(255,200,80,0)");
+		ctx.fillStyle = gr; ctx.fillRect(0, 0, 300, 120);
+		ctx.font = "bold 50px IPAGothic"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineJoin = "round";
+		ctx.lineWidth = 12; ctx.strokeStyle = "#5a2a10"; ctx.strokeText("×2 か ×0", 150, 62);
+		ctx.fillStyle = "#fff8c0"; ctx.fillText("×2 か ×0", 150, 62);
+	}, { crop: false, plain: true });
+	make("chestglow", 220, 220, (ctx) => {
+		const gr = ctx.createRadialGradient(110, 110, 0, 110, 110, 110);
+		gr.addColorStop(0, "rgba(255,245,170,0.9)"); gr.addColorStop(0.5, "rgba(255,220,100,0.4)"); gr.addColorStop(1, "rgba(255,210,80,0)");
+		ctx.fillStyle = gr; ctx.fillRect(0, 0, 220, 220);
+		for (let k = 0; k < 12; k++) {
+			const a = k * Math.PI / 6;
+			poly(ctx, [[110, 110], [110 + Math.cos(a - 0.08) * 110, 110 + Math.sin(a - 0.08) * 110], [110 + Math.cos(a + 0.08) * 110, 110 + Math.sin(a + 0.08) * 110]], "rgba(255,240,160,0.35)");
+		}
+	}, { crop: false, plain: true });
+	// ======== 空の道 ========
+	make("cloud", 220, 120, (ctx) => {
+		[[-0.6, 0.15, 0.45], [-0.2, -0.15, 0.55], [0.3, -0.05, 0.5], [0.65, 0.2, 0.38], [0.05, 0.25, 0.5]].forEach((q) => E(ctx, 110 + q[0] * 90, 64 + q[1] * 90, q[2] * 90, q[2] * 72, "#fbfbff", "#c8d4e8", 3));
+		[[-0.6, 0.15, 0.45], [-0.2, -0.15, 0.55], [0.3, -0.05, 0.5], [0.65, 0.2, 0.38], [0.05, 0.25, 0.5]].forEach((q) => E(ctx, 110 + q[0] * 90, 64 + q[1] * 90, q[2] * 90 - 3, q[2] * 72 - 3, "#fbfbff"));
+	}, { plain: true });
+	make("kikyu", 140, 200, (ctx) => {
+		ctx.beginPath(); ctx.moveTo(70, 4); ctx.bezierCurveTo(146, 4, 140, 100, 88, 136); ctx.lineTo(52, 136); ctx.bezierCurveTo(0, 100, -6, 4, 70, 4);
+		ctx.fillStyle = "#e8b040"; ctx.fill();
+		ctx.save(); ctx.clip(); for (let k = 0; k < 6; k++) R(ctx, 4 + k * 24, 0, 12, 140, 0, "#d8503a"); ctx.restore();
+		ctx.beginPath(); ctx.moveTo(70, 4); ctx.bezierCurveTo(146, 4, 140, 100, 88, 136); ctx.lineTo(52, 136); ctx.bezierCurveTo(0, 100, -6, 4, 70, 4);
+		ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.stroke();
+		line(ctx, [[54, 136], [56, 164]], INK, 2); line(ctx, [[86, 136], [84, 164]], INK, 2);
+		R(ctx, 52, 164, 36, 28, 4, "#8a5a32", INK, 2.5);
+	});
+	make("rainbow", 900, 420, (ctx) => {
+		["#e8505a", "#f09a40", "#f0d050", "#6ac06a", "#5a9ad8", "#8a6ad0"].forEach((c, k) => {
+			ctx.beginPath(); ctx.arc(450, 420, 430 - k * 26, Math.PI, 0); ctx.strokeStyle = c; ctx.lineWidth = 27; ctx.stroke();
+		});
+		[[60, 404], [840, 404]].forEach((q) => { E(ctx, q[0], q[1], 70, 24, "#fbfbff", "#c8d4e8", 3); E(ctx, q[0] - 30, q[1] - 14, 40, 22, "#fbfbff", "#c8d4e8", 3); });
+	}, { plain: true });
+	make("plane", 240, 110, (ctx) => {
+		poly(ctx, [[100, 50], [70, 4], [96, 4], [140, 50]], "#d8503a", INK, 2.5);
+		R(ctx, 10, 46, 220, 34, 17, "#f4f0e8", INK, 3);
+		poly(ctx, [[20, 52], [4, 20], [30, 22], [50, 52]], "#d8503a", INK, 2.5);
+		poly(ctx, [[100, 70], [80, 106], [106, 106], [140, 70]], "#c8443a", INK, 2.5);
+		for (let k = 0; k < 6; k++) E(ctx, 90 + k * 20, 60, 5, 5, "#8ac0e0", INK, 1);
+		E(ctx, 218, 63, 10, 12, "#8ac0e0", INK, 1.5);
+	});
+	make("clouds_far", 1280, 170, (ctx, w, h) => {
+		for (let k = 0; k < 18; k++) {
+			const x = (k * 71) % w, y = h - 20 - (k * 37) % 70, s = 40 + (k * 23) % 50;
+			[[-0.6, 0.15, 0.45], [-0.2, -0.15, 0.55], [0.3, -0.05, 0.5], [0.65, 0.2, 0.38]].forEach((q) => E(ctx, x + q[0] * s, y + q[1] * s, q[2] * s, q[2] * s * 0.7, "rgba(255,255,255,0.75)"));
+		}
+		R(ctx, 0, h - 20, w, 20, 0, "rgba(255,255,255,0.8)");
+	}, { crop: false, plain: true });
+	make("clouds_near", 1280, 110, (ctx, w, h) => {
+		ctx.fillStyle = "#f4f6ff";
+		ctx.beginPath(); ctx.moveTo(0, h);
+		for (let x = 0; x <= w; x += 8) { const t = x / w * Math.PI * 2; ctx.lineTo(x, 50 - 22 * Math.abs(Math.sin(t * 7)) - 10 * Math.sin(t * 3)); }
+		ctx.lineTo(w, h); ctx.fill();
+	}, { crop: false, plain: true });
+	make("sky_high", 1280, 340, (ctx, w, h) => {
+		const g = ctx.createLinearGradient(0, 0, 0, h);
+		g.addColorStop(0, "#3a70c8"); g.addColorStop(0.7, "#9ac8f0"); g.addColorStop(1, "#e8f0ff");
+		ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+		for (let k = 0; k < 30; k++) E(ctx, (k * 97) % w, (k * 53) % 160, 1.5, 1.5, "rgba(255,255,255,0.6)");
+	}, { crop: false, plain: true, jpeg: true });
+	// ======== 海の道 ========
+	make("sea_far", 1280, 170, (ctx, w, h) => {
+		R(ctx, 0, h - 40, w, 40, 0, "#4a90c0");
+		[[180, 70, 30], [640, 120, 46], [1020, 60, 26]].forEach((q) => {
+			ctx.fillStyle = "#6a9a6a"; ctx.beginPath(); ctx.ellipse(q[0], h - 40, q[1], q[2], 0, Math.PI, 0); ctx.fill();
+		});
+		E(ctx, 640, h - 70, 10, 30, "#f4f0e8");
+		poly(ctx, [[634, h - 100], [640, h - 116], [646, h - 100]], "#c84a3a");
+	}, { crop: false, plain: true });
+	make("waves", 1280, 110, (ctx, w, h) => {
+		R(ctx, 0, 60, w, 50, 0, "#3a86bc");
+		for (let x = 0; x < w; x += 40) { ctx.beginPath(); ctx.arc(x + 20, 64, 20, Math.PI, 0); ctx.fillStyle = "#4a96cc"; ctx.fill(); }
+		for (let x = 0; x < w; x += 40) line(ctx, [[x + 6, 62], [x + 20, 56], [x + 34, 62]], "rgba(255,255,255,0.7)", 2);
+	}, { crop: false, plain: true });
+	make("buoy", 80, 120, (ctx) => {
+		poly(ctx, [[20, 40], [60, 40], [70, 100], [10, 100]], "#e8503a", INK, 3);
+		R(ctx, 16, 60, 48, 12, 0, "#f4f0e8");
+		line(ctx, [[40, 40], [40, 10]], INK, 4); E(ctx, 40, 8, 8, 8, "#f8e070", INK, 2);
+		E(ctx, 40, 104, 40, 10, "rgba(255,255,255,0.7)");
+	});
+	make("yacht", 200, 200, (ctx) => {
+		poly(ctx, [[10, 150], [190, 150], [160, 190], [40, 190]], "#f4f0e8", INK, 3);
+		R(ctx, 40, 160, 120, 8, 0, "#3a6ac0");
+		line(ctx, [[96, 150], [96, 14]], INK, 5);
+		poly(ctx, [[100, 18], [100, 140], [176, 140]], "#f8f4ec", INK, 2.5);
+		poly(ctx, [[92, 30], [92, 140], [30, 140]], "#e86a5a", INK, 2.5);
+	});
+	make("island", 300, 200, (ctx) => {
+		E(ctx, 150, 180, 140, 22, "#e8d098", INK, 3);
+		[[110, 176], [190, 172]].forEach((q, k) => {
+			ctx.beginPath(); ctx.moveTo(q[0], q[1]); ctx.quadraticCurveTo(q[0] + (k ? 26 : -26), q[1] - 70, q[0] + (k ? 14 : -10), q[1] - 140); ctx.strokeStyle = "#8a5a32"; ctx.lineWidth = 11; ctx.stroke();
+			for (let j = 0; j < 6; j++) { const a = j * Math.PI / 3 + 0.3; E(ctx, q[0] + (k ? 14 : -10) + Math.cos(a) * 32, q[1] - 140 + Math.sin(a) * 14, 34, 10, "#5aa04a", "#3a7a2a", 2, a); }
+		});
+	});
+	make("lighthouse", 110, 260, (ctx) => {
+		poly(ctx, [[30, 250], [80, 250], [70, 60], [40, 60]], "#f4f0e8", INK, 3);
+		[90, 140, 190].forEach((y) => poly(ctx, [[40 - (y - 60) * 0.05, y], [70 + (y - 60) * 0.05, y], [71 + (y - 60) * 0.06, y + 22], [39 - (y - 60) * 0.06, y + 22]], "#d8403a"));
+		R(ctx, 30, 48, 50, 14, 2, "#4a4a52", INK, 2);
+		R(ctx, 38, 22, 34, 26, 3, "#fff2a0", INK, 2);
+		poly(ctx, [[34, 22], [55, 2], [76, 22]], "#4a4a52", INK, 2);
+	});
+	make("dolphin", 200, 120, (ctx) => {
+		ctx.beginPath(); ctx.moveTo(10, 90); ctx.quadraticCurveTo(70, 0, 170, 40); ctx.quadraticCurveTo(190, 50, 196, 60); ctx.quadraticCurveTo(160, 62, 150, 70);
+		ctx.quadraticCurveTo(80, 60, 30, 110); ctx.closePath(); ctx.fillStyle = "#6a9ac8"; ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.stroke();
+		poly(ctx, [[90, 30], [100, 4], [118, 32]], "#6a9ac8", INK, 2.5);
+		poly(ctx, [[14, 88], [0, 70], [8, 104], [26, 112]], "#6a9ac8", INK, 2.5);
+		E(ctx, 160, 46, 3, 3, INK);
+		for (let k = 0; k < 6; k++) E(ctx, 30 + k * 10, 110 - k * 4, 4, 4, "rgba(220,240,255,0.9)");
+	});
+	make("crab", 120, 90, (ctx) => {
+		[-1, 1].forEach((s) => {
+			for (let k = 0; k < 3; k++) line(ctx, [[60 + s * 22, 56 + k * 6], [60 + s * 44, 62 + k * 8], [60 + s * 50, 78 + k * 3]], "#c84a3a", 4);
+			line(ctx, [[60 + s * 24, 40], [60 + s * 38, 24]], "#c84a3a", 5);
+			E(ctx, 60 + s * 42, 18, 13, 12, "#d85a4a", INK, 2);
+		});
+		E(ctx, 60, 52, 32, 22, "#d85a4a", INK, 3);
+		line(ctx, [[52, 32], [50, 20]], INK, 2); line(ctx, [[68, 32], [70, 20]], INK, 2);
+		E(ctx, 50, 18, 4, 4, "#fff", INK, 1.5); E(ctx, 70, 18, 4, 4, "#fff", INK, 1.5);
+	});
 	// ---- エフェクト ----
 	make("spark", 48, 48, (ctx) => {
 		const gr = ctx.createRadialGradient(24, 24, 0, 24, 24, 24);

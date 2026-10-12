@@ -142,6 +142,9 @@ save("se_coin2", mix(tone(note(91), 0.06, "sq", 0.18, 0.002, 0.06), tone(note(98
 save("se_jump", mix(sweep(0.35, 300, 1200, "sq", 0.18, 0.5)))
 save("se_splash", [v for v in lowpass(noise(0.35, 0.6, 1.2), 0.45)])
 save("se_land", mix(sweep(0.12, 140, 60, "sin", 0.5)))
+save("se_win", mix(*[tone(note(n), 0.6 if i == 5 else 0.12, "sq", 0.16) for i, n in enumerate((72, 76, 79, 84, 88, 91))], offsets=[0, 0.1, 0.2, 0.3, 0.4, 0.5]))
+save("se_lose", mix(*[tone(note(n), 0.5 if i == 3 else 0.18, "tri", 0.25) for i, n in enumerate((67, 64, 61, 55))], offsets=[0, 0.2, 0.4, 0.6]))
+save("se_open", mix(sweep(0.25, 400, 800, "tri", 0.25), bell(note(84), 0.3, 0.15), offsets=[0, 0.15]))
 
 # ---- BGM: 軽快なドライブ曲(152BPM, 16小節) ----
 def snare(vol=0.3):

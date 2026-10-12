@@ -36,7 +36,7 @@ async function draw(srcs) {
 	x.fillStyle = g; x.fillRect(0, 0, 1280, 300);
 	x.drawImage(imgs.logo, 640 - 520, 10, 1040, 224);
 	// エリアの小窓
-	[["town", "まちなか"], ["hw", "こうそくどうろ"], ["desert", "さばく"]].forEach((q, k) => {
+	[["town", "空の道"], ["hw", "海の道"], ["desert", "さばく"]].forEach((q, k) => {
 		const wx = 1000, wy = 250 + k * 128, ww = 250, wh = 141;
 		x.save(); x.translate(wx, wy); x.rotate(-0.03 + k * 0.03);
 		x.fillStyle = "#fff8e8"; x.fillRect(-6, -6, ww + 12, wh + 12);
@@ -46,7 +46,7 @@ async function draw(srcs) {
 	});
 	[[110, 330, 100, "coin"], [190, 450, 80, "gem"], [80, 520, 60, "y10"], [240, 330, 54, "y1"]].forEach((q) => x.drawImage(imgs[q[3]], q[0] - q[2] / 2, q[1] - q[2] / 2, q[2], q[2]));
 	x.fillStyle = "rgba(40,24,14,0.8)"; x.fillRect(0, 640, 1280, 80);
-	text(x, "1円から500円まで、お金をひろってドライブ!", 640, 680, 46, "#fff8e8", "#3b2616");
+	text(x, "お金をひろって、宝箱で2倍か0倍の大勝負!", 640, 680, 46, "#fff8e8", "#3b2616");
 	const promo = c.toDataURL("image/png");
 	// ---- アイコン ----
 	const S = 320;

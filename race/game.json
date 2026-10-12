@@ -559,6 +559,150 @@
 			"path": "image/ysign.png",
 			"width": 180,
 			"height": 218
+		},
+		"se_lose": {
+			"type": "audio",
+			"path": "audio/se_lose",
+			"systemId": "sound",
+			"duration": 1100,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_open": {
+			"type": "audio",
+			"path": "audio/se_open",
+			"systemId": "sound",
+			"duration": 450,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_win": {
+			"type": "audio",
+			"path": "audio/se_win",
+			"systemId": "sound",
+			"duration": 1100,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"buoy": {
+			"type": "image",
+			"path": "image/buoy.png",
+			"width": 88,
+			"height": 123
+		},
+		"chest": {
+			"type": "image",
+			"path": "image/chest.png",
+			"width": 176,
+			"height": 126
+		},
+		"chest_tag": {
+			"type": "image",
+			"path": "image/chest_tag.png",
+			"width": 300,
+			"height": 120
+		},
+		"chestglow": {
+			"type": "image",
+			"path": "image/chestglow.png",
+			"width": 220,
+			"height": 220
+		},
+		"cloud": {
+			"type": "image",
+			"path": "image/cloud.png",
+			"width": 193,
+			"height": 117
+		},
+		"clouds_far": {
+			"type": "image",
+			"path": "image/clouds_far.png",
+			"width": 1280,
+			"height": 170
+		},
+		"clouds_near": {
+			"type": "image",
+			"path": "image/clouds_near.png",
+			"width": 1280,
+			"height": 110
+		},
+		"crab": {
+			"type": "image",
+			"path": "image/crab.png",
+			"width": 120,
+			"height": 89
+		},
+		"dolphin": {
+			"type": "image",
+			"path": "image/dolphin.png",
+			"width": 210,
+			"height": 122
+		},
+		"island": {
+			"type": "image",
+			"path": "image/island.png",
+			"width": 292,
+			"height": 217
+		},
+		"kikyu": {
+			"type": "image",
+			"path": "image/kikyu.png",
+			"width": 126,
+			"height": 200
+		},
+		"lighthouse": {
+			"type": "image",
+			"path": "image/lighthouse.png",
+			"width": 62,
+			"height": 260
+		},
+		"plane": {
+			"type": "image",
+			"path": "image/plane.png",
+			"width": 238,
+			"height": 114
+		},
+		"rainbow": {
+			"type": "image",
+			"path": "image/rainbow.png",
+			"width": 918,
+			"height": 438
+		},
+		"sea_far": {
+			"type": "image",
+			"path": "image/sea_far.png",
+			"width": 1280,
+			"height": 170
+		},
+		"sky_high": {
+			"type": "image",
+			"path": "image/sky_high.jpg",
+			"width": 1280,
+			"height": 340
+		},
+		"waves": {
+			"type": "image",
+			"path": "image/waves.png",
+			"width": 1280,
+			"height": 110
+		},
+		"yacht": {
+			"type": "image",
+			"path": "image/yacht.png",
+			"width": 194,
+			"height": 189
 		}
 	},
 	"environment": {

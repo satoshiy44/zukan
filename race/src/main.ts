@@ -26,12 +26,14 @@ const JUMP_SEC = 1.1;
 const JUMP_H = 190; // ジャンプの高さ(画面のpx)
 const MEDIAN = 0.55; // 分かれ道の真ん中の草地(半分の幅)
 
-type Kind = "yen" | "boost" | "jump" | "hit" | "slow" | "deco" | "fly";
+type Kind = "yen" | "boost" | "jump" | "hit" | "slow" | "deco" | "fly" | "chest";
 interface Obj {
 	id: string; off: number; size: number; kind: Kind; taken: boolean;
 	val?: number; alt?: number; vx?: number; act?: boolean; si?: number;
 }
-interface Seg { i: number; curve: number; y1: number; y2: number; zone: number; w: number; split: number; cross: boolean; objs: Obj[]; }
+interface Seg {
+	i: number; curve: number; y1: number; y2: number; zone: number; w: number; lanes: number; split: number; cross: boolean; objs: Obj[];
+}
 interface Rival { z: number; off: number; speed: number; id: string; size: number; }
 interface Zone {
 	name: string; w: number; lanes: number; speedMul: number;
@@ -58,6 +60,16 @@ const ZONES: Zone[] = [
 		name: "さばく", w: 0.95, lanes: 2, speedMul: 1.0,
 		grass: ["#e8c888", "#dcbc7c"], rumble: ["#c88a4a", "#f4e8d0"], road: ["#8a7a6a", "#958574"],
 		line: "#f4e8d0", center: "#f0c040", sky: "sky_desert", far: "mesas", farY: 180, near: "dunes", nearY: 250
+	},
+	{
+		name: "空の道", w: 1.1, lanes: 3, speedMul: 1.05,
+		grass: ["#a8d4f4", "#9acaf0"], rumble: ["#f070a0", "#f8e070"], road: ["#f6f4fc", "#ecebf6"],
+		line: "#b8a0e0", center: "", sky: "sky_high", far: "clouds_far", farY: 190, near: "clouds_near", nearY: 260
+	},
+	{
+		name: "海の道", w: 1.05, lanes: 3, speedMul: 1.0,
+		grass: ["#3a8ac0", "#3482b8"], rumble: ["#f4f4f4", "#d8403a"], road: ["#8a8a92", "#82828a"],
+		line: "#f4f0e8", center: "", sky: "sky", far: "sea_far", farY: 180, near: "waves", nearY: 250
 	}
 ];
 const YEN_IMG: { [v: number]: string } = { 1: "yen1", 5: "yen5", 10: "yen10", 50: "yen50", 100: "yen100", 500: "yen500" };
@@ -67,7 +79,9 @@ const SIZE: { [id: string]: number } = {
 	bld_a: 1.6, bld_b: 1.4, bld_c: 1.7, bld_d: 1.5, lamp: 0.35, signal: 0.4, roundtree: 0.6, hwlamp: 0.5, wall: 1.0, hwsign: 3.4,
 	cactus: 0.6, drock: 0.9, skull: 0.4, oasis: 1.4, gate: 2.9, ysign: 0.6,
 	chicken: 0.3, bike: 0.55, ball: 0.25, tumble: 0.4, birds: 1.0, vulture: 0.8,
-	cone: 0.2, rock: 0.42, barrier: 0.95, box: 0.35, puddle: 0.6, ramp: 0.55, boost: 0.5
+	cone: 0.2, rock: 0.42, barrier: 0.95, box: 0.35, puddle: 0.6, ramp: 0.55, boost: 0.5,
+	chest: 0.45, cloud: 1.0, kikyu: 0.7, rainbow: 3.4, plane: 1.0,
+	buoy: 0.3, yacht: 1.0, island: 1.6, lighthouse: 0.7, dolphin: 0.8, crab: 0.32
 };
 
 class RoadView extends g.E {
@@ -85,9 +99,12 @@ export function main(param: GameMainParameterObject): void {
 		"cone", "rock", "barrier", "box", "tree", "pine", "bush", "house", "windmill", "flowers", "sign_l", "sign_r", "billboard",
 		"gate", "ysign", "bld_a", "bld_b", "bld_c", "bld_d", "lamp", "signal", "roundtree", "hwlamp", "wall", "hwsign",
 		"cactus", "drock", "skull", "oasis", "chicken", "bike", "ball", "tumble", "birds", "vulture",
-		"spark", "dust", "shadow", "splash", "logo"
+		"spark", "dust", "shadow", "splash", "logo", "chest", "chest_tag", "chestglow", "cloud", "kikyu", "rainbow", "plane",
+		"clouds_far", "clouds_near", "sky_high", "sea_far", "waves", "buoy", "yacht", "island", "lighthouse", "dolphin", "crab"
 	];
-	const audioIds = ["coin", "coin2", "gem", "boost", "crash", "beep", "go", "finish", "combo", "jump", "splash", "land"];
+	const audioIds = [
+		"coin", "coin2", "gem", "boost", "crash", "beep", "go", "finish", "combo", "jump", "splash", "land", "win", "lose", "open"
+	];
 	const scene = new g.Scene({
 		game: g.game,
 		assetIds: imageIds.concat(audioIds.map((a) => "se_" + a), ["bgm"])
@@ -119,7 +136,7 @@ export function main(param: GameMainParameterObject): void {
 		let curSplit = -1; // 分かれ道を作っている間だけ 0〜1
 		const addSeg = (curve: number, y: number): void => {
 			const split = Math.max(0, curSplit);
-			segs.push({ i: segs.length, curve, y1: lastY, y2: y, zone: curZone, w: 1, split, cross: false, objs: [] });
+			segs.push({ i: segs.length, curve, y1: lastY, y2: y, zone: curZone, w: 1, split, cross: false, objs: [], lanes: 3 });
 			lastY = y;
 		};
 		const easeIn = (a: number, b: number, p: number): number => a + (b - a) * p * p;
@@ -142,8 +159,21 @@ export function main(param: GameMainParameterObject): void {
 			}
 			curSplit = -1;
 		};
-		// エリアの順番: いなか → まち → 高速 → 砂漠 → まち → いなか → 高速 → 砂漠
-		const plan = [[0, 560], [1, 640], [2, 760], [3, 720], [1, 600], [0, 640], [2, 760], [3, 900]];
+		// エリアの順番は毎回ランダム(6つのエリアを1周ずつ、周ごとに並べかえ)
+		const plan: number[][] = [];
+		let prevZone = -1;
+		for (let round = 0; round < 3; round++) {
+			const order = [0, 1, 2, 3, 4, 5];
+			for (let k = order.length - 1; k > 0; k--) {
+				const j = Math.floor(rand() * (k + 1));
+				const t = order[k];
+				order[k] = order[j];
+				order[j] = t;
+			}
+			if (order[0] === prevZone) order.push(order.shift()!);
+			order.forEach((z) => plan.push([z, 500 + Math.floor(rand() * 140)]));
+			prevZone = order[order.length - 1];
+		}
 		addRoad(0, 60, 0, 0, 0);
 		for (let pi = 0; pi < plan.length && segs.length < N_SEG - 150; pi++) {
 			curZone = plan[pi][0];
@@ -179,6 +209,19 @@ export function main(param: GameMainParameterObject): void {
 						addSplit(Math.round((rand() - 0.5) * 20));
 						splitDone = true;
 					}
+				} else if (curZone === 4) {
+					// 空の道: ふわふわ大きく上り下り
+					if (r < 0.5) addRoad(30, 20, 30, 0, (rand() < 0.5 ? -1 : 1) * (24 + Math.floor(rand() * 14)));
+					else if (r < 0.85) addRoad(20, 30, 20, dir * (2 + rand() * 3), Math.round((rand() - 0.5) * 40));
+					else for (let k = 0; k < 4; k++) addRoad(10, 4, 10, 0, k % 2 ? -10 : 10);
+				} else if (curZone === 5) {
+					// 海の道: 長い橋。ゆるいカーブと、ゆるい上り下り
+					if (r < 0.5) addRoad(25, 40 + Math.floor(rand() * 30), 25, dir * (1.5 + rand() * 2), Math.round((rand() - 0.5) * 24));
+					else if (r < 0.8) addRoad(10, 50, 10, 0, Math.round((rand() - 0.5) * 10));
+					else {
+						addRoad(15, 15, 15, dir * 3, 0);
+						addRoad(15, 15, 15, -dir * 3, 0);
+					}
 				} else {
 					// 砂漠: 長いまっすぐと、大きな砂の丘
 					const dune = (rand() < 0.5 ? -1 : 1) * (22 + Math.floor(rand() * 14));
@@ -189,6 +232,8 @@ export function main(param: GameMainParameterObject): void {
 			}
 		}
 		addRoad(30, 60, 30, 0, -lastY / SEG);
+		// 難しさ(0〜1): スタートから少しずつ上がる
+		const diff = (k: number): number => Math.min(1, Math.max(0, (k - 300) / 3000));
 		// 道はばをエリアに合わせて、なめらかに変える
 		for (let k = 0; k < segs.length; k++) {
 			let sum = 0;
@@ -197,7 +242,10 @@ export function main(param: GameMainParameterObject): void {
 				sum += ZONES[segs[j].zone].w;
 				cnt++;
 			}
-			segs[k].w = sum / cnt + segs[k].split * 0.9;
+			// 後半ほど道がひろくなり、車線もふえる
+			const d = diff(k);
+			segs[k].w = sum / cnt + segs[k].split * 0.9 + d * 0.45;
+			segs[k].lanes = ZONES[segs[k].zone].lanes + (d > 0.45 ? 1 : 0);
 		}
 		const trackLen = segs.length * SEG;
 
@@ -216,15 +264,17 @@ export function main(param: GameMainParameterObject): void {
 		// その区切りの車線の真ん中
 		const lanesAt = (si: number): number[] => {
 			const sg = segs[Math.min(si, segs.length - 1)];
-			const n = ZONES[sg.zone].lanes;
+			const n = sg.lanes;
 			const res: number[] = [];
 			for (let k = 0; k < n; k++) res.push(-sg.w * 0.85 + sg.w * 1.7 * (k + 0.5) / n);
 			return res;
 		};
 		// 1円が基本。ときどき5円や10円
+		// 後半ほど高いお金が出やすい
+		let dNow = 0;
 		const small = (): number => {
 			const r = rand();
-			return r < 0.8 ? 1 : r < 0.93 ? 5 : 10;
+			return r < 0.8 - dNow * 0.35 ? 1 : r < 0.93 - dNow * 0.2 ? 5 : r < 0.99 - dNow * 0.12 ? 10 : r < 1 - dNow * 0.04 ? 50 : 100;
 		};
 		const movers: Obj[] = [];
 		const mover = (si: number, id: string, speed: number, kind: Kind, alt?: number): void => {
@@ -259,22 +309,27 @@ export function main(param: GameMainParameterObject): void {
 				continue;
 			}
 			const zone = segs[si].zone;
+			dNow = diff(si);
+			const start = si;
 			const L = lanesAt(si);
 			const lane = Math.floor(rand() * L.length);
 			const other = (lane + 1 + Math.floor(rand() * (L.length - 1))) % L.length;
 			// エリアごとに出やすい仕掛けを変える
 			const pats = zone === 0 ? [0, 1, 2, 3, 4, 6, 7, 8, 9, 11, 11] :
 				zone === 1 ? [0, 1, 4, 5, 6, 10, 10, 12, 12, 13, 7] :
-				zone === 2 ? [0, 1, 4, 4, 5, 8, 13, 13, 14, 7, 3] : [0, 1, 3, 4, 8, 8, 9, 15, 15, 6, 2];
+				zone === 2 ? [0, 1, 4, 4, 5, 8, 13, 13, 14, 7, 3] :
+				zone === 3 ? [0, 1, 3, 4, 8, 8, 9, 15, 15, 6, 2] :
+				zone === 4 ? [0, 1, 4, 6, 7, 8, 8, 11, 11, 14, 4] : [0, 1, 2, 4, 7, 8, 9, 9, 11, 11, 3];
 			const pat = pick(pats);
 			if (pat === 0) {
 				// 1円の列(最後は少し高いお金)
-				for (let k = 0; k < 10; k++) yen(si + k * 3, L[lane], k === 9 ? 10 : 1);
+				for (let k = 0; k < 10; k++) yen(si + k * 3, L[lane], k === 9 ? (dNow > 0.5 ? 50 : 10) : small());
 				si += 30;
 			} else if (pat === 1) {
 				// くねくね
 				const ph = rand() * 6;
-				for (let k = 0; k < 14; k++) yen(si + k * 3, Math.sin(ph + k * 0.45) * L[L.length - 1], k === 7 ? 50 : small());
+				const mid = dNow > 0.6 ? 100 : 50;
+				for (let k = 0; k < 14; k++) yen(si + k * 3, Math.sin(ph + k * 0.45) * L[L.length - 1], k === 7 ? mid : small());
 				si += 42;
 			} else if (pat === 2) {
 				// コーンのすき間(すき間に50円)
@@ -333,7 +388,7 @@ export function main(param: GameMainParameterObject): void {
 				si += 60;
 			} else if (pat === 9) {
 				// 横切るもの(いなか: ニワトリ、砂漠: 転がる草)
-				mover(si, zone === 3 ? "tumble" : "chicken", zone === 3 ? 1.1 : 0.8, "hit");
+				mover(si, zone === 3 ? "tumble" : zone === 5 ? "crab" : "chicken", zone === 3 ? 1.1 : 0.8, "hit");
 				for (let k = 0; k < 8; k++) yen(si - 12 + k * 3, L[lane], small());
 				si += 26;
 			} else if (pat === 10) {
@@ -343,7 +398,10 @@ export function main(param: GameMainParameterObject): void {
 				si += 32;
 			} else if (pat === 11) {
 				// 鳥の群れ(空を横切るだけ)とお金
-				mover(si + 10, "birds", 1.6, "fly", 0.9);
+				// 空の道は飛行機、海の道はイルカ
+				if (zone === 4) mover(si + 10, "plane", 2.2, "fly", 1.1);
+				else if (zone === 5) mover(si + 10, "dolphin", 1.4, "fly", 0.25);
+				else mover(si + 10, "birds", 1.6, "fly", 0.9);
 				for (let k = 0; k < 10; k++) yen(si + k * 3, L[lane], small());
 				si += 30;
 			} else if (pat === 12) {
@@ -367,9 +425,24 @@ export function main(param: GameMainParameterObject): void {
 				for (let k = 0; k < 6; k++) yen(si + k * 2, L[other], 1);
 				si += 24;
 			}
-			si += 10 + Math.floor(rand() * 10);
+			// 後半: あいている車線にもお金の列、すき間にじゃまもの
+			if (rand() < dNow * 0.7) {
+				const l2 = Math.floor(rand() * L.length);
+				for (let k = start; k < si; k += 3) if (!isSplit(k, k)) yen(k, L[l2], small());
+			}
+			if (rand() < dNow * 0.8 && !isSplit(si, si + 5)) {
+				obj(si + 4, pick(zone === 3 ? ["drock", "cone"] : ["cone", "rock", "box"]), L[Math.floor(rand() * L.length)], "hit");
+			}
+			si += Math.floor((10 + rand() * 10) * (1 - dNow * 0.55));
 		}
 
+		// ======== 宝箱(50%で今のお金が2倍、50%で0円) ========
+		[700, 1600, 2500].forEach((base) => {
+			let k = base + Math.floor(rand() * 200);
+			while (isSplit(k - 10, k + 10)) k += 20;
+			segs[k].objs.length = 0;
+			obj(k, "chest", pick(lanesAt(k)), "chest");
+		});
 		// ======== 道ばたの景色 ========
 		obj(12, "gate", 0, "deco");
 		const deco = (k: number, id: string, off: number): void => {
@@ -411,6 +484,15 @@ export function main(param: GameMainParameterObject): void {
 					}
 				} else if (k % 6 === 0) deco(k, pick(["tree", "pine", "bush"]), (rand() < 0.5 ? -1 : 1) * (ew + 0.6 + rand() * 1.5));
 				if (k % 180 === 90 && sg.split === 0) deco(k, "hwsign", 0);
+			} else if (sg.zone === 4) {
+				if (k % 3 === 0) deco(k, "cloud", (rand() < 0.5 ? -1 : 1) * (ew + 0.6 + rand() * 2.8));
+				if (k % 40 === 20) obj(k, "kikyu", (rand() < 0.5 ? -1 : 1) * (ew + 1.6 + rand() * 1.6), "deco").alt = 0.5 + rand() * 0.6;
+				if (k % 160 === 80 && sg.split === 0) deco(k, "rainbow", 0);
+			} else if (sg.zone === 5) {
+				if (k % 8 === 0) deco(k, "buoy", (rand() < 0.5 ? -1 : 1) * (ew + 0.4 + rand() * 0.9));
+				if (k % 40 === 10) deco(k, "yacht", (rand() < 0.5 ? -1 : 1) * (ew + 1.6 + rand() * 2));
+				if (k % 90 === 45) deco(k, "island", (rand() < 0.5 ? -1 : 1) * (ew + 2.6 + rand() * 1.5));
+				if (k % 130 === 0) deco(k, "lighthouse", (rand() < 0.5 ? -1 : 1) * (ew + 1.8));
 			} else {
 				if (k % 5 === 0) {
 					const id = pick(["cactus", "cactus", "drock", "skull", "cactus", "drock"]);
@@ -610,7 +692,7 @@ export function main(param: GameMainParameterObject): void {
 				const y1 = Math.min(maxy, P1Y[n]);
 				r.fillRect(0, Math.floor(y2), W, Math.ceil(y1) - Math.floor(y2) + 1, z.grass[c]);
 				const span = P1Y[n] - P2Y[n];
-				const nl = z.lanes;
+				const nl = sg.lanes;
 				for (let yy = Math.floor(y2); yy < y1; yy += 3) {
 					const t = (yy - P2Y[n]) / span;
 					const rx = P2X[n] + (P1X[n] - P2X[n]) * t;
@@ -662,7 +744,13 @@ export function main(param: GameMainParameterObject): void {
 						const bob = o.kind === "fly" ? Math.sin(frameT * 10) * w1 * 0.03 : 0;
 						const roll = o.id === "ball" || o.id === "tumble" ? Math.abs(Math.cos(frameT * 6)) * 0.15 + 0.85 : 1;
 						drawSprite(r, o.id, cx, P1Y[n] - up + bob, w1 * o.size, CLIP[n] + up, dir * roll);
-					} else drawSprite(r, o.id, cx, P1Y[n], w1 * o.size, CLIP[n], 1);
+					} else if (o.kind === "chest") {
+						const pulse = 1 + Math.sin(frameT * 6) * 0.08;
+						drawSprite(r, "chestglow", cx, P1Y[n] + w1 * 0.2, w1 * 1.0 * pulse, CLIP[n], 1);
+						drawSprite(r, "chest", cx, P1Y[n], w1 * o.size, CLIP[n], 1);
+						const tagY = P1Y[n] - w1 * 0.45 + Math.sin(frameT * 4) * w1 * 0.03;
+						drawSprite(r, "chest_tag", cx, tagY, w1 * 1.2 * pulse, CLIP[n] + w1, 1);
+					} else drawSprite(r, o.id, cx, P1Y[n] - up, w1 * o.size, CLIP[n] + up, 1);
 				}
 				const rl = rivalBySeg[sg.i];
 				for (let k = 0; k < rl.length; k++) {
@@ -771,6 +859,20 @@ export function main(param: GameMainParameterObject): void {
 					se("jump", 0.6);
 					popText("ジャンプ!", fontW, 56, W / 2, 420);
 					speed = Math.max(speed, MAX_SPEED);
+				}
+			} else if (o.kind === "chest") {
+				// 宝箱: 50%で今のお金が2倍、50%で0円
+				o.taken = true;
+				se("open", 0.6);
+				if (rand() < 0.5) {
+					addScore(score);
+					se("win", 0.7);
+					popText("2倍!! " + score + "円", fontY, 80, W / 2, 330, 2.2);
+					sparks(W / 2, 520, 16);
+				} else {
+					addScore(-score);
+					se("lose", 0.7);
+					popText("0倍… 0円になった", fontR, 70, W / 2, 330, 2.2);
 				}
 			} else if (o.kind === "slow") {
 				if (slowLeft <= 0) se("splash", 0.6);
