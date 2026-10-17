@@ -259,15 +259,24 @@ export function main(param: GameMainParameterObject): void {
 		let nextCustomerDelay = 0;
 		let lastCount = -1;
 
+		// 良い知らせは上、まちがいは下に出して、重ならないようにする
 		const popText = (text: string, good: boolean): void => {
-			const pop = label(text, good ? goldFont : redFont, 48, WIDTH / 2, 430, effectLayer, 0.5);
+			const baseY = good ? 400 : 480;
+			const box = new g.E({ scene: scene, x: 0, y: baseY });
+			effectLayer.append(box);
+			const pop = label(text, good ? goldFont : redFont, 48, WIDTH / 2, 0, box, 0.5);
+			// 文字の後ろに暗い帯を敷いて、トレーや料理と重なっても読めるようにする
+			const bw = pop.width + 48;
+			box.insertBefore(new g.FilledRect({
+				scene: scene, cssColor: "rgba(40,20,10,0.78)", x: WIDTH / 2 - bw / 2, y: -6, width: bw, height: 62
+			}), pop);
 			let life = 0;
-			pop.onUpdate.add(() => {
+			box.onUpdate.add(() => {
 				life += 1 / g.game.fps;
-				pop.y = 430 - life * 65;
-				pop.opacity = Math.max(0, 1 - life / 1.1);
-				pop.modified();
-				if (life >= 1.1) pop.destroy();
+				box.y = baseY - life * 40;
+				box.opacity = Math.max(0, 1 - Math.max(0, life - 0.5) / 0.6);
+				box.modified();
+				if (life >= 1.1) box.destroy();
 			});
 		};
 
@@ -380,16 +389,23 @@ export function main(param: GameMainParameterObject): void {
 			x: 140,
 			y: 120
 		}));
-		intro.append(new g.Sprite({
+		const logo = new g.Sprite({
 			scene: scene,
 			src: image("logo"),
-			x: 260,
-			y: 136
-		}));
-		label("① 注文の小皿をタップ", mainFont, 34, 330, 390, intro);
-		label("② 全部そろえば自動でお会計", mainFont, 34, 330, 442, intro);
-		label("1〜5品を見極めよう　まちがいは -100円", redFont, 27, WIDTH / 2, 495, intro, 0.5);
-		const countLabel = label("", goldFont, 88, 985, 470, intro, 0.5);
+			x: 190,
+			y: 128,
+			scaleX: 0.9,
+			scaleY: 0.9,
+			anchorX: 0,
+			anchorY: 0
+		});
+		intro.append(logo);
+		// 遊び方: 見る → タップ → お会計
+		label("① お客さんの「ご注文」を見る", mainFont, 34, 230, 372, intro);
+		label("② 同じ料理をタップしてトレーへ", mainFont, 34, 230, 420, intro);
+		label("③ 全部そろえばお会計！料理代が入る", mainFont, 34, 230, 468, intro);
+		label("続けてお会計するとボーナス！　まちがえると -100円", redFont, 28, WIDTH / 2, 530, intro, 0.5);
+		const countLabel = label("", goldFont, 96, 1030, 400, intro, 0.5);
 
 		const bgmPlayer = scene.asset.getAudioById("bgm").play();
 		bgmPlayer.changeVolume(0.24);
