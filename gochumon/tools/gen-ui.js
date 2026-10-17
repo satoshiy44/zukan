@@ -44,6 +44,59 @@ function draw() {
 		x.fillStyle = "#fffaf0"; x.fillRect(172, 132, 46, 10);
 		x.strokeStyle = "rgba(200,150,80,0.6)"; x.lineWidth = 2; x.beginPath(); x.roundRect(16, 16, 428, 116, 22); x.stroke();
 	});
+	// ---- 深夜メニュー(6品)。今の料理と同じお皿・同じ線の太さで描く ----
+	const INK = "#352a2d", TEAL = "#285b5b", GOLD = "#cd9d48";
+	const E = (x, cx, cy, rx, ry, fill, stroke, lw) => {
+		x.beginPath(); x.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+		if (fill) { x.fillStyle = fill; x.fill(); }
+		if (stroke) { x.lineWidth = lw; x.strokeStyle = stroke; x.stroke(); }
+	};
+	const plate = (x) => {
+		E(x, 80, 103, 70, 12, "rgba(28,20,19,0.28)");
+		E(x, 80, 76, 71, 33, "#e0d9c4", INK, 4);
+		E(x, 80, 75, 61, 26, "#faf4e0", TEAL, 3);
+		x.beginPath(); x.ellipse(80, 75, 54, 20, 0, Math.PI * 1.11, Math.PI * 1.89); x.strokeStyle = GOLD; x.lineWidth = 2; x.stroke();
+	};
+	const dishes = [
+		(x) => { // カレー
+			E(x, 80, 66, 46, 22, "#f6f0e0", INK, 3);
+			x.beginPath(); x.ellipse(92, 66, 34, 18, 0, -Math.PI / 2, Math.PI / 2); x.closePath(); x.fillStyle = "#b8702a"; x.fill();
+			E(x, 96, 62, 7, 5, "#e88a3a"); E(x, 104, 72, 6, 4, "#f4d040");
+		},
+		(x) => { // ハンバーグ
+			E(x, 80, 64, 38, 22, "#7a4a2a", INK, 3);
+			E(x, 80, 58, 28, 12, "#a8441e");
+			E(x, 118, 76, 10, 6, "#6ab04a", INK, 2); E(x, 44, 76, 9, 6, "#f0a040", INK, 2);
+		},
+		(x) => { // プリン
+			x.beginPath(); x.moveTo(56, 86); x.lineTo(66, 40); x.lineTo(94, 40); x.lineTo(104, 86); x.closePath();
+			x.fillStyle = "#f2d070"; x.fill(); x.lineWidth = 3; x.strokeStyle = INK; x.stroke();
+			x.beginPath(); x.moveTo(66, 40); x.lineTo(94, 40); x.lineTo(97, 54); x.lineTo(63, 54); x.closePath(); x.fillStyle = "#8a4a1a"; x.fill();
+			E(x, 80, 32, 7, 7, "#c8303a", INK, 2);
+		},
+		(x) => { // クリームソーダ
+			x.beginPath(); x.moveTo(62, 30); x.lineTo(98, 30); x.lineTo(92, 92); x.lineTo(68, 92); x.closePath();
+			x.fillStyle = "#6ac88a"; x.fill(); x.lineWidth = 3; x.strokeStyle = INK; x.stroke();
+			E(x, 80, 28, 20, 12, "#fffaf0", INK, 2); E(x, 90, 18, 6, 6, "#d8303a", INK, 2);
+			x.beginPath(); x.moveTo(70, 26); x.lineTo(60, 4); x.lineWidth = 4; x.strokeStyle = "#e85a5a"; x.stroke();
+		},
+		(x) => { // ホットケーキ
+			for (let k = 0; k < 3; k++) E(x, 80, 76 - k * 12, 44, 16, k === 2 ? "#e8b860" : "#c88a3a", INK, 3);
+			x.fillStyle = "#fff4c0"; x.fillRect(70, 42, 20, 10); x.strokeStyle = INK; x.lineWidth = 2; x.strokeRect(70, 42, 20, 10);
+			x.beginPath(); x.moveTo(100, 50); x.quadraticCurveTo(112, 60, 104, 74); x.strokeStyle = "#a8641e"; x.lineWidth = 5; x.stroke();
+		},
+		(x) => { // ナポリタン
+			for (let k = 0; k < 5; k++) {
+				x.beginPath(); x.ellipse(80, 66 + k * 2, 40 - k * 3, 18 - k, 0, Math.PI * 1.05, Math.PI * 1.95);
+				x.strokeStyle = "#d8502a"; x.lineWidth = 5; x.stroke();
+			}
+			E(x, 66, 58, 6, 4, "#5aa04a"); E(x, 94, 60, 6, 4, "#5aa04a"); E(x, 80, 52, 7, 5, "#c8303a");
+		}
+	];
+	dishes.forEach((fn, k) => make("dish" + (6 + k), 160, 120, (x) => {
+		plate(x);
+		fn(x);
+	}));
 	return out;
 }
 

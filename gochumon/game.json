@@ -241,6 +241,42 @@
 			"path": "image/star_off.png",
 			"width": 52,
 			"height": 52
+		},
+		"dish10": {
+			"type": "image",
+			"path": "image/dish10.png",
+			"width": 160,
+			"height": 120
+		},
+		"dish11": {
+			"type": "image",
+			"path": "image/dish11.png",
+			"width": 160,
+			"height": 120
+		},
+		"dish6": {
+			"type": "image",
+			"path": "image/dish6.png",
+			"width": 160,
+			"height": 120
+		},
+		"dish7": {
+			"type": "image",
+			"path": "image/dish7.png",
+			"width": 160,
+			"height": 120
+		},
+		"dish8": {
+			"type": "image",
+			"path": "image/dish8.png",
+			"width": 160,
+			"height": 120
+		},
+		"dish9": {
+			"type": "image",
+			"path": "image/dish9.png",
+			"width": 160,
+			"height": 120
 		}
 	},
 	"environment": {

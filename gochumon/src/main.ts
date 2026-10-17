@@ -5,23 +5,34 @@ const WIDTH = 1280;
 const HEIGHT = 720;
 const INTRO_SECONDS = 6;
 const END_MARGIN_SECONDS = 3;
-const DISH_COUNT = 6;
+const DISH_COUNT = 12; // 昼6品 + 深夜メニュー6品
+const DAY_DISHES = 6;
+const NIGHT_LEFT = 30; // のこり30秒から深夜営業
+const NIGHT_RATE = 1.2; // 深夜料金(スコア2割増し)
+const STAR_POINT = 10; // 星1つのスコア
 const MAX_ORDER_COUNT = 5;
-const DISH_NAMES = ["オムライス", "スープ", "ケーキ", "紅茶", "サンド", "パスタ"];
+const DISH_NAMES = [
+	"オムライス", "スープ", "ケーキ", "紅茶", "サンド", "パスタ",
+	"カレー", "ハンバーグ", "プリン", "クリームソーダ", "ホットケーキ", "ナポリタン"
+];
 // 待っていられる時間 = 基本 + 1品あたり
 const PATIENCE_BASE = 3.5;
 const PATIENCE_PER_DISH = 1.8;
 const MISS_PENALTY = 0.12; // まちがえたとき、ゲージが減る割合
 // 列の位置(先頭が真ん中、うしろは右へ)
 const SLOT_X = [560, 790, 960, 1110];
-const SLOT_Y = [540, 520, 505, 494];
-const SLOT_SCALE = [1.25, 1.05, 0.95, 0.88];
+let SLOT_Y = [540, 520, 505, 494];
+let SLOT_SCALE = [1.25, 1.05, 0.95, 0.88];
 const QUEUE_LEN = SLOT_X.length;
 // 料理ボタン(下に1列)
 const BTN_X0 = 200;
 const BTN_STEP = 150;
 const BTN_Y = 548;
 const BTN_SCALE = 0.73;
+// 深夜はボタンを2段に
+const NBTN_SCALE = 0.6;
+const NBTN_X0 = 209;
+const NBTN_Y = [462, 570];
 
 interface Customer {
 	e: g.E; // 足もとを原点にした入れもの
@@ -38,6 +49,7 @@ export function main(param: GameMainParameterObject): void {
 	const imageIds = [
 		"restaurant", "check", "dish_panel", "tray", "logo", "emblem", "intro_panel", "hud_panel",
 		"customer0", "customer1", "customer2", "dish0", "dish1", "dish2", "dish3", "dish4", "dish5",
+		"dish6", "dish7", "dish8", "dish9", "dish10", "dish11",
 		"star", "star_off", "speech"
 	];
 	const audioIds = ["bgm", "tap", "serve", "cash", "miss", "count", "finish"];
@@ -46,7 +58,7 @@ export function main(param: GameMainParameterObject): void {
 	if (param.sessionParameter.totalTimeLimit) {
 		totalTime = param.sessionParameter.totalTimeLimit;
 	}
-	// ランキングの点数 = もらった星の合計
+	// ランキングの点数 = もらった星 × 10点(深夜は2割増し)
 	g.game.vars.gameState = { score: 0 };
 
 	scene.onLoad.add(() => {
@@ -113,11 +125,14 @@ export function main(param: GameMainParameterObject): void {
 			starOns.push(on);
 		}
 		const reviewLabel = label("口コミ 0件", mainFont, 22, 385, 104, hud, 1);
-		const totalLabel = label("星の合計 0", goldFont, 24, 30, 104, hud);
+		const totalLabel = label("スコア 0", goldFont, 24, 30, 104, hud);
 		hud.append(new g.FilledRect({ scene, cssColor: "rgba(40,24,20,0.72)", x: 1070, y: 12, width: 194, height: 84 }));
 		label("のこり", mainFont, 22, 1167, 16, hud, 0.5);
 		const timeLabel = label(String(totalTime), mainFont, 48, 1167, 40, hud, 0.5);
 		let totalStars = 0;
+		let score = 0;
+		let night = false;
+		let dishKinds = DAY_DISHES;
 		let reviews = 0;
 		const updateRating = (): void => {
 			const avg = reviews > 0 ? totalStars / reviews : 0;
@@ -136,8 +151,8 @@ export function main(param: GameMainParameterObject): void {
 				s.invalidate();
 			}
 			setText(reviewLabel, "口コミ " + reviews + "件");
-			setText(totalLabel, "星の合計 " + totalStars);
-			g.game.vars.gameState.score = totalStars;
+			setText(totalLabel, "スコア " + score);
+			g.game.vars.gameState.score = score;
 		};
 
 		// ---- 吹き出し(注文)とゲージ ----
@@ -167,18 +182,21 @@ export function main(param: GameMainParameterObject): void {
 		bubble.hide();
 
 		// ---- 料理ボタン ----
-		const buttons: g.Sprite[] = [];
+		// ボタンは「台紙・料理・名前」をまとめた入れもので動かす
+		const buttons: g.E[] = [];
+		const panels: g.Sprite[] = [];
 		for (let d = 0; d < DISH_COUNT; d++) {
-			const bx = BTN_X0 + d * BTN_STEP;
-			const panel = new g.Sprite({
-				scene, src: image("dish_panel"), x: bx, y: BTN_Y, scaleX: BTN_SCALE, scaleY: BTN_SCALE, touchable: true
-			});
-			dishLayer.append(panel);
-			buttons.push(panel);
-			sprite("dish" + d, bx + 8, BTN_Y + 4, dishLayer, 0.72);
-			label(DISH_NAMES[d], mainFont, 20, bx + 66, BTN_Y + 91, dishLayer, 0.5);
+			const b = new g.E({ scene, x: BTN_X0 + d * BTN_STEP, y: BTN_Y, scaleX: BTN_SCALE, scaleY: BTN_SCALE });
+			dishLayer.append(b);
+			const panel = new g.Sprite({ scene, src: image("dish_panel"), touchable: true });
+			b.append(panel);
+			panels.push(panel);
+			sprite("dish" + d, 11, 5, b, 0.986);
+			label(DISH_NAMES[d], mainFont, d === 9 ? 20 : 27, 90, 124, b, 0.5);
+			if (d >= DAY_DISHES) b.hide();
+			buttons.push(b);
 		}
-		const btnCenter = (d: number): number[] => [BTN_X0 + d * BTN_STEP + 66, BTN_Y + 48];
+		const btnCenter = (d: number): number[] => [buttons[d].x + 90 * buttons[d].scaleX, buttons[d].y + 66 * buttons[d].scaleY];
 
 		// ---- ふわっと出る文字 ----
 		const popText = (text: string, font: g.Font, size: number, x: number, y: number, dur = 1.0): void => {
@@ -281,7 +299,7 @@ export function main(param: GameMainParameterObject): void {
 			served.length = 0;
 			servedCount = 0;
 			for (let s = 0; s < n; s++) {
-				orderIds.push(Math.floor(random() * DISH_COUNT));
+				orderIds.push(Math.floor(random() * dishKinds));
 				served.push(false);
 			}
 			patienceMax = PATIENCE_BASE + PATIENCE_PER_DISH * n;
@@ -296,8 +314,9 @@ export function main(param: GameMainParameterObject): void {
 			bubble.show();
 			bubble.scaleX = bubble.scaleY = 0.2;
 			bubble.modified();
+			const bscale = night ? 0.88 : 1;
 			animate(0.25, (p) => {
-				bubble.scaleX = bubble.scaleY = 0.2 + easeOut(p) * 0.8;
+				bubble.scaleX = bubble.scaleY = 0.2 + easeOut(p) * (bscale - 0.2);
 				bubble.modified();
 			});
 			sound("tap", 0.3);
@@ -332,6 +351,7 @@ export function main(param: GameMainParameterObject): void {
 		};
 		const review = (stars: number): void => {
 			totalStars += stars;
+			score += Math.round(stars * STAR_POINT * (night ? NIGHT_RATE : 1));
 			reviews++;
 			updateRating();
 		};
@@ -381,8 +401,9 @@ export function main(param: GameMainParameterObject): void {
 				}
 			}
 			const btn = buttons[d];
+			const bs = night ? NBTN_SCALE : BTN_SCALE;
 			animate(0.15, (p) => {
-				btn.scaleX = btn.scaleY = BTN_SCALE * (1 - Math.sin(p * Math.PI) * 0.08);
+				btn.scaleX = btn.scaleY = bs * (1 - Math.sin(p * Math.PI) * 0.08);
 				btn.modified();
 			});
 			if (target < 0) {
@@ -414,7 +435,7 @@ export function main(param: GameMainParameterObject): void {
 		};
 		for (let d = 0; d < DISH_COUNT; d++) {
 			const idx = d;
-			buttons[d].onPointDown.add(() => serveDish(idx));
+			panels[d].onPointDown.add(() => serveDish(idx));
 		}
 
 		// ======== はじまりの列 ========
@@ -455,6 +476,71 @@ export function main(param: GameMainParameterObject): void {
 		const bgm = scene.asset.getAudioById("bgm").play();
 		bgm.changeVolume(0.24);
 
+		// ======== 深夜営業: メニュー倍増・ボタン2段・深夜料金 ========
+		const nightShade = new g.FilledRect({ scene, cssColor: "rgba(16,18,48,0.38)", width: WIDTH, height: HEIGHT, opacity: 0 });
+		scene.insertBefore(nightShade, customerLayer);
+		const startNight = (): void => {
+			night = true;
+			dishKinds = DISH_COUNT;
+			sound("cash", 0.5);
+			animate(1.2, (p) => {
+				nightShade.opacity = p;
+				nightShade.modified();
+			});
+			// お客さんの列を少し上へ(下のボタンが2段になるため)
+			SLOT_Y = [460, 446, 434, 425];
+			SLOT_SCALE = [1.1, 0.95, 0.86, 0.8];
+			queue.forEach((c, k) => {
+				if (!c.walking) walkTo(c, SLOT_X[k], SLOT_Y[k], SLOT_SCALE[k], null);
+				else {
+					c.toY = SLOT_Y[k];
+					c.toS = SLOT_SCALE[k];
+				}
+			});
+			const by = bubble.y;
+			animate(0.6, (p) => {
+				bubble.y = by + (175 - by) * easeOut(p);
+				if (ordering) bubble.scaleX = bubble.scaleY = 1 - 0.12 * easeOut(p);
+				bubble.modified();
+			});
+			// ボタンを2段に並べかえ、深夜メニューがぽんっと出る
+			buttons.forEach((b, d) => {
+				const tx = NBTN_X0 + (d % 6) * BTN_STEP, ty = NBTN_Y[Math.floor(d / 6)];
+				const fx = b.x, fy = b.y, fs = b.scaleX;
+				if (d >= DAY_DISHES) {
+					b.x = tx;
+					b.y = ty;
+					b.show();
+				}
+				animate(0.5 + (d >= DAY_DISHES ? (d - DAY_DISHES) * 0.06 : 0), (p) => {
+					if (d < DAY_DISHES) {
+						b.x = fx + (tx - fx) * easeOut(p);
+						b.y = fy + (ty - fy) * easeOut(p);
+						b.scaleX = b.scaleY = fs + (NBTN_SCALE - fs) * easeOut(p);
+					} else {
+						const q = Math.max(0, p * 2 - (d - DAY_DISHES) * 0.15);
+						b.scaleX = b.scaleY = NBTN_SCALE * Math.min(1.15, q < 0.7 ? q / 0.7 * 1.15 : 1.15 - (q - 0.7) * 0.5);
+					}
+					b.modified();
+				}, () => {
+					b.scaleX = b.scaleY = NBTN_SCALE;
+					b.modified();
+				});
+			});
+			const banner = new g.E({ scene, y: 250 });
+			effectLayer.append(banner);
+			banner.append(new g.FilledRect({ scene, cssColor: "rgba(20,16,48,0.88)", width: WIDTH, height: 150 }));
+			label("深夜営業スタート！", goldFont, 64, WIDTH / 2, 16, banner, 0.5);
+			label("メニューが2倍に！　深夜料金でスコア2割増し", mainFont, 34, WIDTH / 2, 94, banner, 0.5);
+			animate(2.4, (p) => {
+				banner.opacity = p < 0.1 ? p / 0.1 : p > 0.8 ? 1 - (p - 0.8) / 0.2 : 1;
+				banner.modified();
+			}, () => banner.destroy());
+			nightTag.show();
+		};
+		const nightTag = label("深夜料金 ×1.2", goldFont, 26, 1167, 104, hud, 0.5);
+		nightTag.hide();
+
 		const finishGame = (): void => {
 			phase = "finish";
 			ordering = false;
@@ -469,7 +555,7 @@ export function main(param: GameMainParameterObject): void {
 			box.children![0].modified();
 			label("本日の営業おしまい！", goldFont, 64, WIDTH / 2, 230, box, 0.5);
 			const avg = reviews > 0 ? totalStars / reviews : 0;
-			label("お店の評価 ★" + avg.toFixed(1) + "　星の合計 " + totalStars, mainFont, 38, WIDTH / 2, 330, box, 0.5);
+			label("お店の評価 ★" + avg.toFixed(1) + "　スコア " + score, inkFont, 38, WIDTH / 2, 330, box, 0.5);
 		};
 
 		// ======== メインループ ========
@@ -522,7 +608,9 @@ export function main(param: GameMainParameterObject): void {
 			}
 
 			timeLeft = Math.max(0, timeLeft - dt);
-			setText(timeLabel, String(Math.ceil(timeLeft)));
+			// 表示の「のこり」が0になったところで営業終了(本当の制限時間より少し前)
+			const shown = Math.max(0, timeLeft - END_MARGIN_SECONDS);
+			setText(timeLabel, String(Math.ceil(shown)));
 			if (phase === "intro") {
 				introElapsed += dt;
 				if (introElapsed >= 3) {
@@ -562,7 +650,8 @@ export function main(param: GameMainParameterObject): void {
 				}
 				if (patience <= 0) giveUp();
 			}
-			if (timeLeft <= END_MARGIN_SECONDS) finishGame();
+			if (!night && shown <= NIGHT_LEFT) startNight();
+			if (shown <= 0) finishGame();
 		});
 	});
 	g.game.pushScene(scene);
