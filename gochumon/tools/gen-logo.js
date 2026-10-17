@@ -1,60 +1,62 @@
-// タイトルロゴ(900x250)を作る。どんな背景の上でも読めるよう、木の枠のクリーム色の看板に、えんじ色の太字で題字を書く
+// タイトルロゴ(900x250)とアイコン(320x320)を作る。かざりは入れず、平たいコーヒーカップと太い題字だけのシンプルな形
 // 使い方: node tools/gen-logo.js
 const { chromium } = require("playwright");
 const fs = require("fs");
 const path = require("path");
 
-const IMG = path.join(__dirname, "..", "image");
-const emblem = "data:image/png;base64," + fs.readFileSync(path.join(IMG, "emblem.png")).toString("base64");
+const ROOT = path.join(__dirname, "..");
 
-async function draw(emblemSrc) {
-	const em = await new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.src = emblemSrc; });
+async function draw(kind) {
 	const c = document.createElement("canvas");
-	c.width = 900; c.height = 250;
 	const x = c.getContext("2d");
-	const round = (l, t, w, h, r) => {
-		x.beginPath(); x.moveTo(l + r, t); x.arcTo(l + w, t, l + w, t + h, r); x.arcTo(l + w, t + h, l, t + h, r);
-		x.arcTo(l, t + h, l, t, r); x.arcTo(l, t, l + w, t, r); x.closePath();
+	const INK = "#3a1810", RED = "#9c1e2c", CREAM = "#fff6e2";
+	// 平たいコーヒーカップ(中心 cx,cy、大きさ s)
+	const cup = (cx, cy, s, body, line) => {
+		x.lineJoin = "round"; x.lineCap = "round";
+		// 湯気
+		x.strokeStyle = line; x.lineWidth = s * 0.07;
+		[-0.18, 0.06].forEach((dx) => {
+			x.beginPath(); x.moveTo(cx + dx * s, cy - 0.36 * s);
+			x.bezierCurveTo(cx + (dx - 0.1) * s, cy - 0.48 * s, cx + (dx + 0.1) * s, cy - 0.56 * s, cx + dx * s, cy - 0.7 * s);
+			x.stroke();
+		});
+		// 取っ手
+		x.lineWidth = s * 0.09; x.strokeStyle = body;
+		x.beginPath(); x.arc(cx + 0.33 * s, cy - 0.04 * s, 0.13 * s, -Math.PI / 2, Math.PI / 2); x.stroke();
+		// カップ
+		x.fillStyle = body; x.beginPath();
+		x.moveTo(cx - 0.38 * s, cy - 0.24 * s); x.lineTo(cx + 0.34 * s, cy - 0.24 * s);
+		x.quadraticCurveTo(cx + 0.32 * s, cy + 0.2 * s, cx - 0.02 * s, cy + 0.2 * s);
+		x.quadraticCurveTo(cx - 0.36 * s, cy + 0.2 * s, cx - 0.38 * s, cy - 0.24 * s); x.fill();
+		// 受け皿
+		x.beginPath(); x.ellipse(cx - 0.02 * s, cy + 0.27 * s, 0.5 * s, 0.07 * s, 0, 0, Math.PI * 2); x.fill();
 	};
-	// 看板: 影 → 木の枠 → 金の線 → クリームの板
-	x.fillStyle = "rgba(0,0,0,0.35)"; round(14, 30, 880, 210, 34); x.fill();
-	const wood = x.createLinearGradient(0, 22, 0, 232);
-	wood.addColorStop(0, "#8a4a26"); wood.addColorStop(0.5, "#5e2e16"); wood.addColorStop(1, "#3e1c0c");
-	x.fillStyle = wood; round(8, 22, 880, 210, 34); x.fill();
-	x.fillStyle = "#d8a84a"; round(20, 34, 856, 186, 26); x.fill();
-	const paper = x.createLinearGradient(0, 40, 0, 214);
-	paper.addColorStop(0, "#fffaf0"); paper.addColorStop(1, "#f4e2bc");
-	x.fillStyle = paper; round(26, 40, 844, 174, 22); x.fill();
-	// 左に紋章(クロッシュ)
-	const eh = 236, ew = em.width * eh / em.height;
-	x.drawImage(em, 6 - 30, 6, ew, eh);
-	// 題字: こげ茶の影 + 白ふち + えんじ色
-	const text = (t, cx, cy, size, fill) => {
+	const title = (t, tx, ty, size, fill, edge, shadow) => {
 		x.font = "bold " + size + "px IPAGothic"; x.textAlign = "center"; x.textBaseline = "middle"; x.lineJoin = "round";
-		x.lineWidth = size * 0.26; x.strokeStyle = "#3a1810"; x.strokeText(t, cx + 3, cy + 5);
-		x.lineWidth = size * 0.22; x.strokeStyle = "#fffaf0"; x.strokeText(t, cx, cy);
-		x.fillStyle = fill; x.fillText(t, cx, cy);
+		if (shadow) { x.lineWidth = size * 0.24; x.strokeStyle = shadow; x.strokeText(t, tx + 4, ty + 6); }
+		x.lineWidth = size * 0.2; x.strokeStyle = edge; x.strokeText(t, tx, ty);
+		x.fillStyle = fill; x.fillText(t, tx, ty);
 	};
-	const cx = 612;
-	text("ご注文どぞ", cx, 128, 94, "#9c1e2c");
-	// 紋章のリボンに「喫茶店」
-	x.font = "bold 34px IPAGothic"; x.textAlign = "center"; x.textBaseline = "middle";
-	x.fillStyle = "#7a1a26"; x.fillText("喫 茶 店", 6 - 30 + ew / 2, 6 + eh * 0.765);
-	// キラリ
-	const star = (sx, sy, r) => {
-		x.fillStyle = "#e8b440"; x.beginPath();
-		for (let k = 0; k < 8; k++) { const rr = k % 2 ? r * 0.28 : r, a = k * Math.PI / 4 - Math.PI / 2; x.lineTo(sx + Math.cos(a) * rr, sy + Math.sin(a) * rr); }
-		x.fill();
-	};
-	star(846, 74, 16); star(820, 46, 9); star(356, 70, 11);
+	if (kind === "logo") {
+		c.width = 900; c.height = 250;
+		cup(122, 146, 180, RED, "#e8b440");
+		title("ご注文どぞ", 548, 136, 116, RED, CREAM, INK);
+	} else {
+		c.width = 320; c.height = 320;
+		x.fillStyle = RED; x.fillRect(0, 0, 320, 320);
+		cup(170, 150, 180, CREAM, "#f2c86a");
+		title("ご注文どぞ", 160, 270, 58, CREAM, INK);
+	}
 	return c.toDataURL("image/png");
 }
 
 (async () => {
 	const b = await chromium.launch();
 	const p = await b.newPage();
-	const url = await p.evaluate(draw, emblem);
+	const logo = await p.evaluate(draw, "logo");
+	const icon = await p.evaluate(draw, "icon");
 	await b.close();
-	fs.writeFileSync(path.join(IMG, "logo.png"), Buffer.from(url.split(",")[1], "base64"));
-	console.log("wrote logo.png");
+	fs.writeFileSync(path.join(ROOT, "image", "logo.png"), Buffer.from(logo.split(",")[1], "base64"));
+	fs.writeFileSync(path.join(ROOT, "icon.png"), Buffer.from(icon.split(",")[1], "base64"));
+	console.log("wrote logo.png, icon.png");
 })();
