@@ -93,10 +93,45 @@ function draw() {
 			E(x, 66, 58, 6, 4, "#5aa04a"); E(x, 94, 60, 6, 4, "#5aa04a"); E(x, 80, 52, 7, 5, "#c8303a");
 		}
 	];
+	// ---- メニューにない料理(クレーマーが頼む) ----
+	dishes.push((x) => { // ラーメン
+		E(x, 80, 66, 46, 24, "#c8302a", INK, 3);
+		E(x, 80, 62, 40, 18, "#e8b860");
+		for (let k = 0; k < 4; k++) { x.beginPath(); x.moveTo(52 + k * 14, 62); x.quadraticCurveTo(58 + k * 14, 54, 64 + k * 14, 62); x.strokeStyle = "#f8e8a0"; x.lineWidth = 3; x.stroke(); }
+		E(x, 66, 56, 9, 6, "#f8f0e0", INK, 2); E(x, 96, 58, 8, 5, "#5aa04a");
+		x.beginPath(); x.moveTo(104, 30); x.lineTo(84, 64); x.moveTo(114, 32); x.lineTo(92, 64); x.strokeStyle = "#a8783a"; x.lineWidth = 4; x.stroke();
+	});
+	dishes.push((x) => { // お寿司
+		for (let k = 0; k < 3; k++) {
+			const cx = 52 + k * 28;
+			x.fillStyle = "#fffaf0"; x.strokeStyle = INK; x.lineWidth = 2;
+			x.beginPath(); x.roundRect(cx - 12, 58, 24, 18, 6); x.fill(); x.stroke();
+			x.fillStyle = ["#f06a4a", "#f8c8b0", "#e8d040"][k]; x.beginPath(); x.roundRect(cx - 14, 48, 28, 13, 5); x.fill(); x.stroke();
+		}
+	});
+	dishes.push((x) => { // かつ丼
+		E(x, 80, 66, 44, 22, "#2a2a3a", INK, 3);
+		E(x, 80, 60, 38, 15, "#f4e0a0");
+		for (let k = 0; k < 4; k++) { x.fillStyle = "#c8843a"; x.strokeStyle = INK; x.lineWidth = 1.5; x.beginPath(); x.roundRect(52 + k * 14, 50, 13, 18, 3); x.fill(); x.stroke(); }
+		E(x, 94, 56, 6, 4, "#5aa04a");
+	});
 	dishes.forEach((fn, k) => make("dish" + (6 + k), 160, 120, (x) => {
 		plate(x);
 		fn(x);
 	}));
+	// 「帰れ！」ボタン
+	make("kaere", 160, 130, (x) => {
+		x.fillStyle = "rgba(0,0,0,0.35)"; x.beginPath(); x.roundRect(8, 14, 148, 112, 18); x.fill();
+		const g = x.createLinearGradient(0, 4, 0, 118);
+		g.addColorStop(0, "#e8584a"); g.addColorStop(1, "#a8241c");
+		x.fillStyle = g; x.strokeStyle = "#3a120e"; x.lineWidth = 5;
+		x.beginPath(); x.roundRect(4, 4, 148, 112, 18); x.fill(); x.stroke();
+		x.strokeStyle = "rgba(255,230,200,0.7)"; x.lineWidth = 2; x.beginPath(); x.roundRect(12, 12, 132, 96, 12); x.stroke();
+		x.font = "bold 46px IPAGothic"; x.textAlign = "center"; x.textBaseline = "middle"; x.lineJoin = "round";
+		x.lineWidth = 8; x.strokeStyle = "#3a120e"; x.strokeText("帰れ！", 78, 52);
+		x.fillStyle = "#fff4e0"; x.fillText("帰れ！", 78, 52);
+		x.font = "bold 18px IPAGothic"; x.fillStyle = "#ffe0c0"; x.fillText("クレーマー撃退", 78, 92);
+	});
 	return out;
 }
 

@@ -10,6 +10,10 @@ const DAY_DISHES = 6;
 const NIGHT_LEFT = 30; // のこり30秒から深夜営業
 const NIGHT_RATE = 1.2; // 深夜料金(スコア2割増し)
 const STAR_POINT = 1000; // 星1つのスコア
+const ALL_KINDS = 15; // 吹き出しに出せる料理(12品 + メニューにない3品)
+const FAKE_DISHES = [12, 13, 14]; // ラーメン・お寿司・かつ丼(メニューにない)
+const KICK_BONUS = 2000; // クレーマーを帰らせたボーナス
+const CLAIMER_RATE = 0.18; // クレーマーが来る確率(3人目から)
 const MAX_ORDER_COUNT = 5;
 const DISH_NAMES = [
 	"オムライス", "スープ", "ケーキ", "紅茶", "サンド", "パスタ",
@@ -49,7 +53,7 @@ export function main(param: GameMainParameterObject): void {
 	const imageIds = [
 		"restaurant", "check", "dish_panel", "tray", "logo", "emblem", "intro_panel", "hud_panel",
 		"customer0", "customer1", "customer2", "dish0", "dish1", "dish2", "dish3", "dish4", "dish5",
-		"dish6", "dish7", "dish8", "dish9", "dish10", "dish11",
+		"dish6", "dish7", "dish8", "dish9", "dish10", "dish11", "dish12", "dish13", "dish14", "kaere",
 		"star", "star_off", "speech"
 	];
 	const audioIds = ["bgm", "tap", "serve", "cash", "miss", "count", "finish"];
@@ -163,7 +167,7 @@ export function main(param: GameMainParameterObject): void {
 		const orderCheck: g.Sprite[] = [];
 		for (let s = 0; s < MAX_ORDER_COUNT; s++) {
 			const row: g.Sprite[] = [];
-			for (let d = 0; d < DISH_COUNT; d++) {
+			for (let d = 0; d < ALL_KINDS; d++) {
 				const sp = sprite("dish" + d, 0, -104, bubble, 0.72, 0.5, 0.5);
 				sp.hide();
 				row.push(sp);
@@ -266,6 +270,8 @@ export function main(param: GameMainParameterObject): void {
 		let playElapsed = 0;
 		let lastCount = -1;
 		let ordering = false; // 先頭のお客さんが注文中
+		let claimer = false; // 先頭のお客さんがクレーマー
+		let customerCount = 0;
 		let patience = 0;
 		let patienceMax = 1;
 		const orderIds: number[] = [];
@@ -275,7 +281,7 @@ export function main(param: GameMainParameterObject): void {
 		const placeOrderDishes = (): void => {
 			const n = orderIds.length;
 			for (let s = 0; s < MAX_ORDER_COUNT; s++) {
-				for (let d = 0; d < DISH_COUNT; d++) orderDish[s][d].hide();
+				for (let d = 0; d < ALL_KINDS; d++) orderDish[s][d].hide();
 				orderCheck[s].hide();
 			}
 			for (let s = 0; s < n; s++) {
@@ -301,6 +307,13 @@ export function main(param: GameMainParameterObject): void {
 			for (let s = 0; s < n; s++) {
 				orderIds.push(Math.floor(random() * dishKinds));
 				served.push(false);
+			}
+			// クレーマー: メニューにない料理をひとつまぜてくる(昼は深夜メニューもまだない)
+			customerCount++;
+			claimer = customerCount >= 3 && random() < CLAIMER_RATE;
+			if (claimer) {
+				const fakes = night ? FAKE_DISHES : [6, 7, 8, 9, 10, 11].concat(FAKE_DISHES);
+				orderIds[Math.floor(random() * n)] = fakes[Math.floor(random() * fakes.length)];
 			}
 			patienceMax = PATIENCE_BASE + PATIENCE_PER_DISH * n;
 			patience = patienceMax;
@@ -349,9 +362,9 @@ export function main(param: GameMainParameterObject): void {
 			walkTo(c, -220, SLOT_Y[0] + 10, SLOT_SCALE[0], null);
 			advanceQueue();
 		};
-		const review = (stars: number): void => {
+		const review = (stars: number, noPoint = false): void => {
 			totalStars += stars;
-			score += Math.round(stars * STAR_POINT * (night ? NIGHT_RATE : 1));
+			if (!noPoint) score += Math.round(stars * STAR_POINT * (night ? NIGHT_RATE : 1));
 			reviews++;
 			updateRating();
 		};
@@ -372,6 +385,32 @@ export function main(param: GameMainParameterObject): void {
 			popText("もう帰ります…", redFont, 42, SLOT_X[0], 400);
 			leaveFront(false);
 		};
+
+		// 「帰れ！」: クレーマーならボーナス、ふつうのお客さんなら★1の口コミ(点数なし)
+		const kickOut = (): void => {
+			if (phase !== "play" || !ordering) return;
+			animate(0.15, (p) => {
+				kaere.scaleX = kaere.scaleY = 1 - Math.sin(p * Math.PI) * 0.08;
+				kaere.modified();
+			});
+			if (claimer) {
+				const bonus = Math.round(KICK_BONUS * (night ? NIGHT_RATE : 1));
+				score += bonus;
+				updateRating();
+				sound("cash", 0.6);
+				popText("クレーマー撃退！ +" + bonus, goldFont, 44, SLOT_X[0], 330, 1.4);
+				popText("ぷんぷん！", redFont, 36, SLOT_X[0], 400);
+			} else {
+				review(1, true);
+				sound("miss", 0.6);
+				popStars(1, SLOT_X[0], 330);
+				popText("ひどい店だ！", redFont, 44, SLOT_X[0], 400, 1.2);
+			}
+			leaveFront(false);
+		};
+		const kaere = new g.Sprite({ scene, src: image("kaere"), x: 1180, y: 606, anchorX: 0.5, anchorY: 0.5, touchable: true });
+		dishLayer.append(kaere);
+		kaere.onPointDown.add(kickOut);
 
 		// 料理が飛んでいって、トレーにのる
 		const flyDish = (d: number, slotIdx: number, n: number): void => {
@@ -461,16 +500,17 @@ export function main(param: GameMainParameterObject): void {
 		const rules = [
 			"吹き出しの注文を見て、同じ料理をタップ",
 			"全部そろえたら、お客さんは笑顔でお帰り",
-			"早く出すほど高評価！星5をめざそう"
+			"早く出すほど高評価！星5をめざそう",
+			"メニューにない料理を頼む客には「帰れ！」"
 		];
 		rules.forEach((text, k) => {
-			const y = 372 + k * 46;
+			const y = 366 + k * 42;
 			intro.append(new g.FilledRect({ scene, cssColor: "#7a2430", x: 200, y: y, width: 40, height: 40 }));
 			label(String(k + 1), numFont, 30, 220, y + 4, intro, 0.5);
-			label(text, inkFont, 32, 254, y + 2, intro);
+			label(text, inkFont, 30, 254, y + 3, intro);
 		});
-		intro.append(new g.FilledRect({ scene, cssColor: "rgba(168,36,28,0.12)", x: 190, y: 514, width: 900, height: 40 }));
-		label("待たせすぎると星1…　まちがえるとお客さんがイライラ！", warnFont, 26, WIDTH / 2, 519, intro, 0.5);
+		intro.append(new g.FilledRect({ scene, cssColor: "rgba(168,36,28,0.12)", x: 190, y: 538, width: 900, height: 40 }));
+		label("ふつうのお客さんを帰すと★1…　待たせすぎても★1！", warnFont, 26, WIDTH / 2, 543, intro, 0.5);
 		const countLabel = label("", goldFont, 96, 1040, 380, intro, 0.5);
 
 		const bgm = scene.asset.getAudioById("bgm").play();

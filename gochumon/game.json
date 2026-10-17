@@ -277,6 +277,30 @@
 			"path": "image/dish9.png",
 			"width": 160,
 			"height": 120
+		},
+		"dish12": {
+			"type": "image",
+			"path": "image/dish12.png",
+			"width": 160,
+			"height": 120
+		},
+		"dish13": {
+			"type": "image",
+			"path": "image/dish13.png",
+			"width": 160,
+			"height": 120
+		},
+		"dish14": {
+			"type": "image",
+			"path": "image/dish14.png",
+			"width": 160,
+			"height": 120
+		},
+		"kaere": {
+			"type": "image",
+			"path": "image/kaere.png",
+			"width": 160,
+			"height": 130
 		}
 	},
 	"environment": {
