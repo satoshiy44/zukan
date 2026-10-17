@@ -1,0 +1,316 @@
+{
+	"width": 1280,
+	"height": 720,
+	"fps": 30,
+	"main": "./script/_bootstrap.js",
+	"assets": {
+		"bgm": {
+			"type": "audio",
+			"path": "audio/bgm",
+			"systemId": "music",
+			"duration": 23972,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			},
+			"loop": true
+		},
+		"se_beep": {
+			"type": "audio",
+			"path": "audio/se_beep",
+			"systemId": "sound",
+			"duration": 150,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_combo": {
+			"type": "audio",
+			"path": "audio/se_combo",
+			"systemId": "sound",
+			"duration": 460,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_crash": {
+			"type": "audio",
+			"path": "audio/se_crash",
+			"systemId": "sound",
+			"duration": 350,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_finish": {
+			"type": "audio",
+			"path": "audio/se_finish",
+			"systemId": "sound",
+			"duration": 920,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_go": {
+			"type": "audio",
+			"path": "audio/se_go",
+			"systemId": "sound",
+			"duration": 500,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_jump": {
+			"type": "audio",
+			"path": "audio/se_jump",
+			"systemId": "sound",
+			"duration": 280,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_land": {
+			"type": "audio",
+			"path": "audio/se_land",
+			"systemId": "sound",
+			"duration": 100,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_pass": {
+			"type": "audio",
+			"path": "audio/se_pass",
+			"systemId": "sound",
+			"duration": 190,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_perfect": {
+			"type": "audio",
+			"path": "audio/se_perfect",
+			"systemId": "sound",
+			"duration": 600,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"bg_day": {
+			"type": "image",
+			"path": "image/bg_day.png",
+			"width": 1280,
+			"height": 320
+		},
+		"bg_night": {
+			"type": "image",
+			"path": "image/bg_night.png",
+			"width": 1280,
+			"height": 320
+		},
+		"bg_river": {
+			"type": "image",
+			"path": "image/bg_river.png",
+			"width": 1280,
+			"height": 320
+		},
+		"face": {
+			"type": "image",
+			"path": "image/face.png",
+			"width": 352,
+			"height": 400
+		},
+		"house": {
+			"type": "image",
+			"path": "image/house.png",
+			"width": 600,
+			"height": 704
+		},
+		"lantern": {
+			"type": "image",
+			"path": "image/lantern.png",
+			"width": 200,
+			"height": 832
+		},
+		"logo": {
+			"type": "image",
+			"path": "image/logo.png",
+			"width": 1088,
+			"height": 224
+		},
+		"man_jump": {
+			"type": "image",
+			"path": "image/man_jump.png",
+			"width": 152,
+			"height": 328
+		},
+		"man_run0": {
+			"type": "image",
+			"path": "image/man_run0.png",
+			"width": 152,
+			"height": 328
+		},
+		"man_run1": {
+			"type": "image",
+			"path": "image/man_run1.png",
+			"width": 152,
+			"height": 328
+		},
+		"man_stand": {
+			"type": "image",
+			"path": "image/man_stand.png",
+			"width": 152,
+			"height": 328
+		},
+		"panel_ground": {
+			"type": "image",
+			"path": "image/panel_ground.png",
+			"width": 1280,
+			"height": 608
+		},
+		"panel_high": {
+			"type": "image",
+			"path": "image/panel_high.png",
+			"width": 1280,
+			"height": 608
+		},
+		"panel_kid_l": {
+			"type": "image",
+			"path": "image/panel_kid_l.png",
+			"width": 1280,
+			"height": 608
+		},
+		"panel_kid_r": {
+			"type": "image",
+			"path": "image/panel_kid_r.png",
+			"width": 1280,
+			"height": 608
+		},
+		"piece": {
+			"type": "image",
+			"path": "image/piece.png",
+			"width": 56,
+			"height": 48
+		},
+		"pole": {
+			"type": "image",
+			"path": "image/pole.png",
+			"width": 72,
+			"height": 960
+		},
+		"shadow": {
+			"type": "image",
+			"path": "image/shadow.png",
+			"width": 120,
+			"height": 32
+		},
+		"shop": {
+			"type": "image",
+			"path": "image/shop.png",
+			"width": 640,
+			"height": 768
+		},
+		"sign": {
+			"type": "image",
+			"path": "image/sign.png",
+			"width": 360,
+			"height": 448
+		},
+		"spark": {
+			"type": "image",
+			"path": "image/spark.png",
+			"width": 52,
+			"height": 52
+		},
+		"star": {
+			"type": "image",
+			"path": "image/star.png",
+			"width": 36,
+			"height": 36
+		},
+		"susuki": {
+			"type": "image",
+			"path": "image/susuki.png",
+			"width": 280,
+			"height": 256
+		},
+		"tree": {
+			"type": "image",
+			"path": "image/tree.png",
+			"width": 440,
+			"height": 600
+		},
+		"vending": {
+			"type": "image",
+			"path": "image/vending.png",
+			"width": 256,
+			"height": 448
+		},
+		"wall": {
+			"type": "image",
+			"path": "image/wall.png",
+			"width": 480,
+			"height": 280
+		},
+		"_bootstrap": {
+			"type": "script",
+			"path": "script/_bootstrap.js",
+			"global": true
+		},
+		"main": {
+			"type": "script",
+			"path": "script/main.js",
+			"global": true
+		},
+		"parameterObject": {
+			"type": "script",
+			"path": "script/parameterObject.js",
+			"global": true
+		}
+	},
+	"environment": {
+		"sandbox-runtime": "3",
+		"akashic-runtime": {
+			"version": "~3.13.4-0",
+			"flavor": "-canvas"
+		},
+		"nicolive": {
+			"supportedModes": [
+				"ranking"
+			],
+			"preferredSessionParameters": {
+				"totalTimeLimit": 70
+			}
+		}
+	},
+	"globalScripts": []
+}
