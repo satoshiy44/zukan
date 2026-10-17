@@ -9,7 +9,7 @@ const DISH_COUNT = 12; // 昼6品 + 深夜メニュー6品
 const DAY_DISHES = 6;
 const NIGHT_LEFT = 30; // のこり30秒から深夜営業
 const NIGHT_RATE = 1.2; // 深夜料金(スコア2割増し)
-const STAR_POINT = 10; // 星1つのスコア
+const STAR_POINT = 1000; // 星1つのスコア
 const MAX_ORDER_COUNT = 5;
 const DISH_NAMES = [
 	"オムライス", "スープ", "ケーキ", "紅茶", "サンド", "パスタ",
@@ -58,7 +58,7 @@ export function main(param: GameMainParameterObject): void {
 	if (param.sessionParameter.totalTimeLimit) {
 		totalTime = param.sessionParameter.totalTimeLimit;
 	}
-	// ランキングの点数 = もらった星 × 10点(深夜は2割増し)
+	// ランキングの点数 = もらった星 × 1000点(深夜は2割増し)
 	g.game.vars.gameState = { score: 0 };
 
 	scene.onLoad.add(() => {
