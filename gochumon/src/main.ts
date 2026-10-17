@@ -317,12 +317,11 @@ export function main(param: GameMainParameterObject): void {
 				orderIds.push(Math.floor(random() * dishKinds));
 				served.push(false);
 			}
-			// クレーマー: メニューにない料理をひとつまぜてくる(昼は深夜メニューもまだない)
+			// クレーマー: どの時間帯にも出てこない料理をひとつまぜてくる
 			customerCount++;
 			claimer = customerCount >= 3 && random() < CLAIMER_RATE;
 			if (claimer) {
-				const fakes = night ? FAKE_DISHES : [6, 7, 8, 9, 10, 11].concat(FAKE_DISHES);
-				orderIds[Math.floor(random() * n)] = fakes[Math.floor(random() * fakes.length)];
+				orderIds[Math.floor(random() * n)] = FAKE_DISHES[Math.floor(random() * FAKE_DISHES.length)];
 			}
 			patienceMax = PATIENCE_BASE + PATIENCE_PER_DISH * n;
 			patience = patienceMax;
