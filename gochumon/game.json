@@ -1,0 +1,244 @@
+{
+	"width": 1280,
+	"height": 720,
+	"fps": 30,
+	"main": "./script/_bootstrap.js",
+	"assets": {
+		"bgm": {
+			"type": "audio",
+			"path": "audio/bgm",
+			"systemId": "music",
+			"loop": true,
+			"duration": 8960,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"cash": {
+			"type": "audio",
+			"path": "audio/cash",
+			"systemId": "sound",
+			"duration": 520,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"count": {
+			"type": "audio",
+			"path": "audio/count",
+			"systemId": "sound",
+			"duration": 140,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"finish": {
+			"type": "audio",
+			"path": "audio/finish",
+			"systemId": "sound",
+			"duration": 720,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"miss": {
+			"type": "audio",
+			"path": "audio/miss",
+			"systemId": "sound",
+			"duration": 360,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"serve": {
+			"type": "audio",
+			"path": "audio/serve",
+			"systemId": "sound",
+			"duration": 220,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"tap": {
+			"type": "audio",
+			"path": "audio/tap",
+			"systemId": "sound",
+			"duration": 90,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"bubble": {
+			"type": "image",
+			"path": "image/bubble.png",
+			"width": 130,
+			"height": 120
+		},
+		"check": {
+			"type": "image",
+			"path": "image/check.png",
+			"width": 96,
+			"height": 96
+		},
+		"coin": {
+			"type": "image",
+			"path": "image/coin.png",
+			"width": 72,
+			"height": 72
+		},
+		"customer0": {
+			"type": "image",
+			"path": "image/customer0.png",
+			"width": 220,
+			"height": 235
+		},
+		"customer1": {
+			"type": "image",
+			"path": "image/customer1.png",
+			"width": 220,
+			"height": 235
+		},
+		"customer2": {
+			"type": "image",
+			"path": "image/customer2.png",
+			"width": 220,
+			"height": 235
+		},
+		"dish0": {
+			"type": "image",
+			"path": "image/dish0.png",
+			"width": 160,
+			"height": 120
+		},
+		"dish1": {
+			"type": "image",
+			"path": "image/dish1.png",
+			"width": 160,
+			"height": 120
+		},
+		"dish2": {
+			"type": "image",
+			"path": "image/dish2.png",
+			"width": 160,
+			"height": 120
+		},
+		"dish3": {
+			"type": "image",
+			"path": "image/dish3.png",
+			"width": 160,
+			"height": 120
+		},
+		"dish4": {
+			"type": "image",
+			"path": "image/dish4.png",
+			"width": 160,
+			"height": 120
+		},
+		"dish5": {
+			"type": "image",
+			"path": "image/dish5.png",
+			"width": 160,
+			"height": 120
+		},
+		"dish_panel": {
+			"type": "image",
+			"path": "image/dish_panel.png",
+			"width": 180,
+			"height": 166
+		},
+		"emblem": {
+			"type": "image",
+			"path": "image/emblem.png",
+			"width": 390,
+			"height": 260
+		},
+		"hud_panel": {
+			"type": "image",
+			"path": "image/hud_panel.png",
+			"width": 370,
+			"height": 70
+		},
+		"intro_panel": {
+			"type": "image",
+			"path": "image/intro_panel.png",
+			"width": 1000,
+			"height": 490
+		},
+		"logo": {
+			"type": "image",
+			"path": "image/logo.png",
+			"width": 760,
+			"height": 220
+		},
+		"order_board": {
+			"type": "image",
+			"path": "image/order_board.png",
+			"width": 590,
+			"height": 145
+		},
+		"restaurant": {
+			"type": "image",
+			"path": "image/restaurant.png",
+			"width": 1280,
+			"height": 720
+		},
+		"tray": {
+			"type": "image",
+			"path": "image/tray.png",
+			"width": 600,
+			"height": 72
+		},
+		"_bootstrap": {
+			"type": "script",
+			"path": "script/_bootstrap.js",
+			"global": true
+		},
+		"main": {
+			"type": "script",
+			"path": "script/main.js",
+			"global": true
+		},
+		"parameterObject": {
+			"type": "script",
+			"path": "script/parameterObject.js",
+			"global": true
+		}
+	},
+	"environment": {
+		"sandbox-runtime": "3",
+		"akashic-runtime": {
+			"version": "~3.13.4-0",
+			"flavor": "-canvas"
+		},
+		"nicolive": {
+			"supportedModes": [
+				"ranking"
+			],
+			"preferredSessionParameters": {
+				"totalTimeLimit": 60
+			}
+		}
+	},
+	"globalScripts": []
+}

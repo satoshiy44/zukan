@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+	"lib": ["es5", "es2015.promise"],
+    "types": [
+      "jest",
+      "node"
+    ]
+  },
+  "include": [
+    "spec/**/*.ts"
+  ]
+}
