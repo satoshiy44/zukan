@@ -22,8 +22,8 @@ async function draw(srcs) {
 	x.drawImage(im.logo, 640 - 380, 2, 760, 211);
 	x.fillStyle = "rgba(40,16,10,0.85)"; x.fillRect(0, 640, 1280, 80);
 	x.font = "bold 44px IPAGothic"; x.textAlign = "center"; x.textBaseline = "middle"; x.lineJoin = "round";
-	x.lineWidth = 10; x.strokeStyle = "#3a1810"; x.strokeText("注文どおりの料理をそろえて、売上No.1をめざせ！", 640, 680);
-	x.fillStyle = "#fff4d8"; x.fillText("注文どおりの料理をそろえて、売上No.1をめざせ！", 640, 680);
+	x.lineWidth = 10; x.strokeStyle = "#3a1810"; x.strokeText("早く正確に料理を出して、星5のお店をめざせ！", 640, 680);
+	x.fillStyle = "#fff4d8"; x.fillText("早く正確に料理を出して、星5のお店をめざせ！", 640, 680);
 	return c.toDataURL("image/png");
 }
 

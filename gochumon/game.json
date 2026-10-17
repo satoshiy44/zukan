@@ -188,8 +188,8 @@
 		"logo": {
 			"type": "image",
 			"path": "image/logo.png",
-			"width": 760,
-			"height": 220
+			"width": 900,
+			"height": 250
 		},
 		"order_board": {
 			"type": "image",
@@ -223,6 +223,24 @@
 			"type": "script",
 			"path": "script/parameterObject.js",
 			"global": true
+		},
+		"speech": {
+			"type": "image",
+			"path": "image/speech.png",
+			"width": 460,
+			"height": 180
+		},
+		"star": {
+			"type": "image",
+			"path": "image/star.png",
+			"width": 52,
+			"height": 52
+		},
+		"star_off": {
+			"type": "image",
+			"path": "image/star_off.png",
+			"width": 52,
+			"height": 52
 		}
 	},
 	"environment": {
