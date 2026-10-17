@@ -14,6 +14,8 @@ const ALL_KINDS = 15; // 吹き出しに出せる料理(12品 + メニューに�
 const FAKE_DISHES = [12, 13, 14]; // ラーメン・お寿司・かつ丼(メニューにない)
 const KICK_BONUS = 2000; // クレーマーを帰らせたボーナス
 const CLAIMER_RATE = 0.18; // クレーマーが来る確率(3人目から)
+const STREAK_STEP = 300; // 連チャンボーナス: (連チャン数-1) × 300点
+const STREAK_MAX = 3000; // 連チャンボーナスの上限
 const MAX_ORDER_COUNT = 5;
 const DISH_NAMES = [
 	"オムライス", "スープ", "ケーキ", "紅茶", "サンド", "パスタ",
@@ -272,6 +274,7 @@ export function main(param: GameMainParameterObject): void {
 		let ordering = false; // 先頭のお客さんが注文中
 		let claimer = false; // 先頭のお客さんがクレーマー
 		let customerCount = 0;
+		let streak = 0; // 連チャン数
 		let patience = 0;
 		let patienceMax = 1;
 		const orderIds: number[] = [];
@@ -368,6 +371,26 @@ export function main(param: GameMainParameterObject): void {
 			reviews++;
 			updateRating();
 		};
+		// 連チャン: ★3以上で出す・クレーマー撃退で続き、それ以外で切れる
+		const streakLabel = label("", goldFont, 30, 30, 142, hud);
+		const addStreak = (): void => {
+			streak++;
+			setText(streakLabel, streak >= 2 ? streak + "連チャン中！" : "");
+			if (streak < 2) return;
+			const bonus = Math.round(Math.min(STREAK_MAX, (streak - 1) * STREAK_STEP) * (night ? NIGHT_RATE : 1));
+			score += bonus;
+			updateRating();
+			popText(streak + "連チャン！ +" + bonus, goldFont, 40, SLOT_X[0], 460, 1.3);
+			animate(0.3, (p) => {
+				streakLabel.scaleX = streakLabel.scaleY = 1 + Math.sin(p * Math.PI) * 0.25;
+				streakLabel.modified();
+			});
+		};
+		const breakStreak = (): void => {
+			if (streak >= 3) popText(streak + "連チャンがとぎれた…", redFont, 34, SLOT_X[0], 460, 1.3);
+			streak = 0;
+			setText(streakLabel, "");
+		};
 		const completeOrder = (): void => {
 			const r = patience / patienceMax;
 			const stars = r > 0.7 ? 5 : r > 0.5 ? 4 : r > 0.3 ? 3 : r > 0.15 ? 2 : 1;
@@ -376,6 +399,8 @@ export function main(param: GameMainParameterObject): void {
 			popStars(stars, SLOT_X[0], 330);
 			const words = stars === 5 ? "さいこう！" : stars >= 4 ? "ありがとう！" : stars >= 3 ? "どうも" : "おそいよ〜";
 			popText(words, stars >= 3 ? goldFont : redFont, 40, SLOT_X[0], 400);
+			if (stars >= 3) addStreak();
+			else breakStreak();
 			leaveFront(true);
 		};
 		const giveUp = (): void => {
@@ -383,6 +408,7 @@ export function main(param: GameMainParameterObject): void {
 			sound("miss", 0.5);
 			popStars(1, SLOT_X[0], 330);
 			popText("もう帰ります…", redFont, 42, SLOT_X[0], 400);
+			breakStreak();
 			leaveFront(false);
 		};
 
@@ -400,11 +426,13 @@ export function main(param: GameMainParameterObject): void {
 				sound("cash", 0.6);
 				popText("クレーマー撃退！ +" + bonus, goldFont, 44, SLOT_X[0], 330, 1.4);
 				popText("ぷんぷん！", redFont, 36, SLOT_X[0], 400);
+				addStreak();
 			} else {
 				review(1, true);
 				sound("miss", 0.6);
 				popStars(1, SLOT_X[0], 330);
 				popText("ひどい店だ！", redFont, 44, SLOT_X[0], 400, 1.2);
+				breakStreak();
 			}
 			leaveFront(false);
 		};
