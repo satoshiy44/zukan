@@ -35,9 +35,8 @@ async function draw(emblemSrc) {
 		x.lineWidth = size * 0.22; x.strokeStyle = "#fffaf0"; x.strokeText(t, cx, cy);
 		x.fillStyle = fill; x.fillText(t, cx, cy);
 	};
-	const cx = 600;
-	text("ご注文を", cx, 86, 72, "#7a1a26");
-	text("どうぞ！", cx, 166, 104, "#9c1e2c");
+	const cx = 612;
+	text("ご注文どぞ", cx, 128, 94, "#9c1e2c");
 	// 紋章のリボンに「喫茶店」
 	x.font = "bold 34px IPAGothic"; x.textAlign = "center"; x.textBaseline = "middle";
 	x.fillStyle = "#7a1a26"; x.fillText("喫 茶 店", 6 - 30 + ew / 2, 6 + eh * 0.765);

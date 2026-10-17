@@ -1,7 +1,7 @@
 import * as path from "path";
 import { GameContext } from "@akashic/headless-akashic";
 
-describe("ご注文をどうぞ", () => {
+describe("ご注文どぞ", () => {
 	it("料理をタップし続けると口コミの星がたまり、終わったあとは増えない", async () => {
 		const context = new GameContext<3>({
 			gameJsonPath: path.join(__dirname, "..", "game.json")
