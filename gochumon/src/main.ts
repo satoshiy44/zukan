@@ -9,7 +9,8 @@ const DISH_COUNT = 12; // 昼6品 + 深夜メニュー6品
 const DAY_DISHES = 6;
 const NIGHT_LEFT = 30; // のこり30秒から深夜営業
 const NIGHT_RATE = 1.2; // 深夜料金(スコア2割増し)
-const STAR_POINT = 1000; // 星1つのスコア
+const STAR_POINT = 1000; // 料理を出したときの売上: 星1つ1000円
+const RATING_POINT = 10000; // 最後の評価ボーナス: お店の評価(星の平均) × 10000点
 const ALL_KINDS = 15; // 吹き出しに出せる料理(12品 + メニューにない3品)
 const FAKE_DISHES = [12, 13, 14]; // ラーメン・お寿司・かつ丼(メニューにない)
 const KICK_BONUS = 2000; // クレーマーを帰らせたボーナス
@@ -131,11 +132,15 @@ export function main(param: GameMainParameterObject): void {
 			starOns.push(on);
 		}
 		const reviewLabel = label("口コミ 0件", mainFont, 22, 385, 104, hud, 1);
-		const totalLabel = label("スコア 0", goldFont, 24, 30, 104, hud);
+		const totalLabel = label("売上 0円", goldFont, 24, 30, 104, hud);
 		hud.append(new g.FilledRect({ scene, cssColor: "rgba(40,24,20,0.72)", x: 1070, y: 12, width: 194, height: 84 }));
 		label("のこり", mainFont, 22, 1167, 16, hud, 0.5);
 		const timeLabel = label(String(totalTime), mainFont, 48, 1167, 40, hud, 0.5);
 		let totalStars = 0;
+		// スコア = 売上 + クレーマー撃退ボーナス + 連チャンボーナス + 評価ボーナス(最後に足す)
+		let sales = 0;
+		let kickTotal = 0;
+		let streakTotal = 0;
 		let score = 0;
 		let night = false;
 		let dishKinds = DAY_DISHES;
@@ -157,7 +162,8 @@ export function main(param: GameMainParameterObject): void {
 				s.invalidate();
 			}
 			setText(reviewLabel, "口コミ " + reviews + "件");
-			setText(totalLabel, "スコア " + score);
+			setText(totalLabel, "売上 " + sales + "円");
+			score = sales + kickTotal + streakTotal;
 			g.game.vars.gameState.score = score;
 		};
 
@@ -365,9 +371,10 @@ export function main(param: GameMainParameterObject): void {
 			walkTo(c, -220, SLOT_Y[0] + 10, SLOT_SCALE[0], null);
 			advanceQueue();
 		};
-		const review = (stars: number, noPoint = false): void => {
+		// noSale: 料理を出していない(帰られた・帰した)ときは売上なし
+		const review = (stars: number, noSale = false): void => {
 			totalStars += stars;
-			if (!noPoint) score += Math.round(stars * STAR_POINT * (night ? NIGHT_RATE : 1));
+			if (!noSale) sales += Math.round(stars * STAR_POINT * (night ? NIGHT_RATE : 1));
 			reviews++;
 			updateRating();
 		};
@@ -378,7 +385,7 @@ export function main(param: GameMainParameterObject): void {
 			setText(streakLabel, streak >= 2 ? streak + "連チャン中！" : "");
 			if (streak < 2) return;
 			const bonus = Math.round(Math.min(STREAK_MAX, (streak - 1) * STREAK_STEP) * (night ? NIGHT_RATE : 1));
-			score += bonus;
+			streakTotal += bonus;
 			updateRating();
 			popText(streak + "連チャン！ +" + bonus, goldFont, 40, SLOT_X[0], 460, 1.3);
 			animate(0.3, (p) => {
@@ -404,7 +411,7 @@ export function main(param: GameMainParameterObject): void {
 			leaveFront(true);
 		};
 		const giveUp = (): void => {
-			review(1);
+			review(1, true);
 			sound("miss", 0.5);
 			popStars(1, SLOT_X[0], 330);
 			popText("もう帰ります…", redFont, 42, SLOT_X[0], 400);
@@ -421,7 +428,7 @@ export function main(param: GameMainParameterObject): void {
 			});
 			if (claimer) {
 				const bonus = Math.round(KICK_BONUS * (night ? NIGHT_RATE : 1));
-				score += bonus;
+				kickTotal += bonus;
 				updateRating();
 				sound("cash", 0.6);
 				popText("クレーマー撃退！ +" + bonus, goldFont, 44, SLOT_X[0], 330, 1.4);
@@ -615,15 +622,49 @@ export function main(param: GameMainParameterObject): void {
 			bubble.hide();
 			bgm.stop();
 			sound("finish", 0.6);
+			// 最後に、評価ボーナスを足して内訳を順番に出す
+			const avg = reviews > 0 ? totalStars / reviews : 0;
+			const ratingBonus = Math.round(avg * RATING_POINT);
+			score = sales + kickTotal + streakTotal + ratingBonus;
+			g.game.vars.gameState.score = score;
 			const box = new g.E({ scene });
 			scene.append(box);
-			sprite("intro_panel", 250, 190, box);
-			box.children![0].scaleX = 0.78;
-			box.children![0].scaleY = 0.56;
-			box.children![0].modified();
-			label("本日の営業おしまい！", goldFont, 64, WIDTH / 2, 230, box, 0.5);
-			const avg = reviews > 0 ? totalStars / reviews : 0;
-			label("お店の評価 ★" + avg.toFixed(1) + "　スコア " + score, inkFont, 38, WIDTH / 2, 330, box, 0.5);
+			box.append(new g.FilledRect({ scene, cssColor: "rgba(20,12,10,0.45)", width: WIDTH, height: HEIGHT }));
+			// 線の入っていない無地の枠(こげ茶のふち・クリームの紙・金の細線)
+			box.append(new g.FilledRect({ scene, cssColor: "#4a2a1a", x: 250, y: 108, width: 780, height: 476 }));
+			box.append(new g.FilledRect({ scene, cssColor: "#c89a48", x: 258, y: 116, width: 764, height: 460 }));
+			box.append(new g.FilledRect({ scene, cssColor: "#f8efd8", x: 264, y: 122, width: 752, height: 448 }));
+			label("本日の営業おしまい！", goldFont, 60, WIDTH / 2, 132, box, 0.5);
+			const rows: string[][] = [
+				["売上", sales + "円"],
+				["クレーマー撃退ボーナス", "+" + kickTotal],
+				["連チャンボーナス", "+" + streakTotal],
+				["評価ボーナス（★" + avg.toFixed(1) + "）", "+" + ratingBonus]
+			];
+			rows.forEach((r, k) => {
+				const y = 222 + k * 56;
+				const left = label(r[0], inkFont, 34, 300, y, box);
+				const right = label(r[1], inkFont, 38, 980, y - 2, box, 1);
+				left.opacity = right.opacity = 0;
+				left.modified();
+				right.modified();
+				animate(0.3 + k * 0.3, (p) => {
+					const q = Math.max(0, (p * (0.3 + k * 0.3) - k * 0.3) / 0.3);
+					left.opacity = right.opacity = q;
+					left.modified();
+					right.modified();
+				}, () => sound("tap", 0.4));
+			});
+			box.append(new g.FilledRect({ scene, cssColor: "#7a2430", x: 290, y: 452, width: 700, height: 4 }));
+			const total = label("スコア " + score, goldFont, 64, WIDTH / 2, 470, box, 0.5);
+			total.opacity = 0;
+			total.modified();
+			animate(1.6, (p) => {
+				const q = Math.max(0, (p * 1.6 - 1.3) / 0.3);
+				total.opacity = q;
+				total.scaleX = total.scaleY = q < 1 ? 1.4 - q * 0.4 : 1;
+				total.modified();
+			}, () => sound("cash", 0.6));
 		};
 
 		// ======== メインループ ========
