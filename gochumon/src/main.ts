@@ -427,10 +427,29 @@ export function main(param: GameMainParameterObject): void {
 		intro.append(new g.FilledRect({ scene, cssColor: "rgba(20,12,10,0.35)", width: WIDTH, height: HEIGHT }));
 		sprite("intro_panel", 140, 110, intro);
 		sprite("logo", 190, 116, intro, 0.9);
-		label("① 吹き出しの注文を見て、同じ料理をタップ", mainFont, 32, 200, 356, intro);
-		label("② 全部そろえたら、お客さんは笑顔でお帰り", mainFont, 32, 200, 402, intro);
-		label("③ 早く出すほど高評価！星5をめざそう", mainFont, 32, 200, 448, intro);
-		label("待たせすぎると星1…　まちがえるとお客さんがイライラ！", redFont, 26, WIDTH / 2, 510, intro, 0.5);
+		// 紙の色(クリーム)の上でもはっきり読めるよう、こげ茶の文字と、えんじ色の番号札にする
+		const inkFont = new g.DynamicFont({
+			game: g.game, fontFamily: "sans-serif", fontWeight: "bold", size: 64,
+			fontColor: "#3a1c12", strokeColor: "#fff8e6", strokeWidth: 4
+		});
+		const warnFont = new g.DynamicFont({
+			game: g.game, fontFamily: "sans-serif", fontWeight: "bold", size: 64,
+			fontColor: "#a8241c", strokeColor: "#fff8e6", strokeWidth: 4
+		});
+		const numFont = new g.DynamicFont({ game: g.game, fontFamily: "sans-serif", fontWeight: "bold", size: 64, fontColor: "#ffffff" });
+		const rules = [
+			"吹き出しの注文を見て、同じ料理をタップ",
+			"全部そろえたら、お客さんは笑顔でお帰り",
+			"早く出すほど高評価！星5をめざそう"
+		];
+		rules.forEach((text, k) => {
+			const y = 372 + k * 46;
+			intro.append(new g.FilledRect({ scene, cssColor: "#7a2430", x: 200, y: y, width: 40, height: 40 }));
+			label(String(k + 1), numFont, 30, 220, y + 4, intro, 0.5);
+			label(text, inkFont, 32, 254, y + 2, intro);
+		});
+		intro.append(new g.FilledRect({ scene, cssColor: "rgba(168,36,28,0.12)", x: 190, y: 514, width: 900, height: 40 }));
+		label("待たせすぎると星1…　まちがえるとお客さんがイライラ！", warnFont, 26, WIDTH / 2, 519, intro, 0.5);
 		const countLabel = label("", goldFont, 96, 1040, 380, intro, 0.5);
 
 		const bgm = scene.asset.getAudioById("bgm").play();
