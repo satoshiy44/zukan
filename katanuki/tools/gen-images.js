@@ -362,14 +362,14 @@ function build() {
 	}
 	lg.x.putImageData(td, 0, 0);
 	lg.outline("#e02828"); lg.outline("#e02828"); lg.outline("#201018");
-	lg.x.drawImage(face.c, (LS - 44) / 2, 2, 44, 50);
+	lg.x.drawImage(face.c, (LS - 44) / 2, 6, 44, 50);
 	// 頭の高さに横長のダンボール。頭の形にくりぬいた型から顔が出ている
-	const FX = (LS - 44) / 2, FY = 2, CHIN = 38; // 顔の絵の CHIN 行目までが頭
+	const FX = (LS - 44) / 2, FY = 6, CHIN = 38; // 顔の絵の CHIN 行目までが頭
 	const fm = new Art(LS, LS);
 	fm.x.drawImage(face.c, FX, FY, 44, 50);
 	const fmk = fm.mask().map((v, i) => (v && Math.floor(i / LS) <= FY + CHIN ? 1 : 0));
 	const hole = dilate(fmk, LS, LS, 1);
-	const bTop = FY + 8, bBot = FY + CHIN + 1;
+	const bTop = 0, bBot = FY + CHIN + 1;
 	const bd = new Art(LS, LS);
 	bd.rect(0, bTop, LS, bBot - bTop, "#d29a5c");
 	for (let x = 0; x < LS; x += 4) bd.rect(x, bTop, 1, bBot - bTop, "#c48c50");
@@ -390,6 +390,12 @@ function build() {
 		else if (inH(x - 1, y) || inH(x, y - 1)) { bdd.data[i] = 0x7a; bdd.data[i + 1] = 0x4a; bdd.data[i + 2] = 0x22; }
 	}
 	bd.x.putImageData(bdd, 0, 0);
+	// 型の内側の上と左に影を落として、人が板の奥にいるように見せる
+	for (let y = bTop; y < bBot; y++) for (let x = 0; x < LS; x++) {
+		if (!inH(x, y)) continue;
+		if (!inH(x - 1, y) || !inH(x, y - 1)) bd.px(x, y, "rgba(40,16,8,0.55)");
+		else if (!inH(x - 2, y) || !inH(x, y - 2)) bd.px(x, y, "rgba(40,16,8,0.3)");
+	}
 	bd.outline();
 	lg.x.drawImage(bd.c, 0, 0);
 	lg.save("logo", 4);
