@@ -98,6 +98,16 @@ function build() {
 	};
 	const poses = { run0: man("run0"), run1: man("run1"), jump: man("jump"), stand: man("stand") };
 	Object.keys(poses).forEach((k) => poses[k].save("man_" + k, P));
+	// 前にころんだ男(うしろから: くつの裏が手前、頭は奥) 38x82 の下の方だけ使う
+	const fall = new Art(38, 82);
+	const FR = (x, y, w, h, c) => fall.rect(x + 1, y + 1, w, h, c);
+	FR(13, 40, 11, 6, HAIR); FR(14, 40, 9, 1, HAIR_L); // 頭(奥)
+	FR(4, 44, 6, 10, SKIN); FR(27, 44, 6, 10, SKIN_D); // バンザイの腕
+	FR(8, 45, 21, 15, SHIRT); FR(23, 45, 6, 15, SHIRT_D);
+	FR(9, 59, 19, 7, PANTS); FR(23, 59, 5, 7, PANTS_D);
+	FR(10, 66, 6, 6, SKIN); FR(21, 66, 6, 6, SKIN_D);
+	FR(8, 72, 9, 8, SHOE_D); FR(20, 72, 9, 8, SHOE_D); FR(9, 73, 7, 6, "#9a8a70"); FR(21, 73, 7, 6, "#9a8a70"); // くつの裏
+	fall.outline(); fall.save("man_fall", P);
 
 	// ======== ダンボールの板(型ぬき) ========
 	// 横 4u(=320ドット)、縦 1.9u(=152ドット)。1u=80ドット
@@ -183,6 +193,20 @@ function build() {
 	a = boardFor(0); cut(a, groundShape, PW / 2 - 32, 0); cut(a, kidShape, PW / 2 + 32, 0); a.save("panel_kid_r", P);
 	a = boardFor(0); cut(a, groundShape, PW / 2 + 32, 0); cut(a, kidShape, PW / 2 - 32, 0); a.save("panel_kid_l", P);
 
+	// 道に落ちている石 28x16 と、寝ているねこ 32x18(1u=80ドット)
+	const rock = new Art(28, 16);
+	rock.oval(14, 10, 12, 6, "#8a8a92"); rock.oval(11, 8, 7, 4, "#a8a8b0"); rock.oval(18, 12, 6, 3, "#6a6a72"); rock.px(9, 7, "#d0d0d8");
+	rock.outline(); rock.save("rock", P);
+	const cat = new Art(34, 20);
+	cat.oval(16, 13, 13, 6, "#f0a040"); cat.oval(27, 11, 6, 5, "#f0a040"); // からだと頭
+	cat.rect(23, 5, 2, 3, "#f0a040"); cat.rect(29, 5, 2, 3, "#f0a040"); // 耳
+	for (let k = 0; k < 4; k++) cat.rect(8 + k * 5, 8, 2, 4, "#c87828"); // しましま
+	cat.rect(25, 11, 2, 1, "#402010"); cat.rect(29, 11, 2, 1, "#402010"); // とじた目
+	cat.oval(6, 16, 5, 2, "#f0a040"); // しっぽ
+	cat.oval(16, 16, 8, 2, "#f8d8a0");
+	cat.outline();
+	cat.rect(30, 0, 3, 1, "#ffffff"); cat.rect(32, 1, 1, 1, "#ffffff"); cat.rect(30, 2, 3, 1, "#ffffff"); // Z
+	cat.save("cat", P);
 	// ダンボールのかけら
 	a = new Art(14, 12);
 	a.rect(1, 2, 11, 8, "#d29a5c"); a.rect(3, 1, 7, 1, "#d29a5c"); a.rect(2, 10, 6, 1, "#d29a5c");

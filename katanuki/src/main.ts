@@ -31,12 +31,16 @@ const PASS_PT = 100;
 const PERFECT_PT = 100;
 const COMBO_PT = 15; // 1れんぞくごとの上乗せ
 const COMBO_MAX_PT = 300;
+const TRAP_RATE = 0.16; // 板を出すとき、石かねこも置く確率
+const TRAP_HIT = 0.26; // 石・ねこにつまずく横の近さ(u)
+const FALL_SEC = 1.4; // ころんで止まっている秒
 const INTRO_SEC = 5;
 const END_SEC = 3;
 
 type PanelKind = "ground" | "high" | "kid_l" | "kid_r";
 interface Panel { z: number; x: number; base: number; kind: PanelKind; amp: number; ph: number; done: boolean; broken: boolean; }
 interface Prop { z: number; x: number; id: string; }
+interface Trap { z: number; x: number; id: string; done: boolean; gone: boolean; }
 interface Piece { x: number; y: number; vx: number; vy: number; s: number; rot: number; life: number; }
 interface Stage { name: string; bg: string; top: string; road: string[]; side: string[]; edge: string; props: string[]; }
 const STAGES: Stage[] = [
@@ -66,11 +70,11 @@ class View extends g.E {
 
 export function main(param: GameMainParameterObject): void {
 	const imageIds = [
-		"bg_day", "bg_river", "bg_night", "man_run0", "man_run1", "man_jump", "man_stand",
+		"bg_day", "bg_river", "bg_night", "man_run0", "man_run1", "man_jump", "man_stand", "man_fall", "rock", "cat",
 		"panel_ground", "panel_high", "panel_kid_l", "panel_kid_r", "piece", "shadow", "spark", "star",
 		"pole", "wall", "house", "tree", "susuki", "sign", "lantern", "vending", "shop", "logo"
 	];
-	const audioIds = ["jump", "pass", "perfect", "crash", "miss", "beep", "go", "finish", "combo", "land"];
+	const audioIds = ["jump", "pass", "perfect", "crash", "miss", "fall", "beep", "go", "finish", "combo", "land"];
 	const scene = new g.Scene({
 		game: g.game,
 		assetIds: imageIds.concat(audioIds.map((a) => "se_" + a), ["bgm"])
@@ -105,6 +109,7 @@ export function main(param: GameMainParameterObject): void {
 		let py = 0; // ジャンプの高さ(u)
 		let vy = 0;
 		let stun = 0; // ぶつかってふらふらしている秒
+		let fall = 0; // ころんで止まっている秒
 		let score = 0;
 		let combo = 0;
 		let nextGap = 6; // 次の板までの距離
@@ -116,6 +121,7 @@ export function main(param: GameMainParameterObject): void {
 		let runAnim = 0;
 		const panels: Panel[] = [];
 		const props: Prop[] = [];
+		const traps: Trap[] = [];
 		const pieces: Piece[] = [];
 		let propGap = 0;
 
@@ -242,6 +248,7 @@ export function main(param: GameMainParameterObject): void {
 			const runId = Math.floor(runAnim) % 2 === 0 ? "man_run0" : "man_run1";
 			if (phase === "play" || phase === "end") id = py > 0.02 ? "man_jump" : runId;
 			if (stun > 0) id = "man_jump";
+			if (fall > 0) id = "man_fall";
 			const a = img(id);
 			const bob = py <= 0.02 && phase === "play" ? Math.abs(Math.sin(runAnim * Math.PI)) * 8 : 0;
 			r.save();
@@ -274,6 +281,11 @@ export function main(param: GameMainParameterObject): void {
 				if (p.broken) return;
 				const alpha = p.z < 0 ? Math.max(0, 1 + p.z / 0.6) : Math.min(1, (Z_FAR - p.z) / 4);
 				items.push({ z: p.z, fn: () => drawPanel(r, p, alpha) });
+			});
+			traps.forEach((t) => {
+				if (t.gone) return;
+				const alpha = t.z < 0 ? Math.max(0, 1 + t.z / 0.8) : Math.min(1, (Z_FAR - t.z) / 4);
+				items.push({ z: t.z, fn: () => drawSprite(r, t.id, t.x, t.z, alpha) });
 			});
 			items.push({ z: 0.001, fn: () => drawMan(r) });
 			items.sort((a, b) => b.z - a.z);
@@ -357,11 +369,11 @@ export function main(param: GameMainParameterObject): void {
 		scene.onPointMoveCapture.add((ev) => {
 			if (!down) return;
 			down.moved += Math.abs(ev.prevDelta.x) + Math.abs(ev.prevDelta.y);
-			if (phase !== "play") return;
+			if (phase !== "play" || fall > 0) return;
 			px = Math.max(-MOVE, Math.min(MOVE, px + ev.prevDelta.x * DRAG_RATE));
 		});
 		scene.onPointUpCapture.add(() => {
-			if (down && phase === "play" && down.moved < TAP_MOVE && elapsed - down.t < TAP_SEC && py <= 0.001 && stun <= 0) {
+			if (down && phase === "play" && down.moved < TAP_MOVE && elapsed - down.t < TAP_SEC && py <= 0.001 && stun <= 0 && fall <= 0) {
 				vy = JUMP_V;
 				py = 0.002;
 				se("jump", 0.6);
@@ -400,6 +412,18 @@ export function main(param: GameMainParameterObject): void {
 			props[props.length - 1].z = z;
 		}
 
+		// ======== 石・ねこにつまずいて、前にころぶ ========
+		const trip = (t: Trap): void => {
+			fall = FALL_SEC;
+			shake = 0.3;
+			se("fall", 0.8);
+			const cx = screenX(px, 0), cy = groundY(0) - 300;
+			popText("ズデーン！", fontR, 64, cx, cy);
+			if (t.id === "cat") {
+				t.gone = true;
+				popText("ニャッ！", fontY, 48, cx + 160, cy + 120);
+			}
+		};
 		// ======== 通れた/ぶつかった ========
 		const judge = (p: Panel): void => {
 			p.done = true;
@@ -507,8 +531,8 @@ export function main(param: GameMainParameterObject): void {
 			}
 			const playing = phase === "play";
 			// 速さ
-			const target = playing ? SPEED0 + (SPEED1 - SPEED0) * progress() : phase === "end" ? 0 : 0;
-			speed += (target - speed) * Math.min(1, dt * (stun > 0 ? 0.8 : 2));
+			const target = playing && fall <= 0 ? SPEED0 + (SPEED1 - SPEED0) * progress() : 0;
+			speed += (target - speed) * Math.min(1, dt * (fall > 0 ? 6 : stun > 0 ? 0.8 : 2));
 			const move = speed * dt;
 			dist += move;
 			baseX = courseX(dist);
@@ -524,6 +548,7 @@ export function main(param: GameMainParameterObject): void {
 				}
 			}
 			if (stun > 0) stun -= dt;
+			if (fall > 0) fall -= dt;
 			if (shake > 0) shake = Math.max(0, shake - dt);
 			// 面がかわる
 			const st = Math.min(STAGES.length - 1, Math.floor(progress() * STAGES.length));
@@ -546,6 +571,12 @@ export function main(param: GameMainParameterObject): void {
 				nextGap -= move;
 				if (nextGap <= 0 && elapsed < playSec - 1.5) {
 					spawnPanel();
+					// ごくまれに、板と板のあいだに石か寝ているねこ
+					if (panelCount > 4 && rand() < TRAP_RATE) {
+						const gap = SPEED0 + (SPEED1 - SPEED0) * progress();
+						const tx = (rand() * 2 - 1) * 0.75;
+						traps.push({ z: Z_FAR + gap * 0.6, x: tx, id: rand() < 0.5 ? "rock" : "cat", done: false, gone: false });
+					}
 					const sp = SPEED0 + (SPEED1 - SPEED0) * progress();
 					nextGap = sp * (GAP_SEC0 + (GAP_SEC1 - GAP_SEC0) * progress());
 				}
@@ -556,6 +587,16 @@ export function main(param: GameMainParameterObject): void {
 				if (p.amp > 0) p.x = p.base + Math.sin(p.ph + elapsed * 2.2) * p.amp;
 				if (!p.done && p.z <= 0 && playing) judge(p);
 				if (p.z < -D + 0.5) panels.splice(i, 1);
+			}
+			// 石・ねこ
+			for (let i = traps.length - 1; i >= 0; i--) {
+				const t = traps[i];
+				t.z -= move;
+				if (!t.done && t.z <= 0) {
+					t.done = true;
+					if (playing && !t.gone && fall <= 0 && py < 0.2 && Math.abs(px - t.x) < TRAP_HIT) trip(t);
+				}
+				if (t.z < -D + 0.5) traps.splice(i, 1);
 			}
 			// 道ばたの物
 			propGap -= move;

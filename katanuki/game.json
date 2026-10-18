@@ -307,6 +307,36 @@
 					".ogg"
 				]
 			}
+		},
+		"se_fall": {
+			"type": "audio",
+			"path": "audio/se_fall",
+			"systemId": "sound",
+			"duration": 420,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"cat": {
+			"type": "image",
+			"path": "image/cat.png",
+			"width": 136,
+			"height": 80
+		},
+		"man_fall": {
+			"type": "image",
+			"path": "image/man_fall.png",
+			"width": 152,
+			"height": 328
+		},
+		"rock": {
+			"type": "image",
+			"path": "image/rock.png",
+			"width": 112,
+			"height": 64
 		}
 	},
 	"environment": {

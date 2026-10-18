@@ -204,3 +204,5 @@ bgm = raw[:n]
 for i in range(n, len(raw)):
     bgm[i - n] += raw[i]
 save("bgm", bgm, 0.42)
+# ズデッ: 石やねこにつまずいてころぶ(ほかの音が変わらないよう最後に作る)
+save("se_fall", mix(sweep(0.25, 500, 120, "sq", 0.2, 0.6), sweep(0.18, 120, 40, "sin", 0.7), [v * 0.6 for v in lowpass(noise(0.2, 0.7, 2.0), 0.3)], offsets=[0, 0.22, 0.22]))
