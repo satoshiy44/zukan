@@ -429,30 +429,17 @@ function build() {
 	lg.x.drawImage(bd.c, 0, 0);
 	lg.save("logo", 4);
 
-	// ======== アイコン 80x80 を4倍 ========
-	const ic = new Art(80, 80);
-	for (let i = 0; i < 16; i++) {
-		// 集中線っぽい放射
-		const a0 = i / 16 * Math.PI * 2, a1 = a0 + Math.PI / 16;
-		ic.x.fillStyle = i % 2 ? "#ffd040" : "#ff9830";
-		ic.x.beginPath(); ic.x.moveTo(40, 34); ic.x.lineTo(40 + Math.cos(a0) * 80, 34 + Math.sin(a0) * 80);
-		ic.x.lineTo(40 + Math.cos(a1) * 80, 34 + Math.sin(a1) * 80); ic.x.fill();
+	// ======== アイコン(320x320・透過なし): ロゴを夜空色の上にのせる ========
+	{
+		const big = document.createElement("canvas"); big.width = LS * 4; big.height = LS * 4;
+		const bx = big.getContext("2d"); bx.imageSmoothingEnabled = false; bx.drawImage(lg.c, 0, 0, LS * 4, LS * 4);
+		const ic = document.createElement("canvas"); ic.width = 320; ic.height = 320;
+		const ix = ic.getContext("2d");
+		ix.fillStyle = "#16123a"; ix.fillRect(0, 0, 320, 320);
+		ix.imageSmoothingEnabled = true; ix.imageSmoothingQuality = "high";
+		ix.drawImage(big, 0, 0, 320, 320);
+		out.icon = ic.toDataURL("image/png");
 	}
-	// ダンボールのふち(下)
-	ic.rect(0, 58, 80, 22, "#d29a5c"); for (let x = 0; x < 80; x += 4) ic.rect(x, 58, 1, 22, "#c48c50");
-	ic.rect(0, 58, 80, 2, "#9a6a38");
-	ic.x.drawImage(face.c, 18, 6, 44, 50);
-	const tx = new Art(80, 24);
-	tx.x.font = "bold 17px IPAGothic"; tx.x.textAlign = "center"; tx.x.textBaseline = "middle"; tx.x.fillStyle = "#000";
-	tx.x.fillText("かたぬき", 40, 12);
-	const tdd = tx.x.getImageData(0, 0, 80, 24);
-	for (let i = 0; i < 80 * 24; i++) {
-		if (tdd.data[i * 4 + 3] > 110) { tdd.data[i * 4] = 255; tdd.data[i * 4 + 1] = 255; tdd.data[i * 4 + 2] = 255; tdd.data[i * 4 + 3] = 255; }
-		else tdd.data[i * 4 + 3] = 0;
-	}
-	tx.x.putImageData(tdd, 0, 0); tx.outline("#e02828"); tx.outline("#201018");
-	ic.x.drawImage(tx.c, 0, 56);
-	ic.save("icon", 4);
 	return out;
 }
 
