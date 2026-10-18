@@ -11,10 +11,10 @@ const DEPTH = 0.84; // 視野の広さ(1 / tan(画角/2))
 const PLAYER_Z = CAM_H * DEPTH; // カメラから車までの距離
 const DRAW = 140; // 何区切り先まで描くか
 const N_SEG = 6500; // コースの長さ(区切りの数)
-const MAX_SPEED = 10000;
-const BOOST_SPEED = 15000;
+const MAX_SPEED = 11500;
+const BOOST_SPEED = 17000;
 const OFFROAD_SPEED = 3500;
-const ACCEL = 5000;
+const ACCEL = 5800;
 const CENTRIFUGAL = 0.08; // カーブで外へ押される強さ
 const DRAG_RATE = 1 / 450; // 指を1px動かしたときの横移動
 const PLAYER_HALF = 0.19; // 自分の車の半分の幅(道の半分の幅=1)
@@ -426,14 +426,14 @@ export function main(param: GameMainParameterObject): void {
 				si += 24;
 			}
 			// 後半: あいている車線にもお金の列、すき間にじゃまもの
-			if (rand() < dNow * 0.7) {
+			if (rand() < 0.3 + dNow * 0.6) {
 				const l2 = Math.floor(rand() * L.length);
 				for (let k = start; k < si; k += 3) if (!isSplit(k, k)) yen(k, L[l2], small());
 			}
-			if (rand() < dNow * 0.8 && !isSplit(si, si + 5)) {
+			if (rand() < 0.35 + dNow * 0.6 && !isSplit(si, si + 5)) {
 				obj(si + 4, pick(zone === 3 ? ["drock", "cone"] : ["cone", "rock", "box"]), L[Math.floor(rand() * L.length)], "hit");
 			}
-			si += Math.floor((10 + rand() * 10) * (1 - dNow * 0.55));
+			si += Math.floor((5 + rand() * 7) * (1 - dNow * 0.5));
 		}
 
 		// ======== 宝箱(50%で今のお金が2倍、50%で0円) ========
