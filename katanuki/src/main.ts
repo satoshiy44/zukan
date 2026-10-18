@@ -70,7 +70,7 @@ export function main(param: GameMainParameterObject): void {
 		"panel_ground", "panel_high", "panel_kid_l", "panel_kid_r", "piece", "shadow", "spark", "star",
 		"pole", "wall", "house", "tree", "susuki", "sign", "lantern", "vending", "shop", "logo"
 	];
-	const audioIds = ["jump", "pass", "perfect", "crash", "beep", "go", "finish", "combo", "land"];
+	const audioIds = ["jump", "pass", "perfect", "crash", "miss", "beep", "go", "finish", "combo", "land"];
 	const scene = new g.Scene({
 		game: g.game,
 		assetIds: imageIds.concat(audioIds.map((a) => "se_" + a), ["bgm"])
@@ -385,6 +385,12 @@ export function main(param: GameMainParameterObject): void {
 					se("combo", 0.6);
 					popText(combo + "れんぞく！", fontC, 60, W / 2, 150);
 				}
+			} else if (p.kind === "high" && py < HIGH_MIN) {
+				// 高い板の下をくぐってしまった: やぶらずに通りすぎるが、れんぞくは失敗
+				se("miss", 0.7);
+				popText("スカッ…", fontC, 56, screenX(px, 0), groundY(0) - 470);
+				if (combo >= 5) popText("れんぞくがとぎれた…", fontR, 36, W / 2, 210);
+				combo = 0;
 			} else {
 				// ダンボールをつきやぶる
 				p.broken = true;

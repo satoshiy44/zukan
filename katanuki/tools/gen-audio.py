@@ -136,6 +136,8 @@ save("se_pass", mix(sweep(0.09, 900, 300, "sq", 0.16), tone(note(84), 0.12, "sq"
 save("se_perfect", mix(*[bell(note(n), 0.45, 0.2) for n in (88, 91, 96, 100)], offsets=[0, 0.05, 0.1, 0.15]))
 # バリッ: ダンボールをやぶった
 save("se_crash", mix([v for v in lowpass(noise(0.35, 0.9, 1.4), 0.35)], sweep(0.25, 180, 50, "sq", 0.3), [v * 0.6 for v in lowpass(noise(0.2, 0.7, 2.0), 0.7)], offsets=[0, 0, 0.08]))
+# スカッ: 高い板の下を通りすぎた
+save("se_miss", mix(sweep(0.3, 700, 180, "tri", 0.3, 0.7), [v * 0.4 for v in lowpass(noise(0.25, 0.4, 1.5), 0.15)]))
 save("se_beep", tone(note(81), 0.15, "sq", 0.2))
 save("se_go", tone(note(93), 0.5, "sq", 0.22, 0.005, 0.5))
 save("se_finish", mix(*[tone(note(n), 0.5 if i == 3 else 0.14, "sq", 0.18) for i, n in enumerate((72, 76, 79, 84))], offsets=[0, 0.14, 0.28, 0.42]))

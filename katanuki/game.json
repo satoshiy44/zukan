@@ -295,6 +295,18 @@
 			"type": "script",
 			"path": "script/parameterObject.js",
 			"global": true
+		},
+		"se_miss": {
+			"type": "audio",
+			"path": "audio/se_miss",
+			"systemId": "sound",
+			"duration": 300,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
 		}
 	},
 	"environment": {
