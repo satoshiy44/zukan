@@ -277,7 +277,7 @@ export function main(param: GameMainParameterObject): void {
 		const intro = new g.E({ scene });
 		scene.append(intro);
 		intro.append(new g.FilledRect({ scene, cssColor: "rgba(16,8,24,0.55)", width: W, height: H }));
-		const logo = new g.Sprite({ scene, src: img("logo"), x: W / 2, y: 150, anchorX: 0.5, anchorY: 0.5, scaleX: 0.95, scaleY: 0.95 });
+		const logo = new g.Sprite({ scene, src: img("logo"), x: W / 2, y: 150, anchorX: 0.5, anchorY: 0.5 });
 		intro.append(logo);
 		const rule = (t: string, y: number, f: g.Font): void => {
 			const l = new g.Label({

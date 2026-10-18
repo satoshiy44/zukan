@@ -164,7 +164,7 @@
 		"logo": {
 			"type": "image",
 			"path": "image/logo.png",
-			"width": 1200,
+			"width": 1088,
 			"height": 224
 		},
 		"man_jump": {
