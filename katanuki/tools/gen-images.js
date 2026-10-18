@@ -392,7 +392,7 @@ function build() {
 	const fm = new Art(LS, LS);
 	fm.x.drawImage(face.c, FX, FY, 44, 50);
 	const fmk = fm.mask().map((v, i) => (v && Math.floor(i / LS) <= FY + CHIN ? 1 : 0));
-	const hole = dilate(fmk, LS, LS, 1);
+	const hole = dilate(fmk, LS, LS, 3); // 頭より3ドット大きい穴
 	const bTop = 0, bBot = FY + CHIN + 1;
 	const bd = new Art(LS, LS);
 	bd.rect(0, bTop, LS, bBot - bTop, "#d29a5c");
@@ -409,7 +409,12 @@ function build() {
 	const inH = (x, y) => x >= 0 && y >= 0 && x < LS && y < LS && hole[y * LS + x] === 1;
 	for (let y = bTop; y < bBot; y++) for (let x = 0; x < LS; x++) {
 		const i = (y * LS + x) * 4;
-		if (inH(x, y)) { bdd.data[i + 3] = 0; continue; }
+		if (inH(x, y)) {
+			// 頭のまわりのすき間は、板の奥の暗いところ
+			if (fmk[y * LS + x]) bdd.data[i + 3] = 0;
+			else { bdd.data[i] = 0x3a; bdd.data[i + 1] = 0x22; bdd.data[i + 2] = 0x16; bdd.data[i + 3] = 255; }
+			continue;
+		}
 		if (inH(x + 1, y) || inH(x, y + 1)) { bdd.data[i] = 0xf4; bdd.data[i + 1] = 0xd8; bdd.data[i + 2] = 0xa8; }
 		else if (inH(x - 1, y) || inH(x, y - 1)) { bdd.data[i] = 0x7a; bdd.data[i + 1] = 0x4a; bdd.data[i + 2] = 0x22; }
 	}
