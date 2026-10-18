@@ -19,8 +19,10 @@ const JUMP_V = 3.4; // ジャンプの初速(u/秒)
 const GRAVITY = 9.4;
 const TOL = 0.11; // 型からずれてもよい幅(u)
 const PERFECT = 0.04; // ピッタリの幅(u)
-const LOW_MAX = 0.15; // 地面の型: この高さより上だと頭をぶつける
-const HIGH_MIN = 0.28; // 高い型: この高さより上でないと足をぶつける
+const LOW_MAX = 0.15; // ふつうの型: この高さより上だと頭をぶつける
+const HIGH_MIN = 0.28; // 高い型: この高さより上でないと首をぶつける
+const BOARD_TOP = 1.175; // 頭の高さにある板の上のはしの高さ(u)
+const HIGH_LIFT = 0.45; // 高い型の板は、これだけ上にある(u)
 const SPEED0 = 11; // 走る速さ(u/秒)
 const SPEED1 = 20;
 const GAP_SEC0 = 1.5; // 板と板の間(秒)。速くなっても、次の板まで同じくらいの時間がある
@@ -166,6 +168,13 @@ export function main(param: GameMainParameterObject): void {
 		const drawPanel = (r: g.Renderer, p: Panel, alpha: number): void => {
 			const id = "panel_" + p.kind;
 			const sc = scale(p.z) / UNIT;
+			// 板をささえる2本の柱(道の両はし)
+			const top = BOARD_TOP + (p.kind === "high" ? HIGH_LIFT : 0);
+			const s = scale(p.z), gy = groundY(p.z), pw = Math.max(2, 0.05 * s);
+			r.save();
+			if (alpha < 1) r.opacity(alpha);
+			[-ROAD, ROAD - 0.05].forEach((x) => r.fillRect(screenX(x, p.z), gy - top * s, pw, top * s, "#5a4030"));
+			r.restore();
 			// 板は道の幅だけ見せる。型の位置に合わせて絵を切りだす
 			const srcX = Math.round(UNIT * (2 - ROAD - p.x));
 			const srcW = UNIT * ROAD * 2;

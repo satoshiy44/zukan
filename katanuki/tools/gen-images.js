@@ -113,64 +113,61 @@ function build() {
 		}
 		return o;
 	};
-	const shape = (list, shrink) => {
-		// いくつかのポーズを重ねた形
+	// 型は首から上だけ(頭と首。高い型はバンザイの腕も)
+	const NECK = 18; // 絵の上から何ドット目までが首か(その下は肩)
+	const shape = (list, shrink, arms) => {
 		const w = 38, h = 82;
 		let m = new Array(w * h).fill(0);
-		list.forEach((p) => { p.mask().forEach((v, i) => { if (v) m[i] = 1; }); });
+		// 腕(肩)は入れない。バンザイの型だけ腕も入れる
+		const ok = (i) => Math.floor(i / w) <= NECK && (arms || (i % w >= 9 && i % w <= 29));
+		list.forEach((p) => { p.mask().forEach((v, i) => { if (v && ok(i)) m[i] = 1; }); });
 		if (shrink) {
-			// 子ども用: 小さく縮める
+			// 子ども用: 首もとを中心に小さく縮める
 			const s = new Array(w * h).fill(0);
 			for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-				const sx = Math.round(19 + (x - 19) * shrink), sy = Math.round(81 - (81 - y) * shrink);
-				if (sx >= 0 && sy >= 0 && sx < w && sy < h && m[sy * w + sx]) s[y * w + x] = 1;
+				const sx = Math.round(19 + (x - 19) / shrink), sy = Math.round(NECK - (NECK - y) / shrink);
+				if (sx >= 0 && sy >= 0 && sx < w && sy < h && sy <= NECK && m[sy * w + sx]) s[y * w + x] = 1;
 			}
 			m = s;
 		}
 		return { m: dilate(m, w, h, 1), w, h };
 	};
 	const groundShape = shape([poses.run0, poses.run1, poses.stand]);
-	const jumpShape = shape([poses.jump]);
-	const kidShape = shape([poses.stand], 1.55);
-	const cardboard = () => {
+	const jumpShape = shape([poses.jump], 0, true);
+	const kidShape = shape([poses.stand], 0.65);
+	// 頭の高さにだけある横長のダンボール(top〜bottom の行)
+	const BOARD_UP = 12; // 頭のてっぺんより上の余白(ドット)
+	const board = (top, bottom) => {
 		const a = new Art(PW, PH);
-		a.rect(0, 0, PW, PH, "#d29a5c");
-		for (let x = 0; x < PW; x += 4) a.rect(x, 0, 1, PH, "#c48c50");
-		for (let x = 2; x < PW; x += 4) a.rect(x, 0, 1, PH, "#daa468");
-		// しみ・よごれ
-		[[30, 30], [250, 100], [140, 20], [70, 120], [290, 40]].forEach((p) => a.oval(p[0], p[1], 9, 5, "rgba(150,96,50,0.35)"));
+		const hh = bottom - top;
+		a.rect(0, top, PW, hh, "#d29a5c");
+		for (let x = 0; x < PW; x += 4) a.rect(x, top, 1, hh, "#c48c50");
+		for (let x = 2; x < PW; x += 4) a.rect(x, top, 1, hh, "#daa468");
+		[[30, 6], [250, 20], [140, 4], [70, 24], [290, 10]].forEach((p) => a.oval(p[0], top + p[1], 9, 4, "rgba(150,96,50,0.35)"));
 		// ガムテープ
-		a.rect(0, 26, PW, 12, "#e8c890"); a.rect(0, 26, PW, 1, "#f8e0b0"); a.rect(0, 37, PW, 1, "#b88a50");
-		// 天地無用の矢印と、こわれものマーク
+		a.rect(0, top + 5, PW, 6, "#e8c890"); a.rect(0, top + 5, PW, 1, "#f8e0b0"); a.rect(0, top + 10, PW, 1, "#b88a50");
+		// 天地無用の矢印
 		const arrow = (x, y) => {
 			a.rect(x + 3, y + 4, 3, 10, "#d02828"); a.rect(x + 1, y + 4, 7, 1, "#d02828");
 			a.rect(x + 2, y + 3, 5, 1, "#d02828"); a.rect(x + 3, y + 2, 3, 1, "#d02828"); a.rect(x + 4, y + 1, 1, 1, "#d02828");
 		};
-		const glass = (x, y) => {
-			a.rect(x, y, 9, 1, "#d02828"); a.rect(x, y, 1, 5, "#d02828"); a.rect(x + 8, y, 1, 5, "#d02828");
-			a.rect(x + 1, y + 5, 7, 1, "#d02828"); a.rect(x + 4, y + 6, 1, 5, "#d02828"); a.rect(x + 2, y + 11, 5, 1, "#d02828");
-		};
-		[[8, 50], [300, 50], [8, 120], [300, 120]].forEach((p) => { arrow(p[0], p[1]); arrow(p[0] + 7, p[1]); });
-		glass(24, 52); glass(286, 52);
+		[[8, top + 14], [298, top + 14]].forEach((p) => { arrow(p[0], p[1]); arrow(p[0] + 7, p[1]); });
 		// ふち
-		a.rect(0, 0, PW, 3, "#9a6a38"); a.rect(0, PH - 3, PW, 3, "#8a5a30");
+		a.rect(0, top, PW, 2, "#9a6a38"); a.rect(0, bottom - 2, PW, 2, "#8a5a30");
 		return a;
 	};
-	// 形を板からくりぬく(cx = 型の真ん中のドット位置、bottom = 型の足もとの高さ)
+	// 形を板からくりぬく(cx = 型の真ん中のドット位置、bottom = 男の足もとの高さ)
 	const cut = (a, s, cx, bottom) => {
 		const ox = cx - 19, oy = PH - bottom - 82;
 		const inside = (x, y) => {
 			const X = x - ox, Y = y - oy;
 			return X >= 0 && Y >= 0 && X < s.w && Y < s.h && s.m[Y * s.w + X] === 1;
 		};
-		// 型の下が地面まで抜ける(足もと)
-		const reach = (x, y) => inside(x, y) || (bottom === 0 && y >= PH - 4 && inside(x, PH - 5));
 		const d = a.x.getImageData(0, 0, PW, PH);
-		const hole = [];
-		for (let y = 0; y < PH; y++) for (let x = 0; x < PW; x++) hole.push(reach(x, y) ? 1 : 0);
-		const H = (x, y) => x >= 0 && y >= 0 && x < PW && y < PH && hole[y * PW + x] === 1;
+		const H = (x, y) => x >= 0 && y >= 0 && x < PW && y < PH && inside(x, y);
 		for (let y = 0; y < PH; y++) for (let x = 0; x < PW; x++) {
 			const i = (y * PW + x) * 4;
+			if (d.data[i + 3] === 0) continue;
 			if (H(x, y)) { d.data[i + 3] = 0; continue; }
 			// 切り口: 左上は明るく、右下は暗く
 			if (H(x + 1, y) || H(x, y + 1)) { d.data[i] = 0xf4; d.data[i + 1] = 0xd8; d.data[i + 2] = 0xa8; }
@@ -178,12 +175,13 @@ function build() {
 		}
 		a.x.putImageData(d, 0, 0);
 	};
-	const HIGH = 36; // 高い型の足もとの高さ(ドット) = 0.45u
-	let a = cardboard(); cut(a, groundShape, PW / 2, 0); a.save("panel_ground", P);
-	a = cardboard(); cut(a, jumpShape, PW / 2, HIGH); a.save("panel_high", P);
+	const HIGH = 36; // 高い型のときの男の足もとの高さ(ドット) = 0.45u
+	const boardFor = (bottom) => { const oy = PH - bottom - 82; return board(oy - BOARD_UP, oy + NECK + 1); };
+	let a = boardFor(0); cut(a, groundShape, PW / 2, 0); a.save("panel_ground", P);
+	a = boardFor(HIGH); cut(a, jumpShape, PW / 2, HIGH); a.save("panel_high", P);
 	// 2つ穴: 片方は子ども用の小さな型(通れない)
-	a = cardboard(); cut(a, groundShape, PW / 2 - 32, 0); cut(a, kidShape, PW / 2 + 32, 0); a.save("panel_kid_r", P);
-	a = cardboard(); cut(a, groundShape, PW / 2 + 32, 0); cut(a, kidShape, PW / 2 - 32, 0); a.save("panel_kid_l", P);
+	a = boardFor(0); cut(a, groundShape, PW / 2 - 32, 0); cut(a, kidShape, PW / 2 + 32, 0); a.save("panel_kid_r", P);
+	a = boardFor(0); cut(a, groundShape, PW / 2 + 32, 0); cut(a, kidShape, PW / 2 - 32, 0); a.save("panel_kid_l", P);
 
 	// ダンボールのかけら
 	a = new Art(14, 12);
@@ -365,6 +363,35 @@ function build() {
 	lg.x.putImageData(td, 0, 0);
 	lg.outline("#e02828"); lg.outline("#e02828"); lg.outline("#201018");
 	lg.x.drawImage(face.c, (LS - 44) / 2, 2, 44, 50);
+	// 頭の高さに横長のダンボール。頭の形にくりぬいた型から顔が出ている
+	const FX = (LS - 44) / 2, FY = 2, CHIN = 38; // 顔の絵の CHIN 行目までが頭
+	const fm = new Art(LS, LS);
+	fm.x.drawImage(face.c, FX, FY, 44, 50);
+	const fmk = fm.mask().map((v, i) => (v && Math.floor(i / LS) <= FY + CHIN ? 1 : 0));
+	const hole = dilate(fmk, LS, LS, 1);
+	const bTop = FY + 8, bBot = FY + CHIN + 1;
+	const bd = new Art(LS, LS);
+	bd.rect(0, bTop, LS, bBot - bTop, "#d29a5c");
+	for (let x = 0; x < LS; x += 4) bd.rect(x, bTop, 1, bBot - bTop, "#c48c50");
+	bd.rect(0, bTop + 4, LS, 5, "#e8c890"); bd.rect(0, bTop + 4, LS, 1, "#f8e0b0"); bd.rect(0, bTop + 8, LS, 1, "#b88a50");
+	[[4, bTop + 13], [105, bTop + 13]].forEach((q) => {
+		for (let k = 0; k < 2; k++) {
+			const ax = q[0] + k * 5;
+			bd.rect(ax + 1, q[1] + 3, 2, 9, "#d02828"); bd.rect(ax, q[1] + 3, 4, 1, "#d02828"); bd.rect(ax + 1, q[1] + 2, 2, 1, "#d02828");
+		}
+	});
+	bd.rect(0, bTop, LS, 2, "#9a6a38"); bd.rect(0, bBot - 2, LS, 2, "#8a5a30");
+	const bdd = bd.x.getImageData(0, 0, LS, LS);
+	const inH = (x, y) => x >= 0 && y >= 0 && x < LS && y < LS && hole[y * LS + x] === 1;
+	for (let y = bTop; y < bBot; y++) for (let x = 0; x < LS; x++) {
+		const i = (y * LS + x) * 4;
+		if (inH(x, y)) { bdd.data[i + 3] = 0; continue; }
+		if (inH(x + 1, y) || inH(x, y + 1)) { bdd.data[i] = 0xf4; bdd.data[i + 1] = 0xd8; bdd.data[i + 2] = 0xa8; }
+		else if (inH(x - 1, y) || inH(x, y - 1)) { bdd.data[i] = 0x7a; bdd.data[i + 1] = 0x4a; bdd.data[i + 2] = 0x22; }
+	}
+	bd.x.putImageData(bdd, 0, 0);
+	bd.outline();
+	lg.x.drawImage(bd.c, 0, 0);
 	lg.save("logo", 4);
 
 	// ======== アイコン 80x80 を4倍 ========
