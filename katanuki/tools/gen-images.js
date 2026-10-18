@@ -347,14 +347,14 @@ function build() {
 	F(8, 23, 4, 2, "#f88870"); F(28, 23, 4, 2, "#f88870");
 	face.outline(); face.save("face", 8);
 
-	// ======== タイトルロゴ(ドット文字) 272x56 を4倍 ========
-	const lg = new Art(272, 56);
+	// ======== タイトルロゴ(ドット文字) 300x56 を4倍 ========
+	const lg = new Art(300, 56);
 	lg.x.font = "bold 27px IPAGothic"; lg.x.textBaseline = "middle"; lg.x.fillStyle = "#000";
-	lg.x.fillText("かたぬきダッシュ", 58, 30);
+	lg.x.fillText("かたぬきダッシュ", 86, 30);
 	// 文字をくっきりさせて色をぬる(上は黄色、下はオレンジ)
-	const td = lg.x.getImageData(0, 0, 272, 56);
-	for (let y = 0; y < 56; y++) for (let x = 0; x < 272; x++) {
-		const i = (y * 272 + x) * 4;
+	const td = lg.x.getImageData(0, 0, 300, 56);
+	for (let y = 0; y < 56; y++) for (let x = 0; x < 300; x++) {
+		const i = (y * 300 + x) * 4;
 		if (td.data[i + 3] > 110) {
 			const top = y < 29;
 			td.data[i] = 0xff; td.data[i + 1] = top ? 0xf0 : 0xa0; td.data[i + 2] = top ? 0x40 : 0x20; td.data[i + 3] = 255;
@@ -362,7 +362,36 @@ function build() {
 	}
 	lg.x.putImageData(td, 0, 0);
 	lg.outline("#e02828"); lg.outline("#e02828"); lg.outline("#201018");
-	lg.x.drawImage(face.c, 2, 3, 44, 50);
+	// 左: ダンボールの型から顔を出している(型が頭のまわりにある)
+	const BWD = 80;
+	const bd = new Art(BWD, 56);
+	bd.x.drawImage(face.c, 18, 6, 44, 50);
+	const fm = new Art(BWD, 56);
+	fm.x.drawImage(face.c, 18, 6, 44, 50);
+	const fmask = dilate(fm.mask(), BWD, 56, 1);
+	const cb = new Art(BWD, 56);
+	cb.rect(0, 0, BWD, 56, "#d29a5c");
+	for (let x = 0; x < BWD; x += 4) cb.rect(x, 0, 1, 56, "#c48c50");
+	cb.rect(0, 14, BWD, 6, "#e8c890"); cb.rect(0, 14, BWD, 1, "#f8e0b0"); cb.rect(0, 19, BWD, 1, "#b88a50");
+	[[3, 30], [70, 30]].forEach((q) => {
+		for (let k = 0; k < 2; k++) {
+			const ax = q[0] + k * 4;
+			cb.rect(ax + 1, q[1] + 3, 1, 7, "#d02828"); cb.rect(ax, q[1] + 2, 3, 1, "#d02828"); cb.px(ax + 1, q[1] + 1, "#d02828");
+		}
+	});
+	cb.rect(0, 0, BWD, 2, "#9a6a38"); cb.rect(0, 0, 2, 56, "#9a6a38"); cb.rect(BWD - 2, 0, 2, 56, "#8a5a30");
+	const cd = cb.x.getImageData(0, 0, BWD, 56);
+	const inHole = (x, y) => x >= 0 && y >= 0 && x < BWD && y < 56 && fmask[y * BWD + x] === 1;
+	for (let y = 0; y < 56; y++) for (let x = 0; x < BWD; x++) {
+		const i = (y * BWD + x) * 4;
+		if (inHole(x, y)) { cd.data[i + 3] = 0; continue; }
+		if (inHole(x + 1, y) || inHole(x, y + 1)) { cd.data[i] = 0xf4; cd.data[i + 1] = 0xd8; cd.data[i + 2] = 0xa8; }
+		else if (inHole(x - 1, y) || inHole(x, y - 1)) { cd.data[i] = 0x7a; cd.data[i + 1] = 0x4a; cd.data[i + 2] = 0x22; }
+	}
+	cb.x.putImageData(cd, 0, 0);
+	bd.x.drawImage(cb.c, 0, 0);
+	bd.outline();
+	lg.x.drawImage(bd.c, 0, 0);
 	lg.save("logo", 4);
 
 	// ======== アイコン 80x80 を4倍 ========

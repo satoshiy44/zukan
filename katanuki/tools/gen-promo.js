@@ -21,7 +21,7 @@ async function draw(srcs) {
 	g.addColorStop(0, "rgba(16,8,40,1)"); g.addColorStop(0.5, "rgba(16,8,40,0.75)"); g.addColorStop(1, "rgba(16,8,40,0)");
 	x.fillStyle = "#100828"; x.fillRect(0, 0, 1280, 84);
 	x.fillStyle = g; x.fillRect(0, 84, 1280, 160);
-	x.drawImage(im.logo, 640 - 489, 6, 979, 202);
+	x.drawImage(im.logo, 640 - 520, 10, 1040, 194);
 	// 下の帯
 	x.fillStyle = "rgba(16,8,40,0.88)"; x.fillRect(0, 628, 1280, 92);
 	x.fillStyle = "#ffd040"; x.fillRect(0, 628, 1280, 4);
