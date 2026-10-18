@@ -120,9 +120,19 @@ export function main(param: GameMainParameterObject): void {
 		let propGap = 0;
 
 		const scale = (z: number): number => K / (z + D);
-		const groundY = (z: number): number => HOR + CAM_H * scale(z);
+		// コースのカーブ(横)と坂(高さ)。走った距離 d だけで決まるので、みんな同じコース
+		const ramp = (d: number): number => Math.min(1, Math.max(0, (d - 25) / 50));
+		const courseX = (d: number): number => ramp(d) * (6 * Math.sin(d / 45) + 1.5 * Math.sin(d / 22 + 1.3));
+		const courseY = (d: number): number => ramp(d) * (4 * Math.sin(d / 45 + 0.5) + 1.2 * Math.sin(d / 22 + 2));
+		let baseX = 0;
+		let slopeX = 0;
+		let baseY = 0;
+		// 自分の足もとを基準にした、奥(z)の道の横ずれと高さ
+		const curveX = (z: number): number => courseX(dist + z) - baseX - slopeX * z;
+		const elev = (z: number): number => courseY(dist + z) - baseY;
+		const groundY = (z: number): number => HOR + (CAM_H - elev(z)) * scale(z);
 		const camX = (): number => px * 0.35;
-		const screenX = (x: number, z: number): number => W / 2 + (x - camX()) * scale(z);
+		const screenX = (x: number, z: number): number => W / 2 + (x - camX() + curveX(z)) * scale(z);
 
 		// ======== 絵を描く ========
 		const view = new View({ scene, width: W, height: H });
@@ -132,7 +142,7 @@ export function main(param: GameMainParameterObject): void {
 			if (alpha < 1) r.opacity(alpha);
 			r.fillRect(0, 0, W, HOR, st.top);
 			const a = img(st.bg);
-			const off = -camX() * 60;
+			const off = -camX() * 60 - slopeX * 700;
 			let x0 = (((off % a.width) + a.width) % a.width) - a.width;
 			while (x0 < W) {
 				r.drawImage(surf[st.bg], 0, 0, a.width, a.height, x0, HOR + 8 - a.height);
@@ -140,18 +150,44 @@ export function main(param: GameMainParameterObject): void {
 			}
 			r.restore();
 		};
+		// 坂の向こうにかくれるところ: 奥の深さ clipZ[i] から先は、画面の y が clipV[i] より下を描かない
+		const clipZ: number[] = [];
+		const clipV: number[] = [];
+		const clipFor = (z: number): number => {
+			let c = H;
+			for (let i = 0; i < clipZ.length && clipZ[i] <= z; i++) c = clipV[i];
+			return c;
+		};
 		const drawGround = (r: g.Renderer, st: Stage): void => {
-			const step = 4;
-			for (let y = HOR; y < H; y += step) {
-				const s = (y + step / 2 - HOR) / CAM_H;
-				const z = K / s - D;
-				const band = Math.floor((z + dist) / 1.6) % 2 === 0 ? 0 : 1;
-				r.fillRect(0, y, W, step, st.side[band]);
-				const l = W / 2 + (-ROAD - camX()) * s, rr = W / 2 + (ROAD - camX()) * s;
-				r.fillRect(l, y, rr - l, step, st.road[band]);
-				const e = Math.max(1, 0.05 * s);
-				r.fillRect(l - e, y, e, step, st.edge);
-				r.fillRect(rr, y, e, step, st.edge);
+			r.fillRect(0, HOR, W, H - HOR, st.side[0]);
+			// 手前から奥へ、細い帯ごとに描く
+			clipZ.length = 0;
+			clipV.length = 0;
+			let clip = H;
+			let z0 = -0.6;
+			let y0 = groundY(z0), c0 = curveX(z0), s0 = scale(z0);
+			while (z0 < Z_FAR + 2) {
+				const z1 = z0 + 0.15 + Math.max(0, z0) * 0.04;
+				const y1 = groundY(z1), c1 = curveX(z1), s1 = scale(z1);
+				clipZ.push(z0);
+				clipV.push(clip);
+				if (y1 < clip) {
+					const band = ((Math.floor((z0 + dist) / 1.6) % 2) + 2) % 2;
+					const bottom = Math.min(y0, clip);
+					for (let y = Math.max(0, Math.floor(y1)); y < bottom; y += 3) {
+						const t = y0 === y1 ? 0 : (y0 - y) / (y0 - y1);
+						const sc = s0 + (s1 - s0) * t, c = c0 + (c1 - c0) * t;
+						const hh = Math.min(3, bottom - y);
+						r.fillRect(0, y, W, hh, st.side[band]);
+						const l = W / 2 + (-ROAD - camX() + c) * sc, rr = W / 2 + (ROAD - camX() + c) * sc;
+						r.fillRect(l, y, rr - l, hh, st.road[band]);
+						const e = Math.max(1, 0.05 * sc);
+						r.fillRect(l - e, y, e, hh, st.edge);
+						r.fillRect(rr, y, e, hh, st.edge);
+					}
+					clip = Math.min(clip, y1);
+				}
+				z0 = z1; y0 = y1; c0 = c1; s0 = s1;
 			}
 		};
 		const drawSprite = (r: g.Renderer, id: string, x: number, z: number, alpha: number): void => {
@@ -159,10 +195,13 @@ export function main(param: GameMainParameterObject): void {
 			const sc = scale(z) / UNIT;
 			const sx = screenX(x, z);
 			if (sx + a.width * sc / 2 < 0 || sx - a.width * sc / 2 > W) return;
+			const top = groundY(z) - a.height * sc;
+			const visH = Math.min(a.height, (clipFor(z) - top) / sc);
+			if (visH <= 1) return;
 			r.save();
 			if (alpha < 1) r.opacity(alpha);
-			r.transform([sc, 0, 0, sc, sx - a.width * sc / 2, groundY(z) - a.height * sc]);
-			r.drawImage(surf[id], 0, 0, a.width, a.height, 0, 0);
+			r.transform([sc, 0, 0, sc, sx - a.width * sc / 2, top]);
+			r.drawImage(surf[id], 0, 0, a.width, visH, 0, 0);
 			r.restore();
 		};
 		const drawPanel = (r: g.Renderer, p: Panel, alpha: number): void => {
@@ -171,18 +210,23 @@ export function main(param: GameMainParameterObject): void {
 			// 板をささえる2本の柱(道の両はし)
 			const top = BOARD_TOP + (p.kind === "high" ? HIGH_LIFT : 0);
 			const s = scale(p.z), gy = groundY(p.z), pw = Math.max(2, 0.05 * s);
+			const clip = clipFor(p.z);
+			if (clip <= gy - top * s) return;
 			r.save();
 			if (alpha < 1) r.opacity(alpha);
-			[-ROAD, ROAD - 0.05].forEach((x) => r.fillRect(screenX(x, p.z), gy - top * s, pw, top * s, "#5a4030"));
+			const poleH = Math.min(top * s, clip - (gy - top * s));
+			[-ROAD, ROAD - 0.05].forEach((x) => r.fillRect(screenX(x, p.z), gy - top * s, pw, poleH, "#5a4030"));
 			r.restore();
 			// 板は道の幅だけ見せる。型の位置に合わせて絵を切りだす
 			const srcX = Math.round(UNIT * (2 - ROAD - p.x));
 			const srcW = UNIT * ROAD * 2;
 			const h = img(id).height;
+			const visH = Math.min(h, (clip - (gy - h * sc)) / sc);
+			if (visH <= 1) return;
 			r.save();
 			if (alpha < 1) r.opacity(alpha);
 			r.transform([sc, 0, 0, sc, screenX(-ROAD, p.z), groundY(p.z) - h * sc]);
-			r.drawImage(surf[id], srcX, 0, srcW, h, 0, 0);
+			r.drawImage(surf[id], srcX, 0, srcW, visH, 0, 0);
 			r.restore();
 		};
 		const drawMan = (r: g.Renderer): void => {
@@ -467,6 +511,9 @@ export function main(param: GameMainParameterObject): void {
 			speed += (target - speed) * Math.min(1, dt * (stun > 0 ? 0.8 : 2));
 			const move = speed * dt;
 			dist += move;
+			baseX = courseX(dist);
+			slopeX = (courseX(dist + 0.5) - courseX(dist - 0.5));
+			baseY = courseY(dist);
 			runAnim += speed * dt * 0.55;
 			// ジャンプ
 			if (py > 0) {
