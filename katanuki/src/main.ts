@@ -23,8 +23,8 @@ const LOW_MAX = 0.15; // 地面の型: この高さより上だと頭をぶつ�
 const HIGH_MIN = 0.28; // 高い型: この高さより上でないと足をぶつける
 const SPEED0 = 11; // 走る速さ(u/秒)
 const SPEED1 = 20;
-const GAP0 = 15; // 板と板の間(u)
-const GAP1 = 9;
+const GAP_SEC0 = 1.5; // 板と板の間(秒)。速くなっても、次の板まで同じくらいの時間がある
+const GAP_SEC1 = 1.25;
 const PASS_PT = 100;
 const PERFECT_PT = 100;
 const COMBO_PT = 15; // 1れんぞくごとの上乗せ
@@ -484,7 +484,8 @@ export function main(param: GameMainParameterObject): void {
 				nextGap -= move;
 				if (nextGap <= 0 && elapsed < playSec - 1.5) {
 					spawnPanel();
-					nextGap = GAP0 + (GAP1 - GAP0) * progress();
+					const sp = SPEED0 + (SPEED1 - SPEED0) * progress();
+					nextGap = sp * (GAP_SEC0 + (GAP_SEC1 - GAP_SEC0) * progress());
 				}
 			}
 			for (let i = panels.length - 1; i >= 0; i--) {
