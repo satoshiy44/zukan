@@ -347,22 +347,24 @@ function build() {
 	F(8, 23, 4, 2, "#f88870"); F(28, 23, 4, 2, "#f88870");
 	face.outline(); face.save("face", 8);
 
-	// ======== タイトルロゴ(ドット文字) 272x56 を4倍 ========
-	const lg = new Art(272, 56);
-	lg.x.font = "bold 27px IPAGothic"; lg.x.textBaseline = "middle"; lg.x.fillStyle = "#000";
-	lg.x.fillText("かたぬきダッシュ", 58, 30);
-	// 文字をくっきりさせて色をぬる(上は黄色、下はオレンジ)
-	const td = lg.x.getImageData(0, 0, 272, 56);
-	for (let y = 0; y < 56; y++) for (let x = 0; x < 272; x++) {
-		const i = (y * 272 + x) * 4;
+	// ======== タイトルロゴ(正方形) 120x120 を4倍。上に顔、下に2行の題字 ========
+	const LS = 120;
+	const lg = new Art(LS, LS);
+	lg.x.font = "bold 28px IPAGothic"; lg.x.textAlign = "center"; lg.x.textBaseline = "middle"; lg.x.fillStyle = "#000";
+	lg.x.fillText("かたぬき", LS / 2, 72);
+	lg.x.fillText("ダッシュ", LS / 2, 102);
+	// 文字をくっきりさせて色をぬる(各行の上は黄色、下はオレンジ)
+	const td = lg.x.getImageData(0, 0, LS, LS);
+	for (let y = 0; y < LS; y++) for (let x = 0; x < LS; x++) {
+		const i = (y * LS + x) * 4;
 		if (td.data[i + 3] > 110) {
-			const top = y < 29;
+			const top = (y < 87 ? y - 58 : y - 88) < 14;
 			td.data[i] = 0xff; td.data[i + 1] = top ? 0xf0 : 0xa0; td.data[i + 2] = top ? 0x40 : 0x20; td.data[i + 3] = 255;
 		} else td.data[i + 3] = 0;
 	}
 	lg.x.putImageData(td, 0, 0);
 	lg.outline("#e02828"); lg.outline("#e02828"); lg.outline("#201018");
-	lg.x.drawImage(face.c, 2, 3, 44, 50);
+	lg.x.drawImage(face.c, (LS - 44) / 2, 2, 44, 50);
 	lg.save("logo", 4);
 
 	// ======== アイコン 80x80 を4倍 ========

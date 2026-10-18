@@ -16,12 +16,11 @@ async function draw(srcs) {
 	const x = c.getContext("2d");
 	x.imageSmoothingEnabled = false;
 	x.drawImage(im.shot, 0, 0, 1280, 720);
-	// 上の点数・時間の帯はロゴでかくす
-	const g = x.createLinearGradient(0, 84, 0, 244);
-	g.addColorStop(0, "rgba(16,8,40,1)"); g.addColorStop(0.5, "rgba(16,8,40,0.75)"); g.addColorStop(1, "rgba(16,8,40,0)");
-	x.fillStyle = "#100828"; x.fillRect(0, 0, 1280, 84);
-	x.fillStyle = g; x.fillRect(0, 84, 1280, 160);
-	x.drawImage(im.logo, 640 - 489, 6, 979, 202);
+	// 左上の点数はロゴの台紙でかくす
+	x.fillStyle = "#100828";
+	x.beginPath(); x.roundRect(0, 0, 404, 388, [0, 0, 28, 0]); x.fill();
+	x.fillStyle = "#ffd040"; x.fillRect(0, 384, 404, 4); x.fillRect(400, 0, 4, 388);
+	x.drawImage(im.logo, 22, 14, 360, 360);
 	// 下の帯
 	x.fillStyle = "rgba(16,8,40,0.88)"; x.fillRect(0, 628, 1280, 92);
 	x.fillStyle = "#ffd040"; x.fillRect(0, 628, 1280, 4);
