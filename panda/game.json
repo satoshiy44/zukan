@@ -1,0 +1,382 @@
+{
+	"width": 1280,
+	"height": 720,
+	"fps": 30,
+	"main": "./script/_bootstrap.js",
+	"assets": {
+		"bgm": {
+			"type": "audio",
+			"path": "audio/bgm",
+			"systemId": "music",
+			"duration": 25490,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			},
+			"loop": true
+		},
+		"se_beep": {
+			"type": "audio",
+			"path": "audio/se_beep",
+			"systemId": "sound",
+			"duration": 150,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_break": {
+			"type": "audio",
+			"path": "audio/se_break",
+			"systemId": "sound",
+			"duration": 900,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_cancel": {
+			"type": "audio",
+			"path": "audio/se_cancel",
+			"systemId": "sound",
+			"duration": 190,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_carrot": {
+			"type": "audio",
+			"path": "audio/se_carrot",
+			"systemId": "sound",
+			"duration": 120,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_castle": {
+			"type": "audio",
+			"path": "audio/se_castle",
+			"systemId": "sound",
+			"duration": 300,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_finish": {
+			"type": "audio",
+			"path": "audio/se_finish",
+			"systemId": "sound",
+			"duration": 920,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_go": {
+			"type": "audio",
+			"path": "audio/se_go",
+			"systemId": "sound",
+			"duration": 740,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_hit": {
+			"type": "audio",
+			"path": "audio/se_hit",
+			"systemId": "sound",
+			"duration": 50,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_ice": {
+			"type": "audio",
+			"path": "audio/se_ice",
+			"systemId": "sound",
+			"duration": 250,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_ng": {
+			"type": "audio",
+			"path": "audio/se_ng",
+			"systemId": "sound",
+			"duration": 150,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_pea": {
+			"type": "audio",
+			"path": "audio/se_pea",
+			"systemId": "sound",
+			"duration": 60,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_place": {
+			"type": "audio",
+			"path": "audio/se_place",
+			"systemId": "sound",
+			"duration": 180,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_poof": {
+			"type": "audio",
+			"path": "audio/se_poof",
+			"systemId": "sound",
+			"duration": 200,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_roar": {
+			"type": "audio",
+			"path": "audio/se_roar",
+			"systemId": "sound",
+			"duration": 450,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_splash": {
+			"type": "audio",
+			"path": "audio/se_splash",
+			"systemId": "sound",
+			"duration": 300,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"bg": {
+			"type": "image",
+			"path": "image/bg.png",
+			"width": 1280,
+			"height": 720
+		},
+		"card": {
+			"type": "image",
+			"path": "image/card.png",
+			"width": 150,
+			"height": 104
+		},
+		"card_on": {
+			"type": "image",
+			"path": "image/card_on.png",
+			"width": 150,
+			"height": 104
+		},
+		"castle": {
+			"type": "image",
+			"path": "image/castle.png",
+			"width": 300,
+			"height": 300
+		},
+		"e_devil": {
+			"type": "image",
+			"path": "image/e_devil.png",
+			"width": 110,
+			"height": 96
+		},
+		"e_goblin": {
+			"type": "image",
+			"path": "image/e_goblin.png",
+			"width": 90,
+			"height": 96
+		},
+		"e_ogre": {
+			"type": "image",
+			"path": "image/e_ogre.png",
+			"width": 140,
+			"height": 140
+		},
+		"e_slime": {
+			"type": "image",
+			"path": "image/e_slime.png",
+			"width": 90,
+			"height": 80
+		},
+		"e_witch": {
+			"type": "image",
+			"path": "image/e_witch.png",
+			"width": 100,
+			"height": 110
+		},
+		"logo": {
+			"type": "image",
+			"path": "image/logo.png",
+			"width": 480,
+			"height": 480
+		},
+		"p_carrot": {
+			"type": "image",
+			"path": "image/p_carrot.png",
+			"width": 40,
+			"height": 20
+		},
+		"p_ice": {
+			"type": "image",
+			"path": "image/p_ice.png",
+			"width": 26,
+			"height": 26
+		},
+		"p_pea": {
+			"type": "image",
+			"path": "image/p_pea.png",
+			"width": 20,
+			"height": 20
+		},
+		"p_water": {
+			"type": "image",
+			"path": "image/p_water.png",
+			"width": 28,
+			"height": 28
+		},
+		"poof": {
+			"type": "image",
+			"path": "image/poof.png",
+			"width": 80,
+			"height": 80
+		},
+		"ring": {
+			"type": "image",
+			"path": "image/ring.png",
+			"width": 200,
+			"height": 200
+		},
+		"ring_ng": {
+			"type": "image",
+			"path": "image/ring_ng.png",
+			"width": 200,
+			"height": 200
+		},
+		"roar": {
+			"type": "image",
+			"path": "image/roar.png",
+			"width": 200,
+			"height": 200
+		},
+		"splash": {
+			"type": "image",
+			"path": "image/splash.png",
+			"width": 200,
+			"height": 200
+		},
+		"star": {
+			"type": "image",
+			"path": "image/star.png",
+			"width": 40,
+			"height": 40
+		},
+		"u_chick": {
+			"type": "image",
+			"path": "image/u_chick.png",
+			"width": 100,
+			"height": 100
+		},
+		"u_elephant": {
+			"type": "image",
+			"path": "image/u_elephant.png",
+			"width": 100,
+			"height": 100
+		},
+		"u_lion": {
+			"type": "image",
+			"path": "image/u_lion.png",
+			"width": 100,
+			"height": 100
+		},
+		"u_penguin": {
+			"type": "image",
+			"path": "image/u_penguin.png",
+			"width": 100,
+			"height": 100
+		},
+		"u_rabbit": {
+			"type": "image",
+			"path": "image/u_rabbit.png",
+			"width": 100,
+			"height": 100
+		},
+		"_bootstrap": {
+			"type": "script",
+			"path": "script/_bootstrap.js",
+			"global": true
+		},
+		"main": {
+			"type": "script",
+			"path": "script/main.js",
+			"global": true
+		},
+		"parameterObject": {
+			"type": "script",
+			"path": "script/parameterObject.js",
+			"global": true
+		}
+	},
+	"environment": {
+		"sandbox-runtime": "3",
+		"akashic-runtime": {
+			"version": "~3.13.4-0",
+			"flavor": "-canvas"
+		},
+		"nicolive": {
+			"supportedModes": [
+				"ranking"
+			],
+			"preferredSessionParameters": {
+				"totalTimeLimit": 90
+			}
+		}
+	},
+	"globalScripts": []
+}
