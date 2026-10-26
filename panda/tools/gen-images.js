@@ -365,15 +365,16 @@ function build(course) {
 		tw.outline("#ffffff"); tw.outline(OL);
 		// リボン「まもれ！」
 		const ir = new Art(80, 80);
-		ir.rect(1, 45, 8, 9, "#c03a6a"); ir.rect(71, 45, 8, 9, "#c03a6a");
+		// 紫よりのピンク
+		ir.rect(1, 45, 8, 9, "#8a3aa8"); ir.rect(71, 45, 8, 9, "#8a3aa8");
 		ir.x.clearRect(1, 48, 2, 3); ir.x.clearRect(77, 48, 2, 3);
-		ir.rect(6, 41, 68, 12, "#ff6a9a"); ir.rect(6, 41, 68, 2, "#ff9ab8"); ir.rect(6, 51, 68, 2, "#e04a7a");
+		ir.rect(6, 41, 68, 12, "#c85ac8"); ir.rect(6, 41, 68, 2, "#e08ae0"); ir.rect(6, 51, 68, 2, "#a040a8");
 		ir.outline();
 		ic.x.drawImage(ir.c, 0, 0);
 		const mw = new Art(80, 16);
 		mw.x.font = "bold 12px IPAGothic"; mw.x.textAlign = "center"; mw.x.textBaseline = "middle"; mw.x.fillStyle = "#ffffff";
 		mw.x.fillText("まもれ！", 40, 8);
-		mw.crisp(); mw.outline("#8a2a4a");
+		mw.crisp(); mw.outline("#5a2070");
 		ic.x.drawImage(mw.c, 0, 39);
 		ic.x.drawImage(tw.c, 0, 56);
 		out.icon = ic.big(4).toDataURL("image/png");
