@@ -31,36 +31,40 @@ const PATHS: number[][][] = [
 ];
 
 type UnitKind = "chick" | "rabbit" | "penguin" | "elephant" | "lion";
-interface UnitDef { kind: UnitKind; name: string; cost: number; range: number; rate: number; dmg: number; desc: string; }
+interface UnitDef { kind: UnitKind; name: string; cost: number; range: number; rate: number; dmg: number; hp: number; desc: string; }
 const UNITS: UnitDef[] = [
-	{ kind: "chick", name: "ひよこ", cost: 2, range: 135, rate: 0.45, dmg: 2, desc: "まめでっぽう" },
-	{ kind: "rabbit", name: "うさぎ", cost: 5, range: 200, rate: 0.8, dmg: 5, desc: "にんじんミサイル" },
-	{ kind: "penguin", name: "ペンギン", cost: 10, range: 165, rate: 1.0, dmg: 3, desc: "こおりで3体まで足止め" },
-	{ kind: "elephant", name: "ゾウ", cost: 20, range: 190, rate: 1.5, dmg: 9, desc: "みずでっぽう(まわりも)" },
-	{ kind: "lion", name: "ライオン", cost: 30, range: 160, rate: 1.8, dmg: 14, desc: "ほえて全体こうげき" }
+	{ kind: "chick", name: "ひよこ", cost: 2, range: 135, rate: 0.45, dmg: 2, hp: 10, desc: "まめでっぽう" },
+	{ kind: "rabbit", name: "うさぎ", cost: 5, range: 200, rate: 0.8, dmg: 5, hp: 12, desc: "にんじんミサイル" },
+	{ kind: "penguin", name: "ペンギン", cost: 10, range: 165, rate: 1.0, dmg: 3, hp: 24, desc: "こおりで3体まで足止め" },
+	{ kind: "elephant", name: "ゾウ", cost: 20, range: 190, rate: 1.5, dmg: 9, hp: 45, desc: "みずでっぽう(まわりも)" },
+	{ kind: "lion", name: "ライオン", cost: 30, range: 160, rate: 1.8, dmg: 14, hp: 60, desc: "ほえて全体こうげき" }
 ];
 type EnemyKind = "slime" | "mini" | "goblin" | "devil" | "witch" | "ogre";
 interface EnemyDef {
 	kind: EnemyKind; img: string; hp: number; speed: number; pts: number; dmg: number; scale: number; bounty: number; armor: number;
+	hit: number; reach: number; // 歩きながら、近くの動物をこうげきする力ととどく距離
 }
 const ENEMIES: { [k: string]: EnemyDef } = {
 	// スライム: たおすと小さいスライム2ひきに分かれる
-	slime: { kind: "slime", img: "e_slime", hp: 8, speed: 46, pts: 100, dmg: 1, scale: 0.7, bounty: 1, armor: 0 },
-	mini: { kind: "mini", img: "e_slime", hp: 3, speed: 62, pts: 50, dmg: 1, scale: 0.42, bounty: 0, armor: 0 },
+	slime: { kind: "slime", img: "e_slime", hp: 8, speed: 46, pts: 100, dmg: 1, scale: 0.7, bounty: 1, armor: 0, hit: 2, reach: 70 },
+	mini: { kind: "mini", img: "e_slime", hp: 3, speed: 62, pts: 50, dmg: 1, scale: 0.42, bounty: 0, armor: 0, hit: 1, reach: 65 },
 	// ゴブリン: よろいで、こうげきが1へる(ひよこの豆は効きにくい)
-	goblin: { kind: "goblin", img: "e_goblin", hp: 14, speed: 58, pts: 200, dmg: 2, scale: 0.72, bounty: 2, armor: 1 },
+	goblin: { kind: "goblin", img: "e_goblin", hp: 14, speed: 58, pts: 200, dmg: 2, scale: 0.72, bounty: 2, armor: 1, hit: 4, reach: 72 },
 	// 悪魔: とても速い(ペンギンの足止めが効く)
-	devil: { kind: "devil", img: "e_devil", hp: 14, speed: 92, pts: 300, dmg: 3, scale: 0.7, bounty: 2, armor: 0 },
+	devil: { kind: "devil", img: "e_devil", hp: 14, speed: 92, pts: 300, dmg: 3, scale: 0.7, bounty: 2, armor: 0, hit: 3, reach: 72 },
 	// 魔女: まわりの敵を回復する(先にたおしたい)
-	witch: { kind: "witch", img: "e_witch", hp: 28, speed: 48, pts: 500, dmg: 4, scale: 0.75, bounty: 4, armor: 0 },
-	ogre: { kind: "ogre", img: "e_ogre", hp: 130, speed: 30, pts: 2000, dmg: 10, scale: 0.9, bounty: 15, armor: 2 }
+	witch: { kind: "witch", img: "e_witch", hp: 28, speed: 48, pts: 500, dmg: 4, scale: 0.75, bounty: 4, armor: 0, hit: 4, reach: 140 },
+	ogre: { kind: "ogre", img: "e_ogre", hp: 130, speed: 30, pts: 2000, dmg: 10, scale: 0.9, bounty: 15, armor: 2, hit: 12, reach: 90 }
 };
 
-interface Unit { def: UnitDef; x: number; y: number; cool: number; spr: g.Sprite; bounce: number; lv: number; lvLabel: g.Label | null; }
+interface Unit {
+	def: UnitDef; x: number; y: number; cool: number; spr: g.Sprite; bounce: number; lv: number; lvLabel: g.Label | null;
+	hp: number; maxHp: number; barBg: g.FilledRect; bar: g.FilledRect; flash: number; dead: boolean;
+}
 interface Enemy {
 	def: EnemyDef; path: number; d: number; hp: number; maxHp: number; x: number; y: number;
 	slow: number; flash: number; e: g.E; spr: g.Sprite; bar: g.FilledRect; dead: boolean;
-	stop: number; atk: number; lunge: number; heal: number;
+	stop: number; atk: number; lunge: number; heal: number; hitCd: number; lx: number; ly: number;
 }
 interface Shot {
 	kind: string; x: number; y: number; tx: number; ty: number; target: Enemy | null;
@@ -289,7 +293,13 @@ export function main(param: GameMainParameterObject): void {
 				scene, src: img("u_" + def.kind), x, y: y + 30, anchorX: 0.5, anchorY: 0.92, scaleX: 0.8, scaleY: 0.8
 			});
 			world.append(spr);
-			units.push({ def, x, y, cool: rand() * def.rate, spr, bounce: 0.3, lv: 1, lvLabel: null });
+			// HPバー(へったときだけ見せる)
+			const barBg = new g.FilledRect({ scene, cssColor: "#3a2416", x: x - 24, y: y + 32, width: 48, height: 8 });
+			const bar = new g.FilledRect({ scene, cssColor: "#5ad04a", x: x - 22, y: y + 34, width: 44, height: 4 });
+			barBg.hide(); bar.hide();
+			ui.append(barBg); ui.append(bar);
+			units.push({ def, x, y, cool: rand() * def.rate, spr, bounce: 0.3, lv: 1, lvLabel: null,
+				hp: def.hp, maxHp: def.hp, barBg, bar, flash: 0, dead: false });
 			se("place", 0.6);
 			showRing("ring", x, y, def.range);
 			burst("star", x, y - 20, 40, 0.4);
@@ -305,8 +315,7 @@ export function main(param: GameMainParameterObject): void {
 					if (phase === "setup") {
 						// 配置タイム: タップで戻す
 						budget += u.def.cost + upCost(u.def) * (u.lv - 1);
-						u.spr.destroy();
-						if (u.lvLabel) u.lvLabel.destroy();
+						removeUnit(u);
 						units.splice(i, 1);
 						se("cancel", 0.6);
 						refreshCards();
@@ -317,6 +326,27 @@ export function main(param: GameMainParameterObject): void {
 			place(x, y);
 		});
 
+		const removeUnit = (u: Unit): void => {
+			u.dead = true;
+			u.spr.destroy(); u.barBg.destroy(); u.bar.destroy();
+			if (u.lvLabel) u.lvLabel.destroy();
+		};
+		// 敵のこうげきで動物がダメージ
+		const hurtUnit = (u: Unit, dmg: number): void => {
+			if (u.dead) return;
+			u.hp -= dmg;
+			u.flash = 0.15;
+			u.barBg.show(); u.bar.show();
+			u.bar.width = Math.max(0, 44 * u.hp / u.maxHp);
+			u.bar.cssColor = u.hp > u.maxHp * 0.5 ? "#5ad04a" : u.hp > u.maxHp * 0.25 ? "#f0c040" : "#ff4a4a";
+			u.bar.modified();
+			if (u.hp <= 0) {
+				removeUnit(u);
+				se("break", 0.35);
+				burst("poof", u.x, u.y - 20, 90, 0.5);
+				pop(u.def.name + "がやられた…", fontR, 24, u.x, u.y - 90);
+			}
+		};
 		// パワーアップ: こうげき1.6倍ずつ、はんいと速さも少し上がる
 		const upCost = (d: UnitDef): number => Math.max(2, Math.ceil(d.cost * 0.8));
 		const dmgOf = (u: Unit): number => u.def.dmg * (1 + 0.6 * (u.lv - 1));
@@ -332,6 +362,9 @@ export function main(param: GameMainParameterObject): void {
 			}
 			budget -= c;
 			u.lv++;
+			u.maxHp = Math.round(u.def.hp * (1 + 0.5 * (u.lv - 1)));
+			u.hp = u.maxHp; // パワーアップで全回復
+			u.barBg.hide(); u.bar.hide();
 			u.bounce = 0.4;
 			se("place", 0.7);
 			burst("star", u.x, u.y - 30, 70, 0.5);
@@ -395,7 +428,8 @@ export function main(param: GameMainParameterObject): void {
 			world.append(e);
 			const hp = Math.round(def.hp * mul);
 			enemies.push({ def, path, d: d0, hp, maxHp: hp, x: -999, y: -999, slow: 0, flash: 0, e, spr, bar, dead: false,
-				stop: lens[path][lens[path].length - 1] - CASTLE_R - rand() * 45, atk: 0.4, lunge: 0, heal: 1.5 });
+				stop: lens[path][lens[path].length - 1] - CASTLE_R - rand() * 45, atk: 0.4, lunge: 0, heal: 1.5,
+				hitCd: 0.5 + rand() * 0.5, lx: CASTLE_X, ly: CASTLE_Y });
 		};
 		// ウェーブ: 10びょうごとに、数がふえていく。3・5・7ウェーブ目はボス
 		let waveT = 0;
@@ -434,7 +468,7 @@ export function main(param: GameMainParameterObject): void {
 		};
 		// お城に着いた敵は、そこに居すわってこうげきし続ける
 		const hitCastle = (en: Enemy): void => {
-			en.lunge = 0.25;
+			en.lunge = 0.25; en.lx = CASTLE_X; en.ly = CASTLE_Y;
 			castleHp -= en.def.dmg;
 			penalty += en.def.dmg * HIT_PENALTY;
 			castleShake = 0.3;
@@ -583,6 +617,26 @@ export function main(param: GameMainParameterObject): void {
 						if (healed) pop("かいふく♪", fontC, 22, en.x, en.y - 90);
 					}
 				}
+				if (phase === "battle") {
+					en.hitCd -= dt;
+					if (en.hitCd <= 0) {
+						let tgt: Unit | null = null;
+						let best = en.def.reach;
+						units.forEach((u) => {
+							const dd = dist(u.x, u.y, en.x, en.y);
+							if (!u.dead && dd <= best) {
+								best = dd; tgt = u;
+							}
+						});
+						if (tgt) {
+							const t = tgt as Unit;
+							en.hitCd = 1.2;
+							en.lunge = 0.2; en.lx = t.x; en.ly = t.y;
+							hurtUnit(t, en.def.hit);
+							burst(en.def.kind === "witch" ? "p_ice" : "star", t.x, t.y - 30, 30, 0.25);
+						} else en.hitCd = 0.2;
+					}
+				}
 				if (en.d >= en.stop) {
 					en.d = en.stop;
 					if (phase === "battle") {
@@ -596,7 +650,7 @@ export function main(param: GameMainParameterObject): void {
 					// お城に向かってとびかかる
 					en.lunge -= dt;
 					const k = Math.sin(Math.max(0, en.lunge) / 0.25 * Math.PI) * 14;
-					const dx = CASTLE_X - en.x, dy = CASTLE_Y - en.y, l = Math.sqrt(dx * dx + dy * dy) || 1;
+					const dx = en.lx - en.x, dy = en.ly - en.y, l = Math.sqrt(dx * dx + dy * dy) || 1;
 					en.x += dx / l * k; en.y += dy / l * k;
 				}
 				en.e.x = en.x; en.e.y = en.y + Math.sin(battleT * 10 + i) * 2;
@@ -610,7 +664,11 @@ export function main(param: GameMainParameterObject): void {
 				en.spr.modified();
 			}
 			// 動物のこうげき
+			for (let i = units.length - 1; i >= 0; i--) if (units[i].dead) units.splice(i, 1);
 			units.forEach((u) => {
+				if (u.flash > 0) {
+					u.flash -= dt; u.spr.opacity = Math.floor(u.flash * 30) % 2 ? 0.4 : 1;
+				} else u.spr.opacity = 1;
 				if (phase === "battle") {
 					u.cool -= dt;
 					if (u.cool <= 0) {
