@@ -5,7 +5,7 @@ const W = 1280;
 const H = 720;
 const SETUP_SEC = 20; // さいしょに動物を置く時間
 const END_SEC = 3;
-const BUDGET = 50; // 置くのに使えるポイント(さいしょ)
+const BUDGET = 100; // 置くのに使えるポイント(さいしょ)
 const REGEN = 3; // 戦い中に1びょうごとにふえるポイント
 const WAVE_SEC = 10; // ウェーブの長さ
 const MAX_LV = 3; // パワーアップの上限
@@ -390,7 +390,7 @@ export function main(param: GameMainParameterObject): void {
 		intro.append(new g.FilledRect({ scene, cssColor: "rgba(30,20,10,0.55)", width: W, height: 606 }));
 		intro.append(new g.Sprite({ scene, src: img("logo"), x: 330, y: 300, anchorX: 0.5, anchorY: 0.5, scaleX: 0.95, scaleY: 0.95 }));
 		const rules = [
-			"① 50ptで、どうぶつを道のそばに配置！",
+			"① 100ptで、どうぶつを道のそばに配置！",
 			"② ポイントは時間と敵をたおすとふえる",
 			"　 戦いの間も、置いたりパワーアップできる",
 			"③ 敵をたおすとスコアゲット！",
