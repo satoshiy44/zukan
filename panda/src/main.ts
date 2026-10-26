@@ -5,8 +5,8 @@ const W = 1280;
 const H = 720;
 const SETUP_SEC = 20; // さいしょに動物を置く時間
 const END_SEC = 3;
-const BUDGET = 100; // 置くのに使えるポイント(さいしょ)
-const REGEN = 2.5; // 戦い中に1びょうごとにふえるポイント
+const BUDGET = 50; // 置くのに使えるポイント(さいしょ)
+const REGEN = 4; // 戦い中に1びょうごとにふえるポイント
 const WAVE_SEC = 10; // ウェーブの長さ
 const MAX_LV = 3; // パワーアップの上限
 const CASTLE_X = 640;
@@ -14,8 +14,8 @@ const CASTLE_Y = 330;
 const CASTLE_HP = 120;
 const CASTLE_R = 70; // 敵がここまで来たらお城をこうげき
 const BREAK_PENALTY = 2000; // お城がこわれたときのマイナス
-const HIT_PENALTY = 30; // 敵のこうげき1あたりのマイナス
-const ATTACK_SEC = 2.0; // お城に着いた敵が、こうげきする間かく
+const HIT_PENALTY = 15; // 敵のこうげき1あたりのマイナス
+const ATTACK_SEC = 2.5; // お城に着いた敵が、こうげきする間かく
 const ROAD_KEEP = 48; // 道からこれだけはなさないと置けない
 const UNIT_GAP = 52; // 動物どうしの間
 const FIELD_TOP = 70;
@@ -25,7 +25,9 @@ const PATHS: number[][][] = [
 	[[-60, 170], [210, 170], [290, 300], [520, 330]],
 	[[1340, 520], [1060, 520], [980, 380], [760, 340]],
 	[[930, -60], [930, 110], [740, 150], [660, 230]],
-	[[300, 780], [300, 520], [500, 500], [600, 430]]
+	[[300, 780], [300, 520], [500, 500], [600, 430]],
+	[[330, -60], [330, 70], [470, 100], [585, 245]],
+	[[1000, 780], [1000, 630], [820, 590], [705, 420]]
 ];
 
 type UnitKind = "chick" | "rabbit" | "penguin" | "elephant" | "lion";
@@ -346,7 +348,7 @@ export function main(param: GameMainParameterObject): void {
 		intro.append(new g.FilledRect({ scene, cssColor: "rgba(30,20,10,0.55)", width: W, height: 606 }));
 		intro.append(new g.Sprite({ scene, src: img("logo"), x: 330, y: 300, anchorX: 0.5, anchorY: 0.5, scaleX: 0.95, scaleY: 0.95 }));
 		const rules = [
-			"① 100ptで、どうぶつを道のそばに配置！",
+			"① 50ptで、どうぶつを道のそばに配置！",
 			"② ポイントは時間と敵をたおすとふえる",
 			"　 戦いの間も、置いたりパワーアップできる",
 			"③ 敵をたおすとスコアゲット！",
@@ -537,7 +539,7 @@ export function main(param: GameMainParameterObject): void {
 				if (waveT <= 0 && battleT < playSec - 4) {
 					wave++;
 					waveT = WAVE_SEC;
-					waveLeft = 5 + wave * 3;
+					waveLeft = 8 + wave * 5;
 					spawnGap = (WAVE_SEC - 3) / waveLeft;
 					spawnLeft = 0;
 					pop("ウェーブ " + wave + "！", fontY, 64, W / 2, 200);
