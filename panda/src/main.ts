@@ -6,7 +6,7 @@ const H = 720;
 const SETUP_SEC = 20; // さいしょに動物を置く時間
 const END_SEC = 3;
 const BUDGET = 50; // 置くのに使えるポイント(さいしょ)
-const REGEN = 4; // 戦い中に1びょうごとにふえるポイント
+const REGEN = 3; // 戦い中に1びょうごとにふえるポイント
 const WAVE_SEC = 10; // ウェーブの長さ
 const MAX_LV = 3; // パワーアップの上限
 const CASTLE_X = 640;
@@ -14,7 +14,7 @@ const CASTLE_Y = 330;
 const CASTLE_HP = 120;
 const CASTLE_R = 70; // 敵がここまで来たらお城をこうげき
 const BREAK_PENALTY = 2000; // お城がこわれたときのマイナス
-const HIT_PENALTY = 15; // 敵のこうげき1あたりのマイナス
+const HIT_PENALTY = 25; // 敵のこうげき1あたりのマイナス
 const ATTACK_SEC = 2.5; // お城に着いた敵が、こうげきする間かく
 const ROAD_KEEP = 48; // 道からこれだけはなさないと置けない
 const UNIT_GAP = 42; // 動物どうしの間
@@ -48,20 +48,20 @@ interface EnemyDef {
 const ENEMIES: { [k: string]: EnemyDef } = {
 	// スライム: たおすと小さいスライム2ひきに分かれる
 	slime: { kind: "slime", img: "e_slime", hp: 8, speed: 46, pts: 100, dmg: 1,
-		scale: 0.55, bounty: 1, armor: 0, hit: 2, reach: 60, shot: "" },
+		scale: 0.55, bounty: 1, armor: 0, hit: 3, reach: 60, shot: "" },
 	mini: { kind: "mini", img: "e_slime", hp: 3, speed: 62, pts: 50, dmg: 1,
 		scale: 0.33, bounty: 0, armor: 0, hit: 1, reach: 55, shot: "" },
 	// ゴブリン: よろいで、こうげきが1へる(ひよこの豆は効きにくい)
 	goblin: { kind: "goblin", img: "e_goblin", hp: 14, speed: 58, pts: 200, dmg: 2,
-		scale: 0.56, bounty: 2, armor: 1, hit: 3, reach: 120, shot: "e_rock" },
+		scale: 0.56, bounty: 2, armor: 1, hit: 4, reach: 120, shot: "e_rock" },
 	// 悪魔: とても速い(ペンギンの足止めが効く)
 	devil: { kind: "devil", img: "e_devil", hp: 14, speed: 92, pts: 300, dmg: 3,
-		scale: 0.55, bounty: 2, armor: 0, hit: 3, reach: 135, shot: "e_fire" },
+		scale: 0.55, bounty: 2, armor: 0, hit: 4, reach: 135, shot: "e_fire" },
 	// 魔女: まわりの敵を回復する(先にたおしたい)
 	witch: { kind: "witch", img: "e_witch", hp: 28, speed: 48, pts: 500, dmg: 4,
-		scale: 0.58, bounty: 4, armor: 0, hit: 4, reach: 160, shot: "e_magic" },
+		scale: 0.58, bounty: 4, armor: 0, hit: 5, reach: 160, shot: "e_magic" },
 	ogre: { kind: "ogre", img: "e_ogre", hp: 130, speed: 30, pts: 2000, dmg: 10,
-		scale: 0.7, bounty: 15, armor: 2, hit: 10, reach: 140, shot: "e_rock" }
+		scale: 0.7, bounty: 15, armor: 2, hit: 14, reach: 140, shot: "e_rock" }
 };
 
 interface Unit {
@@ -424,7 +424,7 @@ export function main(param: GameMainParameterObject): void {
 		let wave = 0;
 		const spawn = (kind: EnemyKind, path: number, d0 = 0): void => {
 			const def = ENEMIES[kind];
-			const mul = 1 + 0.15 * Math.max(0, wave - 1);
+			const mul = 1 + 0.25 * Math.max(0, wave - 1);
 			const e = new g.E({ scene });
 			const a = img(def.img);
 			const spr = new g.Sprite({ scene, src: a, anchorX: 0.5, anchorY: 0.92, scaleX: def.scale, scaleY: def.scale });
@@ -582,7 +582,7 @@ export function main(param: GameMainParameterObject): void {
 				if (waveT <= 0 && battleT < playSec - 4) {
 					wave++;
 					waveT = WAVE_SEC;
-					waveLeft = 8 + wave * 5;
+					waveLeft = 10 + wave * 6;
 					spawnGap = (WAVE_SEC - 3) / waveLeft;
 					spawnLeft = 0;
 					pop("ウェーブ " + wave + "！", fontY, 64, W / 2, 200);
