@@ -290,6 +290,10 @@ function build(course) {
 	a.save("splash");
 	a = new Art(20, 20); [[10, 10, 6], [5, 12, 4], [15, 12, 4], [10, 6, 4]].forEach((q) => a.oval(q[0], q[1], q[2], q[2], "#ffffff")); a.outline("#c0c0d8"); a.save("poof");
 	a = new Art(11, 11); a.rect(5, 0, 1, 11, "#ffe040"); a.rect(0, 5, 11, 1, "#ffe040"); a.rect(3, 3, 5, 5, "#ffe040"); a.rect(4, 2, 3, 7, "#ffe040"); a.rect(2, 4, 7, 3, "#ffe040"); a.px(4, 4, "#ffffff"); a.outline("#c88a1a"); a.save("star");
+	// 敵のたま: 火の玉・魔法・石
+	a = new Art(9, 9); a.oval(4.5, 4.5, 4, 4, "#ff6a2a"); a.oval(4.5, 5, 2.5, 2.5, "#ffd040"); a.px(3, 3, "#ffffff"); a.outline("#a02a10"); a.save("e_fire");
+	a = new Art(9, 9); a.oval(4.5, 4.5, 3.5, 3.5, "#c060ff"); a.rect(4, 0, 1, 9, "#f0b0ff"); a.rect(0, 4, 9, 1, "#f0b0ff"); a.px(4, 4, "#ffffff"); a.outline("#5a2090"); a.save("e_magic");
+	a = new Art(8, 7); a.oval(4, 3.5, 3.5, 3, "#9a9098"); a.px(3, 2, "#d0c8d0"); a.outline(); a.save("e_rock");
 	// パレットのカード 37x26
 	const card = (name, fill, line) => {
 		const c = new Art(37, 26);

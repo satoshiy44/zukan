@@ -17,8 +17,9 @@ const BREAK_PENALTY = 2000; // お城がこわれたときのマイナス
 const HIT_PENALTY = 15; // 敵のこうげき1あたりのマイナス
 const ATTACK_SEC = 2.5; // お城に着いた敵が、こうげきする間かく
 const ROAD_KEEP = 48; // 道からこれだけはなさないと置けない
-const UNIT_GAP = 52; // 動物どうしの間
+const UNIT_GAP = 42; // 動物どうしの間
 const FIELD_TOP = 70;
+const US = 0.6; // 動物の大きさ
 const FIELD_BOTTOM = 600;
 // 道(tools/course.json と同じ)。最後はお城
 const PATHS: number[][][] = [
@@ -33,28 +34,34 @@ const PATHS: number[][][] = [
 type UnitKind = "chick" | "rabbit" | "penguin" | "elephant" | "lion";
 interface UnitDef { kind: UnitKind; name: string; cost: number; range: number; rate: number; dmg: number; hp: number; desc: string; }
 const UNITS: UnitDef[] = [
-	{ kind: "chick", name: "ひよこ", cost: 2, range: 135, rate: 0.45, dmg: 2, hp: 10, desc: "まめでっぽう" },
-	{ kind: "rabbit", name: "うさぎ", cost: 5, range: 200, rate: 0.8, dmg: 5, hp: 12, desc: "にんじんミサイル" },
-	{ kind: "penguin", name: "ペンギン", cost: 10, range: 165, rate: 1.0, dmg: 3, hp: 24, desc: "こおりで3体まで足止め" },
-	{ kind: "elephant", name: "ゾウ", cost: 20, range: 190, rate: 1.5, dmg: 9, hp: 45, desc: "みずでっぽう(まわりも)" },
-	{ kind: "lion", name: "ライオン", cost: 30, range: 160, rate: 1.8, dmg: 14, hp: 60, desc: "ほえて全体こうげき" }
+	{ kind: "chick", name: "ひよこ", cost: 2, range: 135, rate: 0.45, dmg: 2, hp: 14, desc: "まめでっぽう" },
+	{ kind: "rabbit", name: "うさぎ", cost: 5, range: 200, rate: 0.8, dmg: 5, hp: 17, desc: "にんじんミサイル" },
+	{ kind: "penguin", name: "ペンギン", cost: 10, range: 165, rate: 1.0, dmg: 3, hp: 34, desc: "こおりで3体まで足止め" },
+	{ kind: "elephant", name: "ゾウ", cost: 20, range: 190, rate: 1.5, dmg: 9, hp: 62, desc: "みずでっぽう(まわりも)" },
+	{ kind: "lion", name: "ライオン", cost: 30, range: 160, rate: 1.8, dmg: 14, hp: 84, desc: "ほえて全体こうげき" }
 ];
 type EnemyKind = "slime" | "mini" | "goblin" | "devil" | "witch" | "ogre";
 interface EnemyDef {
 	kind: EnemyKind; img: string; hp: number; speed: number; pts: number; dmg: number; scale: number; bounty: number; armor: number;
-	hit: number; reach: number; // 歩きながら、近くの動物をこうげきする力ととどく距離
+	hit: number; reach: number; shot: string; // 歩きながら近くの動物をこうげき(shot があれば遠くからたまを投げる)
 }
 const ENEMIES: { [k: string]: EnemyDef } = {
 	// スライム: たおすと小さいスライム2ひきに分かれる
-	slime: { kind: "slime", img: "e_slime", hp: 8, speed: 46, pts: 100, dmg: 1, scale: 0.7, bounty: 1, armor: 0, hit: 2, reach: 70 },
-	mini: { kind: "mini", img: "e_slime", hp: 3, speed: 62, pts: 50, dmg: 1, scale: 0.42, bounty: 0, armor: 0, hit: 1, reach: 65 },
+	slime: { kind: "slime", img: "e_slime", hp: 8, speed: 46, pts: 100, dmg: 1,
+		scale: 0.55, bounty: 1, armor: 0, hit: 2, reach: 60, shot: "" },
+	mini: { kind: "mini", img: "e_slime", hp: 3, speed: 62, pts: 50, dmg: 1,
+		scale: 0.33, bounty: 0, armor: 0, hit: 1, reach: 55, shot: "" },
 	// ゴブリン: よろいで、こうげきが1へる(ひよこの豆は効きにくい)
-	goblin: { kind: "goblin", img: "e_goblin", hp: 14, speed: 58, pts: 200, dmg: 2, scale: 0.72, bounty: 2, armor: 1, hit: 4, reach: 72 },
+	goblin: { kind: "goblin", img: "e_goblin", hp: 14, speed: 58, pts: 200, dmg: 2,
+		scale: 0.56, bounty: 2, armor: 1, hit: 3, reach: 120, shot: "e_rock" },
 	// 悪魔: とても速い(ペンギンの足止めが効く)
-	devil: { kind: "devil", img: "e_devil", hp: 14, speed: 92, pts: 300, dmg: 3, scale: 0.7, bounty: 2, armor: 0, hit: 3, reach: 72 },
+	devil: { kind: "devil", img: "e_devil", hp: 14, speed: 92, pts: 300, dmg: 3,
+		scale: 0.55, bounty: 2, armor: 0, hit: 3, reach: 135, shot: "e_fire" },
 	// 魔女: まわりの敵を回復する(先にたおしたい)
-	witch: { kind: "witch", img: "e_witch", hp: 28, speed: 48, pts: 500, dmg: 4, scale: 0.75, bounty: 4, armor: 0, hit: 4, reach: 140 },
-	ogre: { kind: "ogre", img: "e_ogre", hp: 130, speed: 30, pts: 2000, dmg: 10, scale: 0.9, bounty: 15, armor: 2, hit: 12, reach: 90 }
+	witch: { kind: "witch", img: "e_witch", hp: 28, speed: 48, pts: 500, dmg: 4,
+		scale: 0.58, bounty: 4, armor: 0, hit: 4, reach: 160, shot: "e_magic" },
+	ogre: { kind: "ogre", img: "e_ogre", hp: 130, speed: 30, pts: 2000, dmg: 10,
+		scale: 0.7, bounty: 15, armor: 2, hit: 10, reach: 140, shot: "e_rock" }
 };
 
 interface Unit {
@@ -76,7 +83,8 @@ export function main(param: GameMainParameterObject): void {
 	const imageIds = [
 		"bg", "castle", "u_chick", "u_rabbit", "u_penguin", "u_elephant", "u_lion",
 		"e_slime", "e_goblin", "e_devil", "e_witch", "e_ogre",
-		"p_pea", "p_carrot", "p_water", "p_ice", "ring", "ring_ng", "roar", "splash", "poof", "star", "card", "card_on", "logo"
+		"p_pea", "p_carrot", "p_water", "p_ice", "e_fire", "e_magic", "e_rock",
+		"ring", "ring_ng", "roar", "splash", "poof", "star", "card", "card_on", "logo"
 	];
 	const audioIds = [
 		"place", "cancel", "ng", "pea", "carrot", "ice", "splash", "roar", "hit", "poof", "castle", "break", "beep", "go", "finish"
@@ -136,7 +144,7 @@ export function main(param: GameMainParameterObject): void {
 		const world = new g.E({ scene });
 		scene.append(world);
 		const castle = new g.Sprite({
-			scene, src: img("castle"), x: CASTLE_X, y: CASTLE_Y + 70, anchorX: 0.5, anchorY: 0.9, scaleX: 0.8, scaleY: 0.8
+			scene, src: img("castle"), x: CASTLE_X, y: CASTLE_Y + 70, anchorX: 0.5, anchorY: 0.9, scaleX: 0.7, scaleY: 0.7
 		});
 		world.append(castle);
 		const fxLayer = new g.E({ scene });
@@ -206,6 +214,7 @@ export function main(param: GameMainParameterObject): void {
 		const units: Unit[] = [];
 		const enemies: Enemy[] = [];
 		const shots: Shot[] = [];
+		const eshots: { spr: g.Sprite; sx: number; sy: number; target: Unit; dmg: number; t: number; dur: number }[] = [];
 		let selected = 0;
 		let introOn = true; // はじめの説明が出ている
 		const score = (): number => Math.max(0, killPts - penalty);
@@ -290,12 +299,12 @@ export function main(param: GameMainParameterObject): void {
 			}
 			budget -= def.cost;
 			const spr = new g.Sprite({
-				scene, src: img("u_" + def.kind), x, y: y + 30, anchorX: 0.5, anchorY: 0.92, scaleX: 0.8, scaleY: 0.8
+				scene, src: img("u_" + def.kind), x, y: y + 22, anchorX: 0.5, anchorY: 0.92, scaleX: US, scaleY: US
 			});
 			world.append(spr);
 			// HPバー(へったときだけ見せる)
-			const barBg = new g.FilledRect({ scene, cssColor: "#3a2416", x: x - 24, y: y + 32, width: 48, height: 8 });
-			const bar = new g.FilledRect({ scene, cssColor: "#5ad04a", x: x - 22, y: y + 34, width: 44, height: 4 });
+			const barBg = new g.FilledRect({ scene, cssColor: "#3a2416", x: x - 20, y: y + 24, width: 40, height: 7 });
+			const bar = new g.FilledRect({ scene, cssColor: "#5ad04a", x: x - 18, y: y + 26, width: 36, height: 3 });
 			barBg.hide(); bar.hide();
 			ui.append(barBg); ui.append(bar);
 			units.push({ def, x, y, cool: rand() * def.rate, spr, bounce: 0.3, lv: 1, lvLabel: null,
@@ -311,7 +320,7 @@ export function main(param: GameMainParameterObject): void {
 			if (y >= 606 || (phase === "setup" && x > W - 240 && y > 60 && y < 140)) return; // パレットとボタン
 			for (let i = units.length - 1; i >= 0; i--) {
 				const u = units[i];
-				if (Math.abs(x - u.x) < 36 && y > u.y - 50 && y < u.y + 30) {
+				if (Math.abs(x - u.x) < 28 && y > u.y - 40 && y < u.y + 24) {
 					if (phase === "setup") {
 						// 配置タイム: タップで戻す
 						budget += u.def.cost + upCost(u.def) * (u.lv - 1);
@@ -337,7 +346,7 @@ export function main(param: GameMainParameterObject): void {
 			u.hp -= dmg;
 			u.flash = 0.15;
 			u.barBg.show(); u.bar.show();
-			u.bar.width = Math.max(0, 44 * u.hp / u.maxHp);
+			u.bar.width = Math.max(0, 36 * u.hp / u.maxHp);
 			u.bar.cssColor = u.hp > u.maxHp * 0.5 ? "#5ad04a" : u.hp > u.maxHp * 0.25 ? "#f0c040" : "#ff4a4a";
 			u.bar.modified();
 			if (u.hp <= 0) {
@@ -370,7 +379,7 @@ export function main(param: GameMainParameterObject): void {
 			burst("star", u.x, u.y - 30, 70, 0.5);
 			showRing("ring", u.x, u.y, rangeOf(u));
 			pop("パワーアップ！", fontY, 28, u.x, u.y - 100);
-			if (!u.lvLabel) u.lvLabel = label(ui, fontY, 22, u.x, u.y - 92, "", "center", 100);
+			if (!u.lvLabel) u.lvLabel = label(ui, fontY, 22, u.x, u.y - 70, "", "center", 100);
 			setText(u.lvLabel, u.lv >= MAX_LV ? "★★MAX" : "★★".slice(0, u.lv - 1));
 			refreshCards();
 		};
@@ -630,10 +639,21 @@ export function main(param: GameMainParameterObject): void {
 						});
 						if (tgt) {
 							const t = tgt as Unit;
-							en.hitCd = 1.2;
+							en.hitCd = en.def.shot ? 1.7 : 1.2;
 							en.lunge = 0.2; en.lx = t.x; en.ly = t.y;
-							hurtUnit(t, en.def.hit);
-							burst(en.def.kind === "witch" ? "p_ice" : "star", t.x, t.y - 30, 30, 0.25);
+							if (en.def.shot) {
+								// たまを投げる(着いたときにダメージ)
+								en.lunge = 0;
+								const spr = new g.Sprite({
+									scene, src: img(en.def.shot), x: en.x, y: en.y - 20, anchorX: 0.5, anchorY: 0.5
+								});
+								if (en.def.kind === "ogre") spr.scale(1.6);
+								fxLayer.append(spr);
+								eshots.push({ spr, sx: en.x, sy: en.y - 20, target: t, dmg: en.def.hit, t: 0, dur: 0.45 });
+							} else {
+								hurtUnit(t, en.def.hit);
+								burst("star", t.x, t.y - 24, 26, 0.25);
+							}
 						} else en.hitCd = 0.2;
 					}
 				}
@@ -678,11 +698,28 @@ export function main(param: GameMainParameterObject): void {
 					}
 				}
 				if (u.bounce > 0) u.bounce -= dt;
-				const s = 0.8 * (1 + Math.max(0, u.bounce) * 0.8);
-				u.spr.scaleX = 0.8 * (1 + Math.max(0, u.bounce) * 0.3); u.spr.scaleY = s;
-				u.spr.y = u.y + 30 + (phase === "setup" ? Math.sin(battleT * 4 + u.x) * 2 : 0);
+				const s = US * (1 + Math.max(0, u.bounce) * 0.8);
+				u.spr.scaleX = US * (1 + Math.max(0, u.bounce) * 0.3); u.spr.scaleY = s;
+				u.spr.y = u.y + 22 + (phase === "setup" ? Math.sin(battleT * 4 + u.x) * 2 : 0);
 				u.spr.modified();
 			});
+			// 敵のたま
+			for (let i = eshots.length - 1; i >= 0; i--) {
+				const s = eshots[i];
+				s.t += dt;
+				const t = Math.min(1, s.t / s.dur);
+				const tx = s.target.x, ty = s.target.y - 20;
+				s.spr.x = s.sx + (tx - s.sx) * t; s.spr.y = s.sy + (ty - s.sy) * t - Math.sin(t * Math.PI) * 40;
+				s.spr.angle += 25;
+				s.spr.modified();
+				if (t >= 1) {
+					if (!s.target.dead) {
+						hurtUnit(s.target, s.dmg); burst("star", tx, ty, 26, 0.25);
+					}
+					s.spr.destroy();
+					eshots.splice(i, 1);
+				}
+			}
 			// たま
 			for (let i = shots.length - 1; i >= 0; i--) {
 				const s = shots[i];

@@ -361,6 +361,24 @@
 			"type": "script",
 			"path": "script/parameterObject.js",
 			"global": true
+		},
+		"e_fire": {
+			"type": "image",
+			"path": "image/e_fire.png",
+			"width": 36,
+			"height": 36
+		},
+		"e_magic": {
+			"type": "image",
+			"path": "image/e_magic.png",
+			"width": 36,
+			"height": 36
+		},
+		"e_rock": {
+			"type": "image",
+			"path": "image/e_rock.png",
+			"width": 32,
+			"height": 28
 		}
 	},
 	"environment": {
