@@ -347,7 +347,7 @@ function build(course) {
 		for (let y = 0; y < 80; y++) ic.rect(0, y, 80, 1, y < 40 ? (y % 4 < 2 ? "#a8e0ff" : "#b8e8ff") : (y % 4 < 2 ? "#8ad860" : "#80d058"));
 		ic.oval(40, 70, 36, 8, "#f4d898");
 		ic.x.drawImage(castleArt.c, 2, -8);
-		ic.x.drawImage(arts.u_chick, -3, 30); ic.x.drawImage(arts.u_lion, 58, 30);
+		ic.x.drawImage(arts.u_chick, -3, 20); ic.x.drawImage(arts.u_lion, 58, 20);
 		// 下に題字「パンダ城」(太いドット文字)
 		const tw = new Art(80, 26);
 		tw.x.font = "bold 19px IPAGothic"; tw.x.textAlign = "center"; tw.x.textBaseline = "middle"; tw.x.fillStyle = "#000";
@@ -363,7 +363,19 @@ function build(course) {
 		tw.x.putImageData(td2, 0, 0);
 		const tw2 = new Art(80, 26); tw2.x.drawImage(tw.c, 0, 0); tw.x.drawImage(tw2.c, 1, 0);
 		tw.outline("#ffffff"); tw.outline(OL);
-		ic.x.drawImage(tw.c, 0, 55);
+		// リボン「まもれ！」
+		const ir = new Art(80, 80);
+		ir.rect(1, 45, 8, 9, "#c03a6a"); ir.rect(71, 45, 8, 9, "#c03a6a");
+		ir.x.clearRect(1, 48, 2, 3); ir.x.clearRect(77, 48, 2, 3);
+		ir.rect(6, 41, 68, 12, "#ff6a9a"); ir.rect(6, 41, 68, 2, "#ff9ab8"); ir.rect(6, 51, 68, 2, "#e04a7a");
+		ir.outline();
+		ic.x.drawImage(ir.c, 0, 0);
+		const mw = new Art(80, 16);
+		mw.x.font = "bold 12px IPAGothic"; mw.x.textAlign = "center"; mw.x.textBaseline = "middle"; mw.x.fillStyle = "#ffffff";
+		mw.x.fillText("まもれ！", 40, 8);
+		mw.crisp(); mw.outline("#8a2a4a");
+		ic.x.drawImage(mw.c, 0, 39);
+		ic.x.drawImage(tw.c, 0, 56);
 		out.icon = ic.big(4).toDataURL("image/png");
 	}
 	return out;
