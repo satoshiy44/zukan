@@ -8,10 +8,11 @@ const END_SEC = 3;
 const BUDGET = 100; // 置くのに使えるポイント
 const CASTLE_X = 640;
 const CASTLE_Y = 330;
-const CASTLE_HP = 80;
+const CASTLE_HP = 120;
 const CASTLE_R = 70; // 敵がここまで来たらお城をこうげき
 const BREAK_PENALTY = 2000; // お城がこわれたときのマイナス
-const HIT_PENALTY = 100; // 敵のこうげき1あたりのマイナス
+const HIT_PENALTY = 30; // 敵のこうげき1あたりのマイナス
+const ATTACK_SEC = 2.0; // お城に着いた敵が、こうげきする間かく
 const ROAD_KEEP = 48; // 道からこれだけはなさないと置けない
 const UNIT_GAP = 52; // 動物どうしの間
 const FIELD_TOP = 70;
@@ -47,6 +48,7 @@ interface Unit { def: UnitDef; x: number; y: number; cool: number; spr: g.Sprite
 interface Enemy {
 	def: EnemyDef; path: number; d: number; hp: number; maxHp: number; x: number; y: number;
 	slow: number; flash: number; e: g.E; spr: g.Sprite; bar: g.FilledRect; dead: boolean;
+	stop: number; atk: number; lunge: number;
 }
 interface Shot {
 	kind: string; x: number; y: number; tx: number; ty: number; target: Enemy | null;
@@ -349,7 +351,8 @@ export function main(param: GameMainParameterObject): void {
 			e.append(bar);
 			world.append(e);
 			const hp = Math.round(def.hp * mul);
-			enemies.push({ def, path, d: 0, hp, maxHp: hp, x: -999, y: -999, slow: 0, flash: 0, e, spr, bar, dead: false });
+			enemies.push({ def, path, d: 0, hp, maxHp: hp, x: -999, y: -999, slow: 0, flash: 0, e, spr, bar, dead: false,
+				stop: lens[path][lens[path].length - 1] - CASTLE_R - rand() * 45, atk: 0.4, lunge: 0 });
 		};
 		let spawnLeft = 1.5;
 		const bossTimes = [0.38, 0.68, 0.9];
@@ -377,14 +380,14 @@ export function main(param: GameMainParameterObject): void {
 			en.flash = 0.12;
 			if (en.hp <= 0) kill(en);
 		};
+		// お城に着いた敵は、そこに居すわってこうげきし続ける
 		const hitCastle = (en: Enemy): void => {
-			en.dead = true;
-			en.e.destroy();
+			en.lunge = 0.25;
 			castleHp -= en.def.dmg;
 			penalty += en.def.dmg * HIT_PENALTY;
 			castleShake = 0.3;
 			se("castle", 0.6);
-			pop("-" + en.def.dmg * HIT_PENALTY, fontR, 34, CASTLE_X + (rand() - 0.5) * 120, CASTLE_Y - 120);
+			pop("-" + en.def.dmg * HIT_PENALTY, fontR, 30, en.x, en.y - 80);
 			if (castleHp <= 0) {
 				breaks++;
 				penalty += BREAK_PENALTY;
@@ -504,9 +507,21 @@ export function main(param: GameMainParameterObject): void {
 				}
 				const q = posAt(en.path, en.d);
 				en.x = q[0]; en.y = q[1];
-				const total = lens[en.path][lens[en.path].length - 1];
-				if (en.d >= total - CASTLE_R) {
-					hitCastle(en); enemies.splice(i, 1); continue;
+				if (en.d >= en.stop) {
+					en.d = en.stop;
+					if (phase === "battle") {
+						en.atk -= dt;
+						if (en.atk <= 0) {
+							en.atk = ATTACK_SEC; hitCastle(en);
+						}
+					}
+				}
+				if (en.lunge > 0) {
+					// お城に向かってとびかかる
+					en.lunge -= dt;
+					const k = Math.sin(Math.max(0, en.lunge) / 0.25 * Math.PI) * 14;
+					const dx = CASTLE_X - en.x, dy = CASTLE_Y - en.y, l = Math.sqrt(dx * dx + dy * dy) || 1;
+					en.x += dx / l * k; en.y += dy / l * k;
 				}
 				en.e.x = en.x; en.e.y = en.y + Math.sin(battleT * 10 + i) * 2;
 				en.e.modified();

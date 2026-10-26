@@ -16,6 +16,7 @@ async function draw(srcs) {
 	const c = document.createElement("canvas");
 	c.width = 1280; c.height = 720;
 	const x = c.getContext("2d");
+	x.imageSmoothingEnabled = false; // ドット絵をくっきり
 	const INK = "#3a2416", F = "IPAGothic";
 	const rr = (l, t, w, h, r) => {
 		x.beginPath(); x.moveTo(l + r, t); x.arcTo(l + w, t, l + w, t + h, r); x.arcTo(l + w, t + h, l, t + h, r);

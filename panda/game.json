@@ -206,13 +206,13 @@
 		"card": {
 			"type": "image",
 			"path": "image/card.png",
-			"width": 150,
+			"width": 148,
 			"height": 104
 		},
 		"card_on": {
 			"type": "image",
 			"path": "image/card_on.png",
-			"width": 150,
+			"width": 148,
 			"height": 104
 		},
 		"castle": {
@@ -224,32 +224,32 @@
 		"e_devil": {
 			"type": "image",
 			"path": "image/e_devil.png",
-			"width": 110,
+			"width": 112,
 			"height": 96
 		},
 		"e_goblin": {
 			"type": "image",
 			"path": "image/e_goblin.png",
-			"width": 90,
-			"height": 96
+			"width": 96,
+			"height": 100
 		},
 		"e_ogre": {
 			"type": "image",
 			"path": "image/e_ogre.png",
-			"width": 140,
-			"height": 140
+			"width": 144,
+			"height": 144
 		},
 		"e_slime": {
 			"type": "image",
 			"path": "image/e_slime.png",
-			"width": 90,
+			"width": 88,
 			"height": 80
 		},
 		"e_witch": {
 			"type": "image",
 			"path": "image/e_witch.png",
-			"width": 100,
-			"height": 110
+			"width": 104,
+			"height": 120
 		},
 		"logo": {
 			"type": "image",
@@ -260,14 +260,14 @@
 		"p_carrot": {
 			"type": "image",
 			"path": "image/p_carrot.png",
-			"width": 40,
+			"width": 44,
 			"height": 20
 		},
 		"p_ice": {
 			"type": "image",
 			"path": "image/p_ice.png",
-			"width": 26,
-			"height": 26
+			"width": 28,
+			"height": 28
 		},
 		"p_pea": {
 			"type": "image",
@@ -279,7 +279,7 @@
 			"type": "image",
 			"path": "image/p_water.png",
 			"width": 28,
-			"height": 28
+			"height": 32
 		},
 		"poof": {
 			"type": "image",
@@ -314,8 +314,8 @@
 		"star": {
 			"type": "image",
 			"path": "image/star.png",
-			"width": 40,
-			"height": 40
+			"width": 44,
+			"height": 44
 		},
 		"u_chick": {
 			"type": "image",

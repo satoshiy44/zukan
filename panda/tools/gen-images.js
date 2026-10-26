@@ -1,4 +1,5 @@
-// ポップな絵を作る(迷彩服のどうぶつ・敵・お城・背景・ロゴ・アイコン)
+// ポップでかわいいドット絵を作る(迷彩服のどうぶつ・敵・お城・背景・ロゴ・アイコン)
+// 小さなキャンバスに点で描いてから、にじまないように4倍に拡大する
 // 使い方: node tools/gen-images.js
 const { chromium } = require("playwright");
 const fs = require("fs");
@@ -10,365 +11,324 @@ const course = JSON.parse(fs.readFileSync(path.join(__dirname, "course.json"), "
 
 function build(course) {
 	const out = {};
-	const INK = "#3a2416";
-	const mk = (w, h) => { const c = document.createElement("canvas"); c.width = w; c.height = h; return [c, c.getContext("2d")]; };
-	const save = (name, c) => { out[name] = c.toDataURL("image/png"); };
-	// 乱数(毎回同じ絵になるように)
-	let seed = 7;
+	const S = 4; // 拡大の倍率
+	const OL = "#3a2030"; // ふちどり
+	let seed = 11;
 	const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
-	const ell = (x, cx, cy, rx, ry, fill, line, lw) => {
-		x.beginPath(); x.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
-		if (fill) { x.fillStyle = fill; x.fill(); }
-		if (line) { x.lineWidth = lw || 4; x.strokeStyle = line; x.stroke(); }
-	};
-	const rr = (x, l, t, w, h, r) => {
-		x.beginPath(); x.moveTo(l + r, t); x.arcTo(l + w, t, l + w, t + h, r); x.arcTo(l + w, t + h, l, t + h, r);
-		x.arcTo(l, t + h, l, t, r); x.arcTo(l, t, l + w, t, r); x.closePath();
-	};
-	// 迷彩もよう: いまのパスの中に、色のかたまりをちらす
-	const camo = (x, l, t, w, h, cols) => {
-		x.save(); x.clip();
-		x.fillStyle = cols[0]; x.fillRect(l, t, w, h);
-		for (let i = 0; i < 26; i++) {
-			const cx = l + rnd() * w, cy = t + rnd() * h, r = 5 + rnd() * 9;
-			x.fillStyle = cols[1 + (i % (cols.length - 1))];
-			x.beginPath();
-			for (let k = 0; k < 7; k++) {
-				const a = k / 7 * Math.PI * 2, rr2 = r * (0.6 + rnd() * 0.6);
-				x.lineTo(cx + Math.cos(a) * rr2 * 1.3, cy + Math.sin(a) * rr2);
+	class Art {
+		constructor(w, h) {
+			this.w = w; this.h = h;
+			this.c = document.createElement("canvas"); this.c.width = w; this.c.height = h;
+			this.x = this.c.getContext("2d");
+		}
+		rect(x, y, w, h, col) { this.x.fillStyle = col; this.x.fillRect(x, y, w, h); return this; }
+		px(x, y, col) { return this.rect(x, y, 1, 1, col); }
+		oval(cx, cy, rx, ry, col, cond) {
+			for (let y = Math.floor(cy - ry); y <= cy + ry; y++) for (let x = Math.floor(cx - rx); x <= cx + rx; x++) {
+				const dx = (x + 0.5 - cx) / rx, dy = (y + 0.5 - cy) / ry;
+				if (dx * dx + dy * dy <= 1 && (!cond || cond(x, y))) this.px(x, y, col);
 			}
-			x.fill();
+			return this;
 		}
-		x.restore();
+		ring(cx, cy, r, th, col) {
+			for (let y = 0; y < this.h; y++) for (let x = 0; x < this.w; x++) {
+				const d = Math.sqrt((x + 0.5 - cx) ** 2 + (y + 0.5 - cy) ** 2);
+				if (d <= r && d > r - th) this.px(x, y, col);
+			}
+			return this;
+		}
+		alpha() { return this.x.getImageData(0, 0, this.w, this.h).data; }
+		outline(col) {
+			const a = this.alpha(), w = this.w, h = this.h;
+			const on = (x, y) => x >= 0 && y >= 0 && x < w && y < h && a[(y * w + x) * 4 + 3] > 100;
+			this.x.fillStyle = col || OL;
+			for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+				if (!on(x, y) && (on(x - 1, y) || on(x + 1, y) || on(x, y - 1) || on(x, y + 1))) this.x.fillRect(x, y, 1, 1);
+			}
+			return this;
+		}
+		// アンチエイリアスの線をくっきりさせる
+		crisp() {
+			const d = this.x.getImageData(0, 0, this.w, this.h);
+			for (let i = 3; i < d.data.length; i += 4) d.data[i] = d.data[i] > 110 ? 255 : 0;
+			this.x.putImageData(d, 0, 0);
+			return this;
+		}
+		big(s) {
+			const c = document.createElement("canvas"); c.width = this.w * s; c.height = this.h * s;
+			const x = c.getContext("2d"); x.imageSmoothingEnabled = false; x.drawImage(this.c, 0, 0, c.width, c.height);
+			return c;
+		}
+		save(name, s) { out[name] = this.big(s || S).toDataURL("image/png"); }
+	}
+	const CAMO = ["#8aaa58", "#5a7a3a", "#b89a60", "#3c4c2a"];
+	const camoFill = (a, test) => {
+		for (let y = 0; y < a.h; y++) for (let x = 0; x < a.w; x++) if (test(x, y)) a.px(x, y, CAMO[0]);
+		for (let i = 0; i < a.w * a.h / 7; i++) {
+			const x = Math.floor(rnd() * a.w), y = Math.floor(rnd() * a.h), col = CAMO[1 + (i % 3)];
+			[[0, 0], [1, 0], [0, 1]].forEach((d) => { if (test(x + d[0], y + d[1])) a.px(x + d[0], y + d[1], col); });
+		}
 	};
-	const CAMO = ["#8aa65a", "#56703a", "#b39a62", "#3c4a2a"];
-	const eyes = (x, cx, cy, gap, r) => {
-		[-1, 1].forEach((s) => {
-			ell(x, cx + s * gap, cy, r, r * 1.15, "#2a1a10");
-			ell(x, cx + s * gap - r * 0.3, cy - r * 0.4, r * 0.38, r * 0.38, "#ffffff");
-		});
+	const eyes = (a, x1, x2, y) => {
+		[x1, x2].forEach((x) => { a.rect(x, y, 2, 2, "#2a1a20"); a.px(x, y, "#ffffff"); });
 	};
-	const blush = (x, cx, cy, gap) => { [-1, 1].forEach((s) => ell(x, cx + s * gap, cy, 7, 4.5, "rgba(255,120,140,0.55)")); };
-	// どうぶつの体(迷彩の服)。足もとが (50, 92)
-	const body = (x) => {
-		ell(x, 50, 94, 26, 6, "rgba(0,0,0,0.22)");
-		ell(x, 38, 88, 8, 6, "#5a3a24", INK, 3); ell(x, 62, 88, 8, 6, "#5a3a24", INK, 3);
-		rr(x, 30, 58, 40, 32, 14); camo(x, 30, 58, 40, 32, CAMO);
-		rr(x, 30, 58, 40, 32, 14); x.lineWidth = 4; x.strokeStyle = INK; x.stroke();
-		x.fillStyle = "#e8c040"; x.fillRect(46, 64, 8, 5); // 名札
+	const blush = (a, x1, x2, y) => { a.rect(x1, y, 2, 1, "#ff8aa8"); a.rect(x2, y, 2, 1, "#ff8aa8"); };
+	// どうぶつの体: 25x25 の下の方。迷彩の服とくつ
+	const body = (a) => {
+		camoFill(a, (x, y) => y >= 15 && y <= 21 && x >= 7 && x <= 17 && !((y === 15 || y === 21) && (x === 7 || x === 17)));
+		a.rect(11, 17, 3, 1, "#f0d040"); // 名札
+		a.rect(7, 22, 4, 2, "#6a4a30"); a.rect(14, 22, 4, 2, "#6a4a30");
 	};
-	// 迷彩のヘルメット(頭の上)
-	const helmet = (x, cx, cy, w, h) => {
-		x.beginPath(); x.ellipse(cx, cy, w, h, 0, Math.PI, Math.PI * 2); x.closePath();
-		camo(x, cx - w, cy - h, w * 2, h, CAMO);
-		x.beginPath(); x.ellipse(cx, cy, w, h, 0, Math.PI, Math.PI * 2); x.closePath();
-		x.lineWidth = 4; x.strokeStyle = INK; x.stroke();
-		rr(x, cx - w - 4, cy - 3, w * 2 + 8, 7, 3); x.fillStyle = "#4a5a2c"; x.fill(); x.lineWidth = 3; x.stroke();
+	const helmet = (a, cx, top, w) => {
+		camoFill(a, (x, y) => y >= top && y <= top + 4 && Math.abs(x + 0.5 - cx) <= w - (y === top ? 2 : y === top + 1 ? 1 : 0));
+		a.rect(Math.round(cx - w - 1), top + 4, w * 2 + 2, 1, "#4a5a2c");
 	};
-	const unit = (name, draw) => { const [c, x] = mk(100, 100); x.lineJoin = "round"; draw(x); save(name, c); };
+	const arts = {};
+	const unit = (name, draw) => { const a = new Art(25, 25); draw(a); a.outline(); a.save(name); arts[name] = a.c; };
 
-	// ======== みかたのどうぶつ ========
-	unit("u_chick", (x) => {
-		body(x);
-		ell(x, 50, 44, 26, 24, "#ffe04a", INK, 4);
-		eyes(x, 50, 44, 10, 4); blush(x, 50, 52, 17);
-		x.beginPath(); x.moveTo(44, 51); x.lineTo(56, 51); x.lineTo(50, 59); x.closePath(); x.fillStyle = "#ff9a2a"; x.fill(); x.lineWidth = 3; x.strokeStyle = INK; x.stroke();
-		helmet(x, 50, 32, 22, 15);
+	// ======== みかたのどうぶつ(25x25) ========
+	unit("u_chick", (a) => {
+		body(a);
+		a.oval(12.5, 10, 7.5, 6.5, "#ffe040");
+		a.oval(9, 12.5, 2, 1, "#fff6a0");
+		eyes(a, 9, 14, 9); blush(a, 7, 16, 12);
+		a.rect(11, 11, 3, 1, "#ff9a2a"); a.px(12, 12, "#ff9a2a");
+		helmet(a, 12.5, 2, 7);
 	});
-	unit("u_rabbit", (x) => {
-		body(x);
-		[-1, 1].forEach((s) => {
-			x.save(); x.translate(50 + s * 11, 22); x.rotate(s * 0.18);
-			ell(x, 0, -12, 8, 20, "#ffffff", INK, 4); ell(x, 0, -12, 4, 14, "#ffb0c4");
-			x.restore();
-		});
-		ell(x, 50, 46, 25, 22, "#ffffff", INK, 4);
-		eyes(x, 50, 46, 10, 4); blush(x, 50, 54, 16);
-		ell(x, 50, 53, 3, 2.5, "#ff7a9a");
+	unit("u_rabbit", (a) => {
+		body(a);
+		[8, 15].forEach((x) => { a.rect(x, 0, 3, 7, "#ffffff"); a.rect(x + 1, 1, 1, 5, "#ffb0c8"); });
+		a.oval(12.5, 10.5, 7.5, 6.5, "#ffffff");
+		eyes(a, 9, 14, 9); blush(a, 7, 16, 12);
+		a.px(12, 11, "#ff7a9a");
 		// ベレー帽
-		ell(x, 46, 28, 20, 8, "#56703a", INK, 4); ell(x, 60, 26, 4, 4, "#3c4a2a");
+		camoFill(a, (x, y) => y >= 4 && y <= 5 && x >= 6 && x <= 17);
+		a.rect(15, 3, 2, 1, "#3c4c2a");
 	});
-	unit("u_penguin", (x) => {
-		body(x);
-		ell(x, 50, 45, 27, 25, "#2a3446", INK, 4);
-		ell(x, 50, 49, 19, 17, "#ffffff");
-		eyes(x, 50, 45, 9, 4); blush(x, 50, 54, 15);
-		x.beginPath(); x.moveTo(44, 52); x.lineTo(56, 52); x.lineTo(50, 58); x.closePath(); x.fillStyle = "#ffa22a"; x.fill(); x.lineWidth = 3; x.strokeStyle = INK; x.stroke();
-		helmet(x, 50, 31, 23, 15);
-		// 雪の結晶バッジ
-		x.strokeStyle = "#7ad8ff"; x.lineWidth = 2;
-		for (let k = 0; k < 3; k++) { x.beginPath(); const a = k * Math.PI / 3; x.moveTo(40 - Math.cos(a) * 5, 76 - Math.sin(a) * 5); x.lineTo(40 + Math.cos(a) * 5, 76 + Math.sin(a) * 5); x.stroke(); }
+	unit("u_penguin", (a) => {
+		body(a);
+		a.oval(12.5, 10, 8, 7, "#2a3a5a");
+		a.oval(12.5, 11.5, 5.5, 4.5, "#ffffff");
+		eyes(a, 9, 14, 9); blush(a, 7, 16, 12);
+		a.rect(11, 12, 3, 1, "#ffa02a");
+		helmet(a, 12.5, 2, 7);
+		a.px(9, 18, "#7ad8ff"); a.px(8, 18, "#7ad8ff"); a.px(9, 17, "#7ad8ff");
 	});
-	unit("u_elephant", (x) => {
-		body(x);
-		[-1, 1].forEach((s) => ell(x, 50 + s * 25, 46, 15, 18, "#a8b4c8", INK, 4));
-		[-1, 1].forEach((s) => ell(x, 50 + s * 25, 46, 9, 12, "#f0b4c0"));
-		ell(x, 50, 45, 23, 22, "#b8c4d6", INK, 4);
-		// 鼻
-		x.beginPath(); x.moveTo(45, 50); x.quadraticCurveTo(44, 66, 54, 70); x.lineTo(57, 64); x.quadraticCurveTo(52, 60, 55, 50); x.closePath();
-		x.fillStyle = "#b8c4d6"; x.fill(); x.lineWidth = 4; x.strokeStyle = INK; x.stroke();
-		eyes(x, 50, 42, 10, 3.8); blush(x, 50, 51, 16);
-		helmet(x, 50, 30, 21, 14);
+	unit("u_elephant", (a) => {
+		body(a);
+		[[4, 10], [21, 10]].forEach((q) => { a.oval(q[0], q[1], 3.5, 4.5, "#a8b4cc"); a.oval(q[0], q[1], 2, 3, "#f8b8c8"); });
+		a.oval(12.5, 10, 7, 6.5, "#b8c4d8");
+		a.rect(11, 12, 3, 4, "#b8c4d8"); a.rect(12, 16, 3, 1, "#b8c4d8");
+		eyes(a, 9, 14, 8); blush(a, 7, 16, 11);
+		helmet(a, 12.5, 2, 6);
 	});
-	unit("u_lion", (x) => {
-		body(x);
-		for (let k = 0; k < 14; k++) {
-			const a = k / 14 * Math.PI * 2;
-			ell(x, 50 + Math.cos(a) * 24, 44 + Math.sin(a) * 22, 10, 10, k % 2 ? "#d8742a" : "#e8902e");
-		}
-		x.beginPath(); x.ellipse(50, 44, 33, 31, 0, 0, Math.PI * 2); x.lineWidth = 4; x.strokeStyle = INK; x.stroke();
-		ell(x, 50, 45, 21, 20, "#ffd27a", INK, 4);
-		eyes(x, 50, 42, 9, 3.8); blush(x, 50, 51, 14);
-		ell(x, 50, 51, 4, 3, "#6a3a20");
-		x.beginPath(); x.moveTo(50, 54); x.lineTo(50, 57); x.moveTo(45, 58); x.quadraticCurveTo(50, 61, 55, 58); x.lineWidth = 2.5; x.strokeStyle = INK; x.stroke();
-		helmet(x, 50, 27, 19, 12);
+	unit("u_lion", (a) => {
+		body(a);
+		a.oval(12.5, 10.5, 10, 9, "#e07a2a");
+		for (let k = 0; k < 12; k++) { const t = k / 12 * Math.PI * 2; a.px(Math.round(12 + Math.cos(t) * 9), Math.round(10 + Math.sin(t) * 8), "#f09a3a"); }
+		a.oval(12.5, 11, 6, 5.5, "#ffd27a");
+		eyes(a, 9, 14, 9); blush(a, 8, 15, 12);
+		a.rect(12, 12, 1, 1, "#6a3a20"); a.rect(11, 13, 3, 1, "#c86a3a");
+		helmet(a, 12.5, 1, 5);
 	});
 
 	// ======== 敵 ========
-	const shadow = (x, cx, cy, w) => ell(x, cx, cy, w, w * 0.25, "rgba(0,0,0,0.22)");
-	const enemy = (name, w, h, draw) => { const [c, x] = mk(w, h); x.lineJoin = "round"; draw(x); save(name, c); };
-	enemy("e_slime", 90, 80, (x) => {
-		shadow(x, 45, 72, 30);
-		x.beginPath(); x.moveTo(10, 66); x.quadraticCurveTo(10, 14, 45, 10); x.quadraticCurveTo(80, 14, 80, 66); x.quadraticCurveTo(45, 76, 10, 66); x.closePath();
-		const gr = x.createLinearGradient(0, 10, 0, 70); gr.addColorStop(0, "#7ae0ff"); gr.addColorStop(1, "#2a8ae0");
-		x.fillStyle = gr; x.fill(); x.lineWidth = 4; x.strokeStyle = "#163a6a"; x.stroke();
-		ell(x, 30, 28, 8, 5, "rgba(255,255,255,0.8)");
-		eyes(x, 45, 44, 11, 5);
-		x.beginPath(); x.arc(45, 54, 6, 0.1 * Math.PI, 0.9 * Math.PI); x.lineWidth = 3; x.strokeStyle = "#163a6a"; x.stroke();
+	const enemy = (name, w, h, draw) => { const a = new Art(w, h); draw(a); a.outline(); a.save(name); arts[name] = a.c; };
+	enemy("e_slime", 22, 20, (a) => {
+		a.oval(11, 12.5, 9.5, 7, "#3aa8f0");
+		a.oval(11, 8, 6, 5, "#3aa8f0");
+		a.oval(11, 9, 5, 4, "#6ad0ff");
+		a.rect(6, 7, 2, 2, "#ffffff");
+		eyes(a, 7, 13, 11);
+		a.rect(10, 15, 2, 1, "#1a5a9a");
+		a.rect(4, 18, 14, 1, "#2a88d0");
 	});
-	enemy("e_goblin", 90, 96, (x) => {
-		shadow(x, 45, 88, 26);
-		ell(x, 34, 82, 7, 6, "#5a3a24", INK, 3); ell(x, 56, 82, 7, 6, "#5a3a24", INK, 3);
-		rr(x, 28, 54, 34, 28, 10); x.fillStyle = "#8a5a32"; x.fill(); x.lineWidth = 4; x.strokeStyle = INK; x.stroke();
-		x.fillStyle = "#c89048"; x.fillRect(30, 68, 30, 5);
+	enemy("e_goblin", 24, 25, (a) => {
+		a.rect(7, 21, 4, 3, "#6a4a30"); a.rect(13, 21, 4, 3, "#6a4a30");
+		a.rect(7, 14, 10, 8, "#a8743a"); a.rect(7, 18, 10, 1, "#7a4a2a");
 		// こん棒
-		x.save(); x.translate(70, 62); x.rotate(0.5);
-		rr(x, -5, -30, 12, 38, 6); x.fillStyle = "#a8743a"; x.fill(); x.lineWidth = 3.5; x.stroke();
-		ell(x, 1, -28, 9, 9, "#a8743a", INK, 3.5);
-		x.restore();
-		// 頭と耳
-		[-1, 1].forEach((s) => {
-			x.beginPath(); x.moveTo(45 + s * 16, 36); x.lineTo(45 + s * 34, 26); x.lineTo(45 + s * 18, 46); x.closePath();
-			x.fillStyle = "#6ac04a"; x.fill(); x.lineWidth = 4; x.strokeStyle = INK; x.stroke();
-		});
-		ell(x, 45, 38, 21, 19, "#7ad05a", INK, 4);
-		[-1, 1].forEach((s) => { ell(x, 45 + s * 8, 36, 5, 5, "#fff6a0", INK, 2); ell(x, 45 + s * 8, 37, 2.2, 2.6, "#2a1a10"); });
-		x.beginPath(); x.moveTo(37, 47); x.quadraticCurveTo(45, 52, 53, 47); x.lineWidth = 3; x.strokeStyle = INK; x.stroke();
-		x.fillStyle = "#ffffff"; x.fillRect(40, 47, 3, 3); x.fillRect(48, 47, 3, 3);
+		a.rect(18, 8, 2, 12, "#9a6a3a"); a.oval(19, 8, 2.5, 3, "#9a6a3a");
+		// 耳
+		for (let k = 0; k < 4; k++) { a.rect(2 + k, 6 + k, 1, 2, "#6ac04a"); a.rect(21 - k, 6 + k, 1, 2, "#6ac04a"); }
+		a.oval(12, 9, 6.5, 6, "#7ad05a");
+		[9, 14].forEach((x) => { a.rect(x, 8, 2, 2, "#fff6a0"); a.px(x + 1, 9, "#2a1a20"); });
+		a.rect(10, 12, 4, 1, "#3a2030"); a.px(10, 13, "#ffffff"); a.px(13, 13, "#ffffff");
 	});
-	enemy("e_devil", 110, 96, (x) => {
-		shadow(x, 55, 90, 22);
+	enemy("e_devil", 28, 24, (a) => {
 		// つばさ
-		[-1, 1].forEach((s) => {
-			x.beginPath(); x.moveTo(55 + s * 12, 50); x.lineTo(55 + s * 48, 26); x.lineTo(55 + s * 42, 46); x.lineTo(55 + s * 50, 54);
-			x.lineTo(55 + s * 38, 58); x.lineTo(55 + s * 40, 68); x.closePath();
-			x.fillStyle = "#4a2a6a"; x.fill(); x.lineWidth = 3.5; x.strokeStyle = "#1e0e2e"; x.stroke();
-		});
+		for (let k = 0; k < 6; k++) { a.rect(1 + k, 6 + k, 1, 7 - k, "#5a3a7a"); a.rect(26 - k, 6 + k, 1, 7 - k, "#5a3a7a"); }
+		a.rect(7, 10, 2, 4, "#5a3a7a"); a.rect(19, 10, 2, 4, "#5a3a7a");
 		// しっぽ
-		x.beginPath(); x.moveTo(62, 76); x.quadraticCurveTo(84, 86, 82, 70); x.lineWidth = 4; x.strokeStyle = "#1e0e2e"; x.stroke();
-		x.beginPath(); x.moveTo(82, 62); x.lineTo(88, 72); x.lineTo(77, 71); x.closePath(); x.fillStyle = "#d03a6a"; x.fill();
-		ell(x, 55, 58, 20, 22, "#b04ad0", "#1e0e2e", 4);
+		a.rect(17, 19, 5, 1, "#3a2050"); a.rect(22, 16, 1, 4, "#3a2050"); a.rect(21, 15, 3, 2, "#e03a6a");
+		a.oval(14, 13, 6.5, 7, "#b04ad0");
+		a.oval(14, 15, 4, 3.5, "#d08ae8");
 		// つの
-		[-1, 1].forEach((s) => {
-			x.beginPath(); x.moveTo(55 + s * 10, 42); x.quadraticCurveTo(55 + s * 20, 26, 55 + s * 14, 18); x.quadraticCurveTo(55 + s * 12, 30, 55 + s * 4, 38); x.closePath();
-			x.fillStyle = "#ffe0a0"; x.fill(); x.lineWidth = 3; x.strokeStyle = "#1e0e2e"; x.stroke();
-		});
-		[-1, 1].forEach((s) => { ell(x, 55 + s * 8, 54, 5, 6, "#fff0f0"); ell(x, 55 + s * 8, 55, 2.4, 3, "#d01a3a"); });
-		x.beginPath(); x.moveTo(47, 66); x.lineTo(51, 70); x.lineTo(55, 66); x.lineTo(59, 70); x.lineTo(63, 66); x.lineWidth = 3; x.strokeStyle = "#1e0e2e"; x.stroke();
+		a.rect(9, 4, 2, 3, "#fff0b0"); a.rect(17, 4, 2, 3, "#fff0b0"); a.px(9, 3, "#fff0b0"); a.px(18, 3, "#fff0b0");
+		[10, 16].forEach((x) => { a.rect(x, 11, 2, 2, "#ffffff"); a.px(x + 1, 12, "#e01a3a"); });
+		a.rect(12, 15, 4, 1, "#3a1a4a"); a.px(12, 16, "#ffffff"); a.px(15, 16, "#ffffff");
 	});
-	enemy("e_witch", 100, 110, (x) => {
-		shadow(x, 50, 104, 26);
+	enemy("e_witch", 26, 30, (a) => {
 		// ほうき
-		x.save(); x.translate(50, 86); x.rotate(-0.25);
-		x.fillStyle = "#8a5a2a"; x.fillRect(-40, -3, 70, 6);
-		x.beginPath(); x.moveTo(26, -10); x.lineTo(44, -14); x.lineTo(46, 14); x.lineTo(26, 10); x.closePath(); x.fillStyle = "#e8b84a"; x.fill(); x.lineWidth = 3; x.strokeStyle = INK; x.stroke();
-		x.restore();
+		a.rect(2, 22, 20, 2, "#8a5a2a"); a.rect(20, 20, 5, 6, "#f0c050");
 		// ローブ
-		x.beginPath(); x.moveTo(30, 96); x.lineTo(36, 58); x.lineTo(64, 58); x.lineTo(70, 96); x.closePath();
-		x.fillStyle = "#6a3aa8"; x.fill(); x.lineWidth = 4; x.strokeStyle = "#241040"; x.stroke();
+		for (let y = 14; y < 27; y++) { const w = 4 + Math.floor((y - 14) / 2); a.rect(13 - w, y, w * 2, 1, "#7a40c0"); }
+		a.rect(9, 20, 8, 1, "#f0c050");
 		// 顔と髪
-		ell(x, 50, 52, 17, 16, "#ffd8b8", INK, 4);
-		x.fillStyle = "#ff7a3a"; x.fillRect(32, 46, 6, 18); x.fillRect(62, 46, 6, 18);
-		[-1, 1].forEach((s) => ell(x, 50 + s * 6, 53, 2.6, 3.2, "#3a1a50"));
-		x.beginPath(); x.moveTo(45, 60); x.quadraticCurveTo(50, 64, 55, 60); x.lineWidth = 2.5; x.strokeStyle = INK; x.stroke();
+		a.oval(13, 13, 5, 4.5, "#ffd8b8");
+		a.rect(7, 11, 2, 6, "#ff7a3a"); a.rect(17, 11, 2, 6, "#ff7a3a");
+		a.rect(10, 12, 2, 2, "#3a1a50"); a.rect(15, 12, 2, 2, "#3a1a50"); a.px(10, 12, "#ffffff"); a.px(15, 12, "#ffffff");
+		blush(a, 9, 16, 15);
 		// ぼうし
-		ell(x, 50, 40, 28, 7, "#2a1a3a", "#120818", 3.5);
-		x.beginPath(); x.moveTo(36, 40); x.lineTo(56, 2); x.lineTo(64, 40); x.closePath(); x.fillStyle = "#2a1a3a"; x.fill(); x.lineWidth = 3.5; x.strokeStyle = "#120818"; x.stroke();
-		x.fillStyle = "#e8c040"; x.fillRect(39, 33, 23, 5);
+		a.rect(5, 9, 16, 2, "#2a1a3a");
+		for (let y = 0; y < 9; y++) { const w = Math.max(1, Math.floor(y / 1.6) + 1); a.rect(14 - w + Math.floor((9 - y) / 3), y, w * 2, 1, "#2a1a3a"); }
+		a.rect(9, 8, 8, 1, "#f0c050");
 	});
-	enemy("e_ogre", 140, 140, (x) => {
-		shadow(x, 70, 130, 44);
-		ell(x, 52, 122, 13, 9, "#6a3a24", INK, 4); ell(x, 88, 122, 13, 9, "#6a3a24", INK, 4);
-		ell(x, 70, 92, 42, 34, "#e8603a", INK, 5);
-		x.fillStyle = "#8a6a3a"; x.fillRect(32, 100, 76, 14); x.strokeStyle = INK; x.lineWidth = 4; x.strokeRect(32, 100, 76, 14);
+	enemy("e_ogre", 36, 36, (a) => {
+		a.rect(9, 31, 6, 4, "#6a3a24"); a.rect(21, 31, 6, 4, "#6a3a24");
+		a.oval(18, 24, 12, 9, "#e8603a");
+		a.rect(8, 26, 20, 4, "#8a6a3a"); a.rect(8, 26, 20, 1, "#a88a4a");
 		// こん棒
-		x.save(); x.translate(118, 86); x.rotate(0.4);
-		rr(x, -8, -50, 18, 62, 8); x.fillStyle = "#9a6a3a"; x.fill(); x.lineWidth = 4; x.stroke();
-		[[-6, -40], [6, -30], [-4, -20]].forEach((q) => ell(x, q[0], q[1], 3, 3, "#d0d0d8"));
-		x.restore();
-		ell(x, 70, 48, 30, 27, "#f07a4a", INK, 5);
-		[-1, 1].forEach((s) => {
-			x.beginPath(); x.moveTo(70 + s * 14, 26); x.lineTo(70 + s * 22, 4); x.lineTo(70 + s * 26, 30); x.closePath();
-			x.fillStyle = "#fff0c0"; x.fill(); x.lineWidth = 3.5; x.strokeStyle = INK; x.stroke();
-		});
-		[-1, 1].forEach((s) => { ell(x, 70 + s * 11, 46, 6, 6, "#ffffff", INK, 2.5); ell(x, 70 + s * 11, 47, 3, 3, "#2a1a10"); });
-		x.beginPath(); x.moveTo(56, 36); x.lineTo(66, 40); x.moveTo(84, 36); x.lineTo(74, 40); x.lineWidth = 4; x.strokeStyle = INK; x.stroke();
-		rr(x, 56, 58, 28, 10, 4); x.fillStyle = "#5a1a1a"; x.fill(); x.lineWidth = 3; x.stroke();
-		x.fillStyle = "#ffffff"; x.fillRect(60, 58, 5, 5); x.fillRect(75, 58, 5, 5);
+		a.rect(30, 8, 4, 20, "#9a6a3a"); a.oval(32, 9, 3.5, 5, "#9a6a3a");
+		a.px(31, 7, "#e0e0e8"); a.px(33, 11, "#e0e0e8");
+		a.oval(18, 12, 9, 8, "#f07a4a");
+		a.rect(10, 1, 2, 5, "#fff0c0"); a.rect(24, 1, 2, 5, "#fff0c0"); a.px(11, 0, "#fff0c0"); a.px(24, 0, "#fff0c0");
+		[13, 21].forEach((x) => { a.rect(x, 10, 3, 3, "#ffffff"); a.rect(x + 1, 11, 2, 2, "#2a1a20"); });
+		a.rect(12, 9, 4, 1, "#3a2030"); a.rect(20, 9, 4, 1, "#3a2030");
+		a.rect(14, 15, 8, 2, "#5a1a1a"); a.px(15, 15, "#ffffff"); a.px(20, 15, "#ffffff");
 	});
 
-	// ======== お城とパンダの王様 ========
+	// ======== お城とパンダの王様(75x75) ========
+	const castleArt = new Art(75, 75);
 	{
-		const [c, x] = mk(300, 300);
-		x.lineJoin = "round";
-		ell(x, 150, 270, 120, 22, "rgba(0,0,0,0.22)");
-		// 城壁
-		const tower = (l, t, w, h, roof) => {
-			rr(x, l, t, w, h, 6); x.fillStyle = "#fff4e0"; x.fill(); x.lineWidth = 5; x.strokeStyle = INK; x.stroke();
-			for (let k = 0; k < 3; k++) { x.fillStyle = "#fff4e0"; x.fillRect(l + 4 + k * (w - 8) / 3, t - 10, (w - 8) / 3 - 6, 12); x.strokeRect(l + 4 + k * (w - 8) / 3, t - 10, (w - 8) / 3 - 6, 12); }
-			x.beginPath(); x.moveTo(l - 6, t - 8); x.lineTo(l + w / 2, t - 8 - roof); x.lineTo(l + w + 6, t - 8); x.closePath();
-			x.fillStyle = "#ff8aa8"; x.fill(); x.stroke();
-			x.fillStyle = "#7ac8ff"; rr(x, l + w / 2 - 8, t + 18, 16, 22, 8); x.fill(); x.stroke();
+		const a = castleArt;
+		a.oval(37.5, 70, 32, 4, "rgba(0,0,0,0.2)");
+		const tower = (l, t, w, h) => {
+			a.rect(l, t, w, h, "#fff4e4"); a.rect(l + w - 2, t, 2, h, "#f0d8c8");
+			for (let k = 0; k < w; k += 4) a.rect(l + k, t - 2, 2, 2, "#fff4e4");
+			for (let y = 0; y < 10; y++) { const ww = Math.max(1, Math.round((w + 4) * (y + 1) / 10 / 2)); a.rect(l + w / 2 - ww, t - 12 + y, ww * 2, 1, "#ff8aaa"); }
+			a.rect(l + w / 2 - 2, t + 6, 4, 6, "#7ac8ff");
 		};
-		tower(28, 140, 64, 120, 46); tower(208, 140, 64, 120, 46);
-		rr(x, 70, 150, 160, 110, 10); x.fillStyle = "#fff8ec"; x.fill(); x.lineWidth = 5; x.strokeStyle = INK; x.stroke();
-		for (let k = 0; k < 6; k++) { x.fillStyle = "#fff8ec"; x.fillRect(74 + k * 26, 138, 18, 14); x.strokeRect(74 + k * 26, 138, 18, 14); }
-		// 門
-		x.beginPath(); x.moveTo(126, 260); x.lineTo(126, 220); x.arc(150, 220, 24, Math.PI, 0); x.lineTo(174, 260); x.closePath();
-		x.fillStyle = "#a8643a"; x.fill(); x.stroke();
+		tower(6, 36, 16, 32); tower(53, 36, 16, 32);
+		a.rect(18, 40, 39, 28, "#fffaf0"); a.rect(53, 40, 2, 28, "#f0d8c8");
+		for (let k = 0; k < 39; k += 5) a.rect(18 + k, 37, 3, 3, "#fffaf0");
+		a.rect(33, 54, 9, 14, "#b06a3a"); a.oval(37.5, 54, 4.5, 4, "#b06a3a");
+		a.rect(37, 54, 1, 14, "#8a4a2a");
 		// 旗
-		[[60, 46], [240, 46]].forEach((q) => {
-			x.beginPath(); x.moveTo(q[0], q[1] + 40); x.lineTo(q[0], q[1]); x.lineWidth = 4; x.stroke();
-			x.beginPath(); x.moveTo(q[0], q[1]); x.lineTo(q[0] + 26, q[1] + 8); x.lineTo(q[0], q[1] + 16); x.closePath(); x.fillStyle = "#ffd040"; x.fill(); x.lineWidth = 3; x.stroke();
-		});
-		// てっぺんのパンダの王様
-		const px = 150, py = 92;
-		rr(x, px - 28, py + 20, 56, 40, 16); x.fillStyle = "#e03a4a"; x.fill(); x.lineWidth = 4.5; x.stroke(); // マント
-		ell(x, px, py + 36, 22, 20, "#ffffff", INK, 4.5);
-		[-1, 1].forEach((s) => ell(x, px + s * 24, py - 22, 11, 11, "#2a2a32", INK, 4));
-		ell(x, px, py, 34, 30, "#ffffff", INK, 5);
-		[-1, 1].forEach((s) => {
-			x.save(); x.translate(px + s * 13, py + 2); x.rotate(s * -0.5); ell(x, 0, 0, 9, 12, "#2a2a32"); x.restore();
-			ell(x, px + s * 12, py + 1, 4, 4.5, "#ffffff"); ell(x, px + s * 12, py + 2, 2.2, 2.6, "#2a1a10");
-		});
-		ell(x, px, py + 12, 5, 3.5, "#2a2a32");
-		x.beginPath(); x.moveTo(px - 6, py + 18); x.quadraticCurveTo(px, py + 23, px + 6, py + 18); x.lineWidth = 3; x.stroke();
-		[-1, 1].forEach((s) => ell(x, px + s * 22, py + 12, 6, 4, "rgba(255,120,140,0.5)"));
+		[[14, 13, "#ffd040"], [61, 13, "#5ad0ff"]].forEach((q) => { a.rect(q[0], q[1], 1, 12, OL); a.rect(q[0] + 1, q[1], 6, 2, q[2]); a.rect(q[0] + 1, q[1] + 2, 4, 2, q[2]); });
+		// パンダの王様
+		a.rect(28, 30, 19, 9, "#e03a4a"); a.rect(28, 30, 19, 1, "#ff6a7a");
+		a.oval(37.5, 33, 6, 5, "#ffffff");
+		a.oval(29, 15, 3, 3, "#2a2a32"); a.oval(46, 15, 3, 3, "#2a2a32");
+		a.oval(37.5, 22, 10, 8.5, "#ffffff");
+		a.oval(33, 22, 2.5, 3, "#2a2a32"); a.oval(42, 22, 2.5, 3, "#2a2a32");
+		a.px(33, 21, "#ffffff"); a.px(42, 21, "#ffffff");
+		a.rect(36, 25, 3, 2, "#2a2a32"); a.rect(30, 25, 2, 1, "#ff9ab0"); a.rect(44, 25, 2, 1, "#ff9ab0");
 		// かんむり
-		x.beginPath(); x.moveTo(px - 20, py - 22); x.lineTo(px - 22, py - 46); x.lineTo(px - 10, py - 34); x.lineTo(px, py - 52); x.lineTo(px + 10, py - 34);
-		x.lineTo(px + 22, py - 46); x.lineTo(px + 20, py - 22); x.closePath();
-		x.fillStyle = "#ffd040"; x.fill(); x.lineWidth = 4; x.stroke();
-		[[px, py - 30, "#e03a4a"], [px - 13, py - 28, "#3a8ae0"], [px + 13, py - 28, "#3ac06a"]].forEach((q) => ell(x, q[0], q[1], 4, 4, q[2]));
-		save("castle", c);
+		a.rect(31, 11, 13, 4, "#ffd040"); a.rect(31, 8, 2, 3, "#ffd040"); a.rect(36, 7, 3, 4, "#ffd040"); a.rect(42, 8, 2, 3, "#ffd040");
+		a.px(37, 12, "#e03a4a"); a.px(33, 12, "#3a8ae0"); a.px(41, 12, "#3ac06a");
+		a.outline();
+		a.save("castle");
 	}
 
-	// ======== 背景(草原と道) ========
+	// ======== 背景(320x180 を4倍) ========
 	{
-		const [c, x] = mk(1280, 720);
-		const g = x.createLinearGradient(0, 0, 0, 720); g.addColorStop(0, "#9ad86a"); g.addColorStop(1, "#7cc456");
-		x.fillStyle = g; x.fillRect(0, 0, 1280, 720);
-		// 草のもよう
-		for (let i = 0; i < 260; i++) {
-			const cx = rnd() * 1280, cy = rnd() * 720;
-			x.strokeStyle = "rgba(60,130,50,0.45)"; x.lineWidth = 3; x.lineCap = "round";
-			x.beginPath(); x.moveTo(cx - 4, cy); x.lineTo(cx - 6, cy - 7); x.moveTo(cx, cy); x.lineTo(cx, cy - 9); x.moveTo(cx + 4, cy); x.lineTo(cx + 6, cy - 7); x.stroke();
-		}
-		// 道
+		const a = new Art(320, 180);
+		a.rect(0, 0, 320, 180, "#8ad860");
+		for (let y = 0; y < 180; y += 2) for (let x = (y / 2) % 2 ? 0 : 2; x < 320; x += 4) if (rnd() < 0.5) a.px(x, y, "#80d058");
+		for (let i = 0; i < 160; i++) { const x = Math.floor(rnd() * 320), y = Math.floor(rnd() * 180); a.px(x, y, "#5aa840"); a.px(x + 1, y - 1, "#5aa840"); }
+		// 道(線を引いてから、くっきりさせる)
 		const road = (w, col) => {
-			x.lineJoin = "round"; x.lineCap = "round"; x.lineWidth = w; x.strokeStyle = col;
+			const r = new Art(320, 180);
+			r.x.lineJoin = "round"; r.x.lineCap = "round"; r.x.lineWidth = w; r.x.strokeStyle = col;
 			course.paths.forEach((p) => {
-				x.beginPath(); x.moveTo(p[0][0], p[0][1]);
-				for (let k = 1; k < p.length; k++) x.lineTo(p[k][0], p[k][1]);
-				x.lineTo(course.castle[0], course.castle[1]); x.stroke();
+				r.x.beginPath(); r.x.moveTo(p[0][0] / 4, p[0][1] / 4);
+				for (let k = 1; k < p.length; k++) r.x.lineTo(p[k][0] / 4, p[k][1] / 4);
+				r.x.lineTo(course.castle[0] / 4, course.castle[1] / 4); r.x.stroke();
 			});
+			r.crisp();
+			a.x.drawImage(r.c, 0, 0);
 		};
-		road(70, "#c89a5a"); road(58, "#f0d49a");
-		// 道の小石
-		course.paths.forEach((p) => {
-			for (let k = 0; k < p.length - 1; k++) {
-				for (let t = 0; t < 1; t += 0.12) {
-					const cx = p[k][0] + (p[k + 1][0] - p[k][0]) * t + (rnd() - 0.5) * 30, cy = p[k][1] + (p[k + 1][1] - p[k][1]) * t + (rnd() - 0.5) * 30;
-					ell(x, cx, cy, 3, 2, "rgba(170,120,70,0.5)");
-				}
-			}
-		});
-		// お城の広場
-		ell(x, course.castle[0], course.castle[1] + 20, 140, 90, "#c89a5a"); ell(x, course.castle[0], course.castle[1] + 20, 132, 83, "#f6dca8");
-		// 花と木
-		const flower = (cx, cy, col) => { for (let k = 0; k < 5; k++) { const a = k / 5 * Math.PI * 2; ell(x, cx + Math.cos(a) * 5, cy + Math.sin(a) * 5, 4, 4, col); } ell(x, cx, cy, 3, 3, "#ffe04a"); };
-		const tree = (cx, cy, s) => {
-			ell(x, cx, cy + 26 * s, 26 * s, 8 * s, "rgba(0,0,0,0.2)");
-			x.fillStyle = "#8a5a32"; x.fillRect(cx - 5 * s, cy, 10 * s, 26 * s);
-			ell(x, cx, cy - 10 * s, 30 * s, 26 * s, "#4aa848", "#2a6a2a", 4); ell(x, cx - 10 * s, cy - 18 * s, 10 * s, 8 * s, "#7ad06a");
-		};
-		const nearRoad = (px, py, d) => course.paths.some((p) => {
-			const pts = p.concat([course.castle]);
-			for (let k = 0; k < pts.length - 1; k++) {
-				const ax = pts[k][0], ay = pts[k][1], bx = pts[k + 1][0], by = pts[k + 1][1];
-				const t = Math.max(0, Math.min(1, ((px - ax) * (bx - ax) + (py - ay) * (by - ay)) / ((bx - ax) ** 2 + (by - ay) ** 2)));
-				if (Math.hypot(px - ax - t * (bx - ax), py - ay - t * (by - ay)) < d) return true;
-			}
-			return false;
-		});
-		for (let i = 0; i < 70; i++) {
-			const cx = rnd() * 1280, cy = rnd() * 720;
-			if (!nearRoad(cx, cy, 45) && Math.hypot(cx - course.castle[0], cy - course.castle[1]) > 170) flower(cx, cy, ["#ff8aa8", "#ffffff", "#ffb0e0", "#a0c8ff"][i % 4]);
+		road(18, "#c89058"); road(15, "#f4d898");
+		for (let i = 0; i < 400; i++) {
+			const x = Math.floor(rnd() * 320), y = Math.floor(rnd() * 180);
+			const d = a.x.getImageData(x, y, 1, 1).data;
+			if (d[0] === 0xf4 && d[1] === 0xd8) a.px(x, y, "#e0bc78");
 		}
-		[[60, 40], [1200, 60], [1230, 300], [40, 420], [130, 640], [1180, 680], [760, 650], [470, 40]].forEach((q, i) => {
-			if (!nearRoad(q[0], q[1], 60)) tree(q[0], q[1], 0.9 + (i % 3) * 0.15);
+		// お城の広場
+		a.oval(160, 87, 36, 23, "#c89058"); a.oval(160, 87, 34, 21, "#f4d898");
+		for (let k = 0; k < 40; k++) { const t = k / 40 * Math.PI * 2; a.px(Math.round(160 + Math.cos(t) * 26), Math.round(87 + Math.sin(t) * 15), "#e8c888"); }
+		const free = (x, y) => { const d = a.x.getImageData(x, y, 1, 1).data; return d[1] > 190 && d[0] < 160; };
+		// 花
+		for (let i = 0; i < 90; i++) {
+			const x = 2 + Math.floor(rnd() * 316), y = 2 + Math.floor(rnd() * 176);
+			if (!free(x, y) || !free(x + 2, y + 2) || !free(x - 2, y - 2)) continue;
+			const col = ["#ff8aaa", "#ffffff", "#ffd040", "#a8c8ff"][i % 4];
+			a.px(x - 1, y, col); a.px(x + 1, y, col); a.px(x, y - 1, col); a.px(x, y + 1, col); a.px(x, y, "#ffe040");
+		}
+		// 木
+		const tree = (x, y) => {
+			a.oval(x, y + 9, 7, 2, "rgba(0,0,0,0.18)");
+			a.rect(x - 1, y + 2, 3, 7, "#8a5a32");
+			a.oval(x + 0.5, y, 7, 6, "#3a9a40"); a.oval(x - 1.5, y - 2, 3, 2.5, "#6ad060");
+		};
+		[[16, 12], [300, 16], [306, 74], [12, 108], [34, 160], [296, 168], [190, 162], [118, 10], [240, 150], [60, 66]].forEach((q) => {
+			if (free(q[0], q[1] + 4) && free(q[0] - 6, q[1]) && free(q[0] + 6, q[1])) tree(q[0], q[1]);
 		});
-		save("bg", c);
+		a.save("bg");
 	}
 
 	// ======== たま・こうか ========
+	let a = new Art(5, 5); a.oval(2.5, 2.5, 2.5, 2.5, "#7ae04a"); a.px(1, 1, "#ffffff"); a.outline("#2a6a2a"); a.save("p_pea");
+	a = new Art(11, 5); a.rect(0, 2, 2, 1, "#ff8a2a"); a.rect(2, 1, 5, 3, "#ff8a2a"); a.px(4, 2, "#e06a1a"); a.rect(7, 1, 2, 3, "#4ac04a"); a.px(9, 0, "#4ac04a"); a.px(9, 4, "#4ac04a"); a.outline(); a.save("p_carrot");
+	a = new Art(7, 8); a.oval(3.5, 5, 3, 3, "#5ac8ff"); a.rect(3, 1, 1, 2, "#5ac8ff"); a.px(2, 4, "#ffffff"); a.outline("#1a5a9a"); a.save("p_water");
+	a = new Art(7, 7); a.rect(3, 0, 1, 7, "#bff0ff"); a.rect(0, 3, 7, 1, "#bff0ff"); a.px(1, 1, "#bff0ff"); a.px(5, 5, "#bff0ff"); a.px(5, 1, "#bff0ff"); a.px(1, 5, "#bff0ff"); a.outline("#3a8ac0"); a.save("p_ice");
+	a = new Art(50, 50); a.oval(25, 25, 24, 24, "rgba(255,255,255,0.2)"); a.ring(25, 25, 24.5, 1.2, "rgba(255,255,255,0.9)"); a.save("ring");
+	a = new Art(50, 50); a.oval(25, 25, 24, 24, "rgba(255,80,80,0.18)"); a.ring(25, 25, 24.5, 1.2, "rgba(255,80,80,0.9)"); a.save("ring_ng");
+	a = new Art(50, 50); a.ring(25, 25, 24, 2, "#ffd040"); a.ring(25, 25, 21, 1, "#fff0a0"); a.save("roar");
+	a = new Art(50, 50); a.oval(25, 25, 22, 22, "rgba(90,200,255,0.3)"); a.ring(25, 25, 23, 2, "rgba(200,240,255,0.9)");
+	for (let k = 0; k < 8; k++) { const t = k / 8 * Math.PI * 2; a.rect(Math.round(25 + Math.cos(t) * 18), Math.round(25 + Math.sin(t) * 18), 2, 2, "#ffffff"); }
+	a.save("splash");
+	a = new Art(20, 20); [[10, 10, 6], [5, 12, 4], [15, 12, 4], [10, 6, 4]].forEach((q) => a.oval(q[0], q[1], q[2], q[2], "#ffffff")); a.outline("#c0c0d8"); a.save("poof");
+	a = new Art(11, 11); a.rect(5, 0, 1, 11, "#ffe040"); a.rect(0, 5, 11, 1, "#ffe040"); a.rect(3, 3, 5, 5, "#ffe040"); a.rect(4, 2, 3, 7, "#ffe040"); a.rect(2, 4, 7, 3, "#ffe040"); a.px(4, 4, "#ffffff"); a.outline("#c88a1a"); a.save("star");
+	// パレットのカード 37x26
+	const card = (name, fill, line) => {
+		const c = new Art(37, 26);
+		c.rect(1, 0, 35, 26, line); c.rect(0, 1, 37, 24, line);
+		c.rect(2, 1, 33, 24, fill); c.rect(1, 2, 35, 22, fill);
+		c.save(name);
+	};
+	card("card", "#fff8e8", "#6a4030"); card("card_on", "#fff0a0", "#ff6a3a");
+
+	// ======== ロゴ(120x120 を4倍) ========
 	{
-		let [c, x] = mk(20, 20); ell(x, 10, 10, 7, 7, "#7ae04a", "#2a6a2a", 3); ell(x, 8, 8, 2, 2, "#ffffff"); save("p_pea", c);
-		[c, x] = mk(40, 20);
-		x.beginPath(); x.moveTo(4, 10); x.lineTo(30, 4); x.lineTo(30, 16); x.closePath(); x.fillStyle = "#ff8a2a"; x.fill(); x.lineWidth = 2.5; x.strokeStyle = INK; x.stroke();
-		x.fillStyle = "#4ac04a"; x.beginPath(); x.moveTo(30, 6); x.lineTo(38, 2); x.lineTo(36, 10); x.lineTo(38, 18); x.lineTo(30, 14); x.closePath(); x.fill(); x.stroke();
-		save("p_carrot", c);
-		[c, x] = mk(28, 28); x.beginPath(); x.moveTo(14, 2); x.quadraticCurveTo(26, 16, 14, 26); x.quadraticCurveTo(2, 16, 14, 2); x.fillStyle = "#5ac8ff"; x.fill(); x.lineWidth = 2.5; x.strokeStyle = "#1a5a9a"; x.stroke(); ell(x, 11, 16, 3, 4, "rgba(255,255,255,0.8)"); save("p_water", c);
-		[c, x] = mk(26, 26);
-		x.strokeStyle = "#bff0ff"; x.lineWidth = 4; x.lineCap = "round";
-		for (let k = 0; k < 3; k++) { const a = k * Math.PI / 3; x.beginPath(); x.moveTo(13 - Math.cos(a) * 10, 13 - Math.sin(a) * 10); x.lineTo(13 + Math.cos(a) * 10, 13 + Math.sin(a) * 10); x.stroke(); }
-		save("p_ice", c);
-		// 輪(はんい・ほえる・水しぶき)
-		[c, x] = mk(200, 200); ell(x, 100, 100, 96, 96, "rgba(255,255,255,0.18)", "rgba(255,255,255,0.85)", 4); save("ring", c);
-		[c, x] = mk(200, 200); ell(x, 100, 100, 94, 94, null, "#ffd040", 8); save("roar", c);
-		[c, x] = mk(200, 200); ell(x, 100, 100, 90, 90, "rgba(90,200,255,0.35)", "rgba(200,240,255,0.9)", 6); save("splash", c);
-		[c, x] = mk(200, 200); ell(x, 100, 100, 96, 96, "rgba(255,90,90,0.15)", "rgba(255,90,90,0.8)", 4); save("ring_ng", c);
-		// けむり
-		[c, x] = mk(80, 80); [[40, 40, 22], [24, 46, 14], [56, 46, 14], [40, 26, 14]].forEach((q) => ell(x, q[0], q[1], q[2], q[2], "#ffffff", "#c8c8d8", 3)); save("poof", c);
-		// 星
-		[c, x] = mk(40, 40); x.beginPath();
-		for (let k = 0; k < 10; k++) { const a = k / 10 * Math.PI * 2 - Math.PI / 2, r = k % 2 ? 8 : 18; x.lineTo(20 + Math.cos(a) * r, 20 + Math.sin(a) * r); }
-		x.closePath(); x.fillStyle = "#ffe04a"; x.fill(); x.lineWidth = 3; x.strokeStyle = "#c88a1a"; x.stroke(); save("star", c);
-	}
-	// ======== パレットのカード ========
-	{
-		const [c, x] = mk(150, 104);
-		rr(x, 3, 3, 144, 98, 16); x.fillStyle = "#fff8e8"; x.fill(); x.lineWidth = 5; x.strokeStyle = INK; x.stroke();
-		save("card", c);
-		const [c2, x2] = mk(150, 104);
-		rr(x2, 3, 3, 144, 98, 16); x2.fillStyle = "#fff0a0"; x2.fill(); x2.lineWidth = 7; x2.strokeStyle = "#ff6a3a"; x2.stroke();
-		save("card_on", c2);
-	}
-	// ======== ロゴ(正方形) ========
-	{
-		const [c, x] = mk(480, 480);
-		x.lineJoin = "round";
-		const img = new Image();
-		const t = (s, cx, cy, size, fill, col2) => {
-			x.font = "bold " + size + "px IPAGothic"; x.textAlign = "center"; x.textBaseline = "middle";
-			x.lineWidth = size * 0.32; x.strokeStyle = INK; x.strokeText(s, cx, cy + 5);
-			x.lineWidth = size * 0.26; x.strokeStyle = "#ffffff"; x.strokeText(s, cx, cy);
-			const gr = x.createLinearGradient(0, cy - size / 2, 0, cy + size / 2); gr.addColorStop(0, fill); gr.addColorStop(1, col2);
-			x.fillStyle = gr; x.fillText(s, cx, cy);
+		const lg = new Art(120, 120);
+		lg.x.drawImage(castleArt.c, 22, -6);
+		const word = (t, y, size, top, bottom, line) => {
+			const w = new Art(120, 40);
+			w.x.font = "bold " + size + "px IPAGothic"; w.x.textAlign = "center"; w.x.textBaseline = "middle"; w.x.fillStyle = "#000";
+			w.x.fillText(t, 60, 20);
+			const d = w.x.getImageData(0, 0, 120, 40);
+			for (let yy = 0; yy < 40; yy++) for (let xx = 0; xx < 120; xx++) {
+				const i = (yy * 120 + xx) * 4;
+				if (d.data[i + 3] > 110) {
+					const c = yy < 20 ? top : bottom;
+					d.data[i] = parseInt(c.slice(1, 3), 16); d.data[i + 1] = parseInt(c.slice(3, 5), 16); d.data[i + 2] = parseInt(c.slice(5, 7), 16); d.data[i + 3] = 255;
+				} else d.data[i + 3] = 0;
+			}
+			w.x.putImageData(d, 0, 0);
+			w.outline("#ffffff"); w.outline(line); w.outline(OL);
+			lg.x.drawImage(w.c, 0, y - 20);
 		};
-		out._logoDraw = true;
-		t("まもれ！", 240, 300, 82, "#ffb0c8", "#ff5a8a");
-		t("パンダ城", 240, 400, 104, "#a8f070", "#3aa84a");
-		save("logo_text", c);
+		word("まもれ！", 74, 22, "#ffb0d0", "#ff5a90", "#c02a60");
+		word("パンダ城", 100, 27, "#b8f080", "#4ab84a", "#2a7a30");
+		lg.save("logo");
+		// アイコン(80x80 を4倍・透過なし)
+		const ic = new Art(80, 80);
+		for (let y = 0; y < 80; y++) ic.rect(0, y, 80, 1, y < 40 ? (y % 4 < 2 ? "#a8e0ff" : "#b8e8ff") : (y % 4 < 2 ? "#8ad860" : "#80d058"));
+		ic.oval(40, 70, 36, 8, "#f4d898");
+		ic.x.drawImage(castleArt.c, 2, -2);
+		ic.x.drawImage(arts.u_chick, -2, 54); ic.x.drawImage(arts.u_lion, 57, 54); ic.x.drawImage(arts.e_slime, 29, 60);
+		out.icon = ic.big(4).toDataURL("image/png");
 	}
 	return out;
 }
@@ -378,35 +338,6 @@ function build(course) {
 	const b = await chromium.launch();
 	const p = await b.newPage();
 	const res = await p.evaluate(build, course);
-	// ロゴ: 文字の上にお城を合成
-	const logo = await p.evaluate(async (res) => {
-		const load = (u) => new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.src = u; });
-		const castle = await load(res.castle), text = await load(res.logo_text), chick = await load(res.u_chick), slime = await load(res.e_slime);
-		const c = document.createElement("canvas"); c.width = 480; c.height = 480;
-		const x = c.getContext("2d");
-		x.drawImage(castle, 90, -20, 300, 300);
-		x.drawImage(chick, 20, 150, 110, 110);
-		x.drawImage(slime, 370, 180, 90, 80);
-		x.drawImage(text, 0, 0);
-		return c.toDataURL("image/png");
-	}, res);
-	res.logo = logo;
-	// アイコン(320x320・透過なし): 草原にお城とパンダの王様、迷彩のひよことライオン
-	res.icon = await p.evaluate(async (res) => {
-		const load = (u) => new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.src = u; });
-		const castle = await load(res.castle), chick = await load(res.u_chick), lion = await load(res.u_lion), slime = await load(res.e_slime);
-		const c = document.createElement("canvas"); c.width = 320; c.height = 320;
-		const x = c.getContext("2d");
-		const g = x.createRadialGradient(160, 120, 20, 160, 160, 230); g.addColorStop(0, "#c8f0ff"); g.addColorStop(0.55, "#9ad86a"); g.addColorStop(1, "#5aa83a");
-		x.fillStyle = g; x.fillRect(0, 0, 320, 320);
-		x.fillStyle = "#f0d49a"; x.beginPath(); x.ellipse(160, 280, 150, 40, 0, 0, Math.PI * 2); x.fill();
-		x.drawImage(castle, 15, -8, 290, 290);
-		x.drawImage(chick, -6, 196, 120, 120);
-		x.drawImage(lion, 206, 196, 120, 120);
-		x.drawImage(slime, 120, 250, 76, 68);
-		return c.toDataURL("image/png");
-	}, res);
-	delete res.logo_text; delete res._logoDraw;
 	await b.close();
 	Object.keys(res).forEach((k) => fs.writeFileSync(k === "icon" ? path.join(ROOT, "icon.png") : path.join(OUT, k + ".png"), Buffer.from(res[k].split(",")[1], "base64")));
 	console.log("wrote", Object.keys(res).length, "images");
