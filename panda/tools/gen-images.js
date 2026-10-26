@@ -306,8 +306,10 @@ function build(course) {
 	// ======== ロゴ(120x120 を4倍) ========
 	{
 		const lg = new Art(120, 120);
-		lg.x.drawImage(castleArt.c, 22, -6);
-		const word = (t, y, size, top, bottom, line) => {
+		lg.x.drawImage(castleArt.c, 22, -5);
+		// お城の両わきに、迷彩のひよことライオン
+		lg.x.drawImage(arts.u_chick, 1, 37); lg.x.drawImage(arts.u_lion, 94, 37);
+		const word = (t, y, size, top, bottom, line, outer, thick) => {
 			const w = new Art(120, 40);
 			w.x.font = "bold " + size + "px IPAGothic"; w.x.textAlign = "center"; w.x.textBaseline = "middle"; w.x.fillStyle = "#000";
 			w.x.fillText(t, 60, 20);
@@ -320,11 +322,25 @@ function build(course) {
 				} else d.data[i + 3] = 0;
 			}
 			w.x.putImageData(d, 0, 0);
-			w.outline("#ffffff"); w.outline(line); w.outline(OL);
+			if (thick) {
+				// 文字を1ドット太くする
+				const t2 = new Art(120, 40); t2.x.drawImage(w.c, 0, 0);
+				[[1, 0], [0, 1], [1, 1]].forEach((o) => w.x.drawImage(t2.c, o[0], o[1]));
+			}
+			if (line) w.outline(line);
+			w.outline(outer || OL);
 			lg.x.drawImage(w.c, 0, y - 20);
 		};
-		word("まもれ！", 74, 22, "#ffb0d0", "#ff5a90", "#c02a60");
-		word("パンダ城", 100, 27, "#b8f080", "#4ab84a", "#2a7a30");
+		// リボン(まもれ！)
+		const rb = new Art(120, 120);
+		rb.rect(1, 66, 12, 12, "#c03a6a"); rb.rect(107, 66, 12, 12, "#c03a6a");
+		rb.rect(1, 70, 3, 4, "rgba(0,0,0,0)"); rb.x.clearRect(1, 70, 3, 4); rb.x.clearRect(116, 70, 3, 4);
+		rb.rect(9, 61, 102, 14, "#ff6a9a"); rb.rect(9, 61, 102, 2, "#ff9ab8"); rb.rect(9, 73, 102, 2, "#e04a7a");
+		rb.rect(9, 75, 4, 3, "#8a2a4a"); rb.rect(107, 75, 4, 3, "#8a2a4a");
+		rb.outline();
+		lg.x.drawImage(rb.c, 0, 0);
+		word("まもれ！", 68, 15, "#ffffff", "#fff0f6", "", "#8a2a4a");
+		word("パンダ城", 98, 28, "#c8ff90", "#4ab84a", "#ffffff", OL, true);
 		lg.save("logo");
 		// アイコン(80x80 を4倍・透過なし)
 		const ic = new Art(80, 80);

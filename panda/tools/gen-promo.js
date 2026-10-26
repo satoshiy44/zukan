@@ -38,7 +38,7 @@ async function draw(srcs) {
 	rr(392, 22, 866, 484, 18); x.fillStyle = "#ffffff"; x.fill();
 	x.save(); rr(400, 30, 850, 468, 14); x.clip(); x.drawImage(im.battle, 0, 0, 1280, 720, 400, 30, 850, 478); x.restore();
 	// 左上: ロゴとひとこと
-	x.drawImage(im.logo, 6, -6, 380, 380);
+	x.drawImage(im.logo, 14, 6, 364, 364);
 	text("かわいい迷彩どうぶつ隊で", 196, 388, 28, "#ffffff", "center", INK, 7);
 	text("パンダの王様のお城を", 196, 428, 28, "#ffffff", "center", INK, 7);
 	text("敵からまもりぬけ！", 196, 470, 34, "#ffe040", "center", INK, 8);
@@ -51,7 +51,7 @@ async function draw(srcs) {
 		text(n, l + 32, 556, 26, col, "center");
 		text(title, l + 58, 556, 26, "#ffffff", "left", INK, 6);
 	};
-	card(16, 520, "#ff7a4a", "1", "ポイントで配置・パワーアップ");
+	card(16, 520, "#ff7a4a", "1", "100ptで配置・パワーアップ");
 	const units = [["u_chick", "2pt"], ["u_rabbit", "5pt"], ["u_penguin", "10pt"], ["u_elephant", "20pt"], ["u_lion", "30pt"]];
 	units.forEach((u, i) => {
 		x.drawImage(im[u[0]], 26 + i * 100, 572, 100, 100);
