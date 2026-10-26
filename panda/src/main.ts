@@ -315,7 +315,8 @@ export function main(param: GameMainParameterObject): void {
 			refreshCards();
 		};
 		scene.onPointDownCapture.add((ev) => {
-			if (phase === "end" || introOn) return;
+			// カードやボタンをタップしたとき(ev.target がある)は、そのものの中の座標になるので配置しない
+			if (phase === "end" || introOn || ev.target) return;
 			const x = ev.point.x, y = ev.point.y;
 			if (y >= 606 || (phase === "setup" && x > W - 240 && y > 60 && y < 140)) return; // パレットとボタン
 			for (let i = units.length - 1; i >= 0; i--) {
@@ -546,7 +547,7 @@ export function main(param: GameMainParameterObject): void {
 			over.append(new g.FilledRect({ scene, cssColor: "rgba(30,20,10,0.6)", width: W, height: H }));
 			over.append(new g.FilledRect({ scene, cssColor: "#3a2416", x: 330, y: 150, width: 620, height: 400 }));
 			over.append(new g.FilledRect({ scene, cssColor: "#fff8e8", x: 338, y: 158, width: 604, height: 384 }));
-			label(over, fontY, 64, W / 2, 180, breaks > 0 ? "おしまい！" : "まもりきった！", "center", 600);
+			label(over, fontY, 64, W / 2, 180, "おしまい！", "center", 600);
 			label(over, fontInk, 34, 380, 290, "たおしたポイント", "left", 500);
 			label(over, fontInk, 34, 900, 290, "+" + killPts, "right", 300);
 			label(over, fontInk, 34, 380, 350, "お城のダメージ", "left", 500);
