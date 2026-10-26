@@ -5,7 +5,10 @@ const W = 1280;
 const H = 720;
 const SETUP_SEC = 20; // さいしょに動物を置く時間
 const END_SEC = 3;
-const BUDGET = 100; // 置くのに使えるポイント
+const BUDGET = 100; // 置くのに使えるポイント(さいしょ)
+const REGEN = 2.5; // 戦い中に1びょうごとにふえるポイント
+const WAVE_SEC = 10; // ウェーブの長さ
+const MAX_LV = 3; // パワーアップの上限
 const CASTLE_X = 640;
 const CASTLE_Y = 330;
 const CASTLE_HP = 120;
@@ -34,21 +37,28 @@ const UNITS: UnitDef[] = [
 	{ kind: "elephant", name: "ゾウ", cost: 20, range: 190, rate: 1.5, dmg: 9, desc: "みずでっぽう(まわりも)" },
 	{ kind: "lion", name: "ライオン", cost: 30, range: 160, rate: 1.8, dmg: 14, desc: "ほえて全体こうげき" }
 ];
-type EnemyKind = "slime" | "goblin" | "devil" | "witch" | "ogre";
-interface EnemyDef { kind: EnemyKind; hp: number; speed: number; pts: number; dmg: number; scale: number; }
+type EnemyKind = "slime" | "mini" | "goblin" | "devil" | "witch" | "ogre";
+interface EnemyDef {
+	kind: EnemyKind; img: string; hp: number; speed: number; pts: number; dmg: number; scale: number; bounty: number; armor: number;
+}
 const ENEMIES: { [k: string]: EnemyDef } = {
-	slime: { kind: "slime", hp: 8, speed: 46, pts: 100, dmg: 1, scale: 0.7 },
-	goblin: { kind: "goblin", hp: 14, speed: 60, pts: 200, dmg: 2, scale: 0.72 },
-	devil: { kind: "devil", hp: 16, speed: 88, pts: 300, dmg: 3, scale: 0.7 },
-	witch: { kind: "witch", hp: 32, speed: 50, pts: 500, dmg: 4, scale: 0.75 },
-	ogre: { kind: "ogre", hp: 130, speed: 30, pts: 2000, dmg: 10, scale: 0.9 }
+	// スライム: たおすと小さいスライム2ひきに分かれる
+	slime: { kind: "slime", img: "e_slime", hp: 8, speed: 46, pts: 100, dmg: 1, scale: 0.7, bounty: 1, armor: 0 },
+	mini: { kind: "mini", img: "e_slime", hp: 3, speed: 62, pts: 50, dmg: 1, scale: 0.42, bounty: 0, armor: 0 },
+	// ゴブリン: よろいで、こうげきが1へる(ひよこの豆は効きにくい)
+	goblin: { kind: "goblin", img: "e_goblin", hp: 14, speed: 58, pts: 200, dmg: 2, scale: 0.72, bounty: 2, armor: 1 },
+	// 悪魔: とても速い(ペンギンの足止めが効く)
+	devil: { kind: "devil", img: "e_devil", hp: 14, speed: 92, pts: 300, dmg: 3, scale: 0.7, bounty: 2, armor: 0 },
+	// 魔女: まわりの敵を回復する(先にたおしたい)
+	witch: { kind: "witch", img: "e_witch", hp: 28, speed: 48, pts: 500, dmg: 4, scale: 0.75, bounty: 4, armor: 0 },
+	ogre: { kind: "ogre", img: "e_ogre", hp: 130, speed: 30, pts: 2000, dmg: 10, scale: 0.9, bounty: 15, armor: 2 }
 };
 
-interface Unit { def: UnitDef; x: number; y: number; cool: number; spr: g.Sprite; bounce: number; }
+interface Unit { def: UnitDef; x: number; y: number; cool: number; spr: g.Sprite; bounce: number; lv: number; lvLabel: g.Label | null; }
 interface Enemy {
 	def: EnemyDef; path: number; d: number; hp: number; maxHp: number; x: number; y: number;
 	slow: number; flash: number; e: g.E; spr: g.Sprite; bar: g.FilledRect; dead: boolean;
-	stop: number; atk: number; lunge: number;
+	stop: number; atk: number; lunge: number; heal: number;
 }
 interface Shot {
 	kind: string; x: number; y: number; tx: number; ty: number; target: Enemy | null;
@@ -135,6 +145,7 @@ export function main(param: GameMainParameterObject): void {
 		const fontY = font("#ffe040", "#3a2416");
 		const fontR = font("#ff5a5a", "#ffffff");
 		const fontInk = font("#3a2416", "#ffffff", 4);
+		const fontC = font("#7aff7a", "#1a4a1a", 6);
 		type Align = "left" | "center" | "right";
 		const label = (
 			parent: g.E, f: g.Font, size: number, x: number, y: number, text: string, align: Align = "left", w = 600
@@ -180,7 +191,7 @@ export function main(param: GameMainParameterObject): void {
 		let phase: "setup" | "battle" | "end" = "setup";
 		let setupLeft = SETUP_SEC;
 		let battleT = 0;
-		let budget = BUDGET;
+		let budget = BUDGET; // 小数でたまる。表示は切り捨て
 		let killPts = 0;
 		let penalty = 0;
 		let castleHp = CASTLE_HP;
@@ -205,7 +216,7 @@ export function main(param: GameMainParameterObject): void {
 		palette.append(new g.FilledRect({ scene, cssColor: "rgba(40,24,14,0.6)", width: W, height: 114 }));
 		const cards: { bg: g.Sprite; on: g.Sprite; cost: g.Label; e: g.E }[] = [];
 		UNITS.forEach((u, i) => {
-			const e = new g.E({ scene, x: 150 + i * 160, y: 6, width: 150, height: 104, touchable: true });
+			const e = new g.E({ scene, x: 360 + i * 160, y: 6, width: 150, height: 104, touchable: true });
 			const bg = new g.Sprite({ scene, src: img("card") });
 			const on = new g.Sprite({ scene, src: img("card_on") });
 			on.hide();
@@ -214,7 +225,7 @@ export function main(param: GameMainParameterObject): void {
 			label(e, fontInk, u.name.length > 3 ? 19 : 23, 108, 16, u.name, "center", 80);
 			const cost = label(e, fontR, 30, 108, 52, u.cost + "pt", "center", 80);
 			e.onPointDown.add(() => {
-				if (phase !== "setup") return;
+				if (phase === "end") return;
 				selected = i;
 				se("cancel", 0.3);
 				refreshCards();
@@ -222,19 +233,20 @@ export function main(param: GameMainParameterObject): void {
 			palette.append(e);
 			cards.push({ bg, on, cost, e });
 		});
-		const budgetLabel = label(palette, fontY, 30, 1090, 16, "", "center", 200);
-		label(palette, fontW, 20, 1090, 56, "草の上をタップで配置", "center", 260);
-		label(palette, fontW, 20, 1090, 82, "置いた動物をタップで戻す", "center", 260);
+		const budgetLabel = label(palette, fontY, 36, 180, 8, "", "center", 340);
+		const regenLabel = label(palette, fontW, 20, 180, 52, "草の上をタップで配置", "center", 340);
+		const hintLabel = label(palette, fontW, 20, 180, 80, "置いた動物をタップで戻す", "center", 340);
 		const descLabel = label(palette, fontW, 22, 20, -34, "", "left", 900);
 		const refreshCards = (): void => {
 			cards.forEach((c, i) => {
 				if (i === selected) c.on.show(); else c.on.hide();
-				c.e.opacity = UNITS[i].cost <= budget ? 1 : 0.45;
+				c.e.opacity = UNITS[i].cost <= Math.floor(budget) ? 1 : 0.45;
 				c.e.modified();
 			});
-			setText(budgetLabel, "のこり " + budget + "pt");
+			setText(budgetLabel, "ポイント " + Math.floor(budget) + "pt");
 			const u = UNITS[selected];
 			setText(descLabel, u.name + "(" + u.cost + "pt): " + u.desc);
+			if (phase === "battle") setText(hintLabel, "置いた動物をタップでパワーアップ");
 		};
 		refreshCards();
 		// スタートボタン
@@ -264,7 +276,7 @@ export function main(param: GameMainParameterObject): void {
 		};
 		const place = (x: number, y: number): void => {
 			const def = UNITS[selected];
-			if (def.cost > budget) {
+			if (def.cost > Math.floor(budget)) {
 				se("ng", 0.5); pop("ポイントがたりない", fontR, 28, x, y - 60); return;
 			}
 			if (!canPlace(x, y)) {
@@ -275,30 +287,58 @@ export function main(param: GameMainParameterObject): void {
 				scene, src: img("u_" + def.kind), x, y: y + 30, anchorX: 0.5, anchorY: 0.92, scaleX: 0.8, scaleY: 0.8
 			});
 			world.append(spr);
-			units.push({ def, x, y, cool: rand() * def.rate, spr, bounce: 0.3 });
+			units.push({ def, x, y, cool: rand() * def.rate, spr, bounce: 0.3, lv: 1, lvLabel: null });
 			se("place", 0.6);
 			showRing("ring", x, y, def.range);
 			burst("star", x, y - 20, 40, 0.4);
 			refreshCards();
 		};
 		scene.onPointDownCapture.add((ev) => {
-			if (phase !== "setup" || introOn) return;
+			if (phase === "end" || introOn) return;
 			const x = ev.point.x, y = ev.point.y;
-			if (y >= 606 || (x > W - 240 && y > 60 && y < 140)) return; // パレットとボタン
-			// 置いた動物をタップしたら戻す
+			if (y >= 606 || (phase === "setup" && x > W - 240 && y > 60 && y < 140)) return; // パレットとボタン
 			for (let i = units.length - 1; i >= 0; i--) {
 				const u = units[i];
 				if (Math.abs(x - u.x) < 36 && y > u.y - 50 && y < u.y + 30) {
-					budget += u.def.cost;
-					u.spr.destroy();
-					units.splice(i, 1);
-					se("cancel", 0.6);
-					refreshCards();
+					if (phase === "setup") {
+						// 配置タイム: タップで戻す
+						budget += u.def.cost + upCost(u.def) * (u.lv - 1);
+						u.spr.destroy();
+						if (u.lvLabel) u.lvLabel.destroy();
+						units.splice(i, 1);
+						se("cancel", 0.6);
+						refreshCards();
+					} else upgrade(u);
 					return;
 				}
 			}
 			place(x, y);
 		});
+
+		// パワーアップ: こうげき1.6倍ずつ、はんいと速さも少し上がる
+		const upCost = (d: UnitDef): number => Math.max(2, Math.ceil(d.cost * 0.8));
+		const dmgOf = (u: Unit): number => u.def.dmg * (1 + 0.6 * (u.lv - 1));
+		const rangeOf = (u: Unit): number => u.def.range * (1 + 0.12 * (u.lv - 1));
+		const rateOf = (u: Unit): number => u.def.rate * (1 - 0.1 * (u.lv - 1));
+		const upgrade = (u: Unit): void => {
+			if (u.lv >= MAX_LV) {
+				se("ng", 0.4); pop("もう最強！", fontY, 26, u.x, u.y - 90); return;
+			}
+			const c = upCost(u.def);
+			if (Math.floor(budget) < c) {
+				se("ng", 0.4); pop("あと" + (c - Math.floor(budget)) + "pt", fontR, 26, u.x, u.y - 90); return;
+			}
+			budget -= c;
+			u.lv++;
+			u.bounce = 0.4;
+			se("place", 0.7);
+			burst("star", u.x, u.y - 30, 70, 0.5);
+			showRing("ring", u.x, u.y, rangeOf(u));
+			pop("パワーアップ！", fontY, 28, u.x, u.y - 100);
+			if (!u.lvLabel) u.lvLabel = label(ui, fontY, 22, u.x, u.y - 92, "", "center", 100);
+			setText(u.lvLabel, u.lv >= MAX_LV ? "★★MAX" : "★★".slice(0, u.lv - 1));
+			refreshCards();
+		};
 
 		// ======== はじめの説明 ========
 		const intro = new g.E({ scene, width: W, height: 606 });
@@ -306,10 +346,10 @@ export function main(param: GameMainParameterObject): void {
 		intro.append(new g.FilledRect({ scene, cssColor: "rgba(30,20,10,0.55)", width: W, height: 606 }));
 		intro.append(new g.Sprite({ scene, src: img("logo"), x: 330, y: 300, anchorX: 0.5, anchorY: 0.5, scaleX: 0.95, scaleY: 0.95 }));
 		const rules = [
-			"① 20びょうで、どうぶつを道のそばに配置！",
-			"　 100ptまで。強い子ほどポイントが高い",
-			"② 道から来る敵を、どうぶつが自動でこうげき",
-			"③ 敵をたおすとポイントゲット！",
+			"① 100ptで、どうぶつを道のそばに配置！",
+			"② ポイントは時間と敵をたおすとふえる",
+			"　 戦いの間も、置いたりパワーアップできる",
+			"③ 敵をたおすとスコアゲット！",
 			"④ お城をこうげきされるとマイナス…"
 		];
 		rules.forEach((t, i) => label(intro, i === 4 ? fontR : fontW, 30, 590, 150 + i * 62, t, "left", 690));
@@ -327,8 +367,8 @@ export function main(param: GameMainParameterObject): void {
 			if (phase !== "setup") return;
 			closeIntro();
 			phase = "battle";
-			palette.hide();
 			startBtn.hide();
+			setText(regenLabel, "+" + REGEN + "pt/びょう・たおすと+α");
 			preview.hide();
 			se("go", 0.7);
 			pop("たたかい開始！", fontY, 72, W / 2, 230);
@@ -337,26 +377,29 @@ export function main(param: GameMainParameterObject): void {
 		startBtn.onPointDown.add(startBattle);
 
 		// ======== 敵 ========
-		const spawn = (kind: EnemyKind, path: number): void => {
+		let wave = 0;
+		const spawn = (kind: EnemyKind, path: number, d0 = 0): void => {
 			const def = ENEMIES[kind];
-			const mul = 1 + Math.min(1, battleT / playSec) * 0.8;
+			const mul = 1 + 0.15 * Math.max(0, wave - 1);
 			const e = new g.E({ scene });
-			const a = img("e_" + kind);
+			const a = img(def.img);
 			const spr = new g.Sprite({ scene, src: a, anchorX: 0.5, anchorY: 0.92, scaleX: def.scale, scaleY: def.scale });
 			e.append(spr);
-			const bw = 50 * def.scale + 10;
+			const bw = 50 * Math.max(0.6, def.scale) + 10;
 			const barY = -a.height * def.scale;
 			e.append(new g.FilledRect({ scene, cssColor: "#3a2416", x: -bw / 2 - 2, y: barY - 8, width: bw + 4, height: 9 }));
 			const bar = new g.FilledRect({ scene, cssColor: "#ff4a4a", x: -bw / 2, y: barY - 6, width: bw, height: 5 });
 			e.append(bar);
 			world.append(e);
 			const hp = Math.round(def.hp * mul);
-			enemies.push({ def, path, d: 0, hp, maxHp: hp, x: -999, y: -999, slow: 0, flash: 0, e, spr, bar, dead: false,
-				stop: lens[path][lens[path].length - 1] - CASTLE_R - rand() * 45, atk: 0.4, lunge: 0 });
+			enemies.push({ def, path, d: d0, hp, maxHp: hp, x: -999, y: -999, slow: 0, flash: 0, e, spr, bar, dead: false,
+				stop: lens[path][lens[path].length - 1] - CASTLE_R - rand() * 45, atk: 0.4, lunge: 0, heal: 1.5 });
 		};
-		let spawnLeft = 1.5;
-		const bossTimes = [0.38, 0.68, 0.9];
-		let bossIdx = 0;
+		// ウェーブ: 10びょうごとに、数がふえていく。3・5・7ウェーブ目はボス
+		let waveT = 0;
+		let waveLeft = 0; // このウェーブでまだ出していない数
+		let spawnGap = 1;
+		let spawnLeft = 0;
 		const pickKind = (p: number): EnemyKind => {
 			const r = rand();
 			if (p < 0.15) return r < 0.75 ? "slime" : "goblin";
@@ -368,7 +411,14 @@ export function main(param: GameMainParameterObject): void {
 			if (en.dead) return;
 			en.dead = true;
 			killPts += en.def.pts;
+			budget += en.def.bounty;
 			updateScore();
+			refreshCards();
+			if (en.def.kind === "slime") {
+				// 小さいスライム2ひきに分かれる
+				spawn("mini", en.path, Math.max(0, en.d - 12));
+				spawn("mini", en.path, Math.max(0, en.d + 8));
+			}
 			se("poof", 0.4);
 			burst("poof", en.x, en.y - 20, 90 * en.def.scale, 0.45);
 			pop("+" + en.def.pts, fontY, en.def.kind === "ogre" ? 48 : 30, en.x, en.y - 90);
@@ -376,7 +426,7 @@ export function main(param: GameMainParameterObject): void {
 		};
 		const damage = (en: Enemy, dmg: number): void => {
 			if (en.dead) return;
-			en.hp -= dmg;
+			en.hp -= Math.max(1, dmg - en.def.armor);
 			en.flash = 0.12;
 			if (en.hp <= 0) kill(en);
 		};
@@ -405,7 +455,7 @@ export function main(param: GameMainParameterObject): void {
 			const res: Enemy[] = [];
 			enemies.forEach((en) => {
 				const onScreen = en.x > -50 && en.x < W + 50 && en.y > -50 && en.y < H + 50;
-				if (!en.dead && onScreen && dist(u.x, u.y, en.x, en.y - 20) <= u.def.range) res.push(en);
+				if (!en.dead && onScreen && dist(u.x, u.y, en.x, en.y - 20) <= rangeOf(u)) res.push(en);
 			});
 			// お城に近い(道を進んだ)順
 			res.sort((a, b) => (b.d / lens[b.path][lens[b.path].length - 1]) - (a.d / lens[a.path][lens[a.path].length - 1]));
@@ -422,17 +472,17 @@ export function main(param: GameMainParameterObject): void {
 			if (list.length === 0) return false;
 			const k = u.def.kind;
 			if (k === "chick") {
-				shoot("p_pea", u, list[0], u.def.dmg, 0.18); se("pea", 0.25);
+				shoot("p_pea", u, list[0], dmgOf(u), 0.18); se("pea", 0.25);
 			} else if (k === "rabbit") {
-				shoot("p_carrot", u, list[0], u.def.dmg, 0.25); se("carrot", 0.3);
+				shoot("p_carrot", u, list[0], dmgOf(u), 0.25); se("carrot", 0.3);
 			} else if (k === "penguin") {
-				for (let i = 0; i < Math.min(3, list.length); i++) shoot("p_ice", u, list[i], u.def.dmg, 0.22);
+				for (let i = 0; i < Math.min(3, list.length); i++) shoot("p_ice", u, list[i], dmgOf(u), 0.22);
 				se("ice", 0.35);
 			} else if (k === "elephant") {
-				shoot("p_water", u, list[0], u.def.dmg, 0.45); se("splash", 0.25);
+				shoot("p_water", u, list[0], dmgOf(u), 0.45); se("splash", 0.25);
 			} else {
-				list.forEach((en) => damage(en, u.def.dmg));
-				burst("roar", u.x, u.y - 20, u.def.range * 2, 0.4);
+				list.forEach((en) => damage(en, dmgOf(u)));
+				burst("roar", u.x, u.y - 20, rangeOf(u) * 2, 0.4);
 				se("roar", 0.45);
 			}
 			return true;
@@ -478,18 +528,29 @@ export function main(param: GameMainParameterObject): void {
 			} else if (phase === "battle") {
 				battleT += dt;
 				const p = battleT / playSec;
-				setText(infoLabel, "");
-				// 敵を出す(だんだん多く)
-				spawnLeft -= dt;
-				if (spawnLeft <= 0 && p < 0.97) {
-					spawn(pickKind(p), Math.floor(rand() * PATHS.length));
-					if (p > 0.6 && rand() < 0.2) spawn(pickKind(p), Math.floor(rand() * PATHS.length));
-					spawnLeft = 1.6 - 0.95 * Math.min(1, p);
+				setText(infoLabel, "ウェーブ " + wave);
+				// ポイントがたまる
+				budget += REGEN * dt;
+				if (Math.floor(budget) !== Math.floor(budget - REGEN * dt)) refreshCards();
+				// ウェーブ
+				waveT -= dt;
+				if (waveT <= 0 && battleT < playSec - 4) {
+					wave++;
+					waveT = WAVE_SEC;
+					waveLeft = 5 + wave * 3;
+					spawnGap = (WAVE_SEC - 3) / waveLeft;
+					spawnLeft = 0;
+					pop("ウェーブ " + wave + "！", fontY, 64, W / 2, 200);
+					if (wave >= 3 && wave % 2 === 1) {
+						spawn("ogre", Math.floor(rand() * PATHS.length));
+						pop("ボスのオーガが来た！", fontR, 40, W / 2, 280);
+					}
 				}
-				if (bossIdx < bossTimes.length && p >= bossTimes[bossIdx]) {
-					bossIdx++;
-					spawn("ogre", Math.floor(rand() * PATHS.length));
-					pop("ボスのオーガが来た！", fontR, 44, W / 2, 150);
+				spawnLeft -= dt;
+				if (waveLeft > 0 && spawnLeft <= 0) {
+					waveLeft--;
+					spawnLeft = spawnGap;
+					spawn(pickKind(p), Math.floor(rand() * PATHS.length));
 				}
 				if (battleT >= playSec) finish();
 			}
@@ -507,6 +568,19 @@ export function main(param: GameMainParameterObject): void {
 				}
 				const q = posAt(en.path, en.d);
 				en.x = q[0]; en.y = q[1];
+				if (en.def.kind === "witch" && phase === "battle") {
+					en.heal -= dt;
+					if (en.heal <= 0) {
+						en.heal = 2.5;
+						let healed = false;
+						enemies.forEach((o) => {
+							if (o !== en && !o.dead && o.hp < o.maxHp && dist(o.x, o.y, en.x, en.y) < 130) {
+								o.hp = Math.min(o.maxHp, o.hp + Math.ceil(o.maxHp * 0.25)); healed = true;
+							}
+						});
+						if (healed) pop("かいふく♪", fontC, 22, en.x, en.y - 90);
+					}
+				}
 				if (en.d >= en.stop) {
 					en.d = en.stop;
 					if (phase === "battle") {
@@ -525,7 +599,7 @@ export function main(param: GameMainParameterObject): void {
 				}
 				en.e.x = en.x; en.e.y = en.y + Math.sin(battleT * 10 + i) * 2;
 				en.e.modified();
-				en.bar.width = Math.max(0, (50 * en.def.scale + 10) * en.hp / en.maxHp);
+				en.bar.width = Math.max(0, (50 * Math.max(0.6, en.def.scale) + 10) * en.hp / en.maxHp);
 				en.bar.modified();
 				if (en.flash > 0) {
 					en.flash -= dt; en.spr.opacity = 0.5;
@@ -539,7 +613,7 @@ export function main(param: GameMainParameterObject): void {
 					u.cool -= dt;
 					if (u.cool <= 0) {
 						if (attack(u)) {
-							u.cool = u.def.rate; u.bounce = 0.2;
+							u.cool = rateOf(u); u.bounce = 0.2;
 						} else u.cool = 0.1;
 					}
 				}

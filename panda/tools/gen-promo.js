@@ -51,7 +51,7 @@ async function draw(srcs) {
 		text(n, l + 32, 556, 26, col, "center");
 		text(title, l + 58, 556, 26, "#ffffff", "left", INK, 6);
 	};
-	card(16, 520, "#ff7a4a", "1", "100ptで動物を配置(20びょう)");
+	card(16, 520, "#ff7a4a", "1", "ポイントで配置・パワーアップ");
 	const units = [["u_chick", "2pt"], ["u_rabbit", "5pt"], ["u_penguin", "10pt"], ["u_elephant", "20pt"], ["u_lion", "30pt"]];
 	units.forEach((u, i) => {
 		x.drawImage(im[u[0]], 26 + i * 100, 572, 100, 100);
