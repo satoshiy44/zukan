@@ -346,8 +346,24 @@ function build(course) {
 		const ic = new Art(80, 80);
 		for (let y = 0; y < 80; y++) ic.rect(0, y, 80, 1, y < 40 ? (y % 4 < 2 ? "#a8e0ff" : "#b8e8ff") : (y % 4 < 2 ? "#8ad860" : "#80d058"));
 		ic.oval(40, 70, 36, 8, "#f4d898");
-		ic.x.drawImage(castleArt.c, 2, -2);
-		ic.x.drawImage(arts.u_chick, -2, 54); ic.x.drawImage(arts.u_lion, 57, 54); ic.x.drawImage(arts.e_slime, 29, 60);
+		ic.x.drawImage(castleArt.c, 2, -8);
+		ic.x.drawImage(arts.u_chick, -3, 30); ic.x.drawImage(arts.u_lion, 58, 30);
+		// 下に題字「パンダ城」(太いドット文字)
+		const tw = new Art(80, 26);
+		tw.x.font = "bold 19px IPAGothic"; tw.x.textAlign = "center"; tw.x.textBaseline = "middle"; tw.x.fillStyle = "#000";
+		tw.x.fillText("パンダ城", 40, 13);
+		const td2 = tw.x.getImageData(0, 0, 80, 26);
+		for (let yy = 0; yy < 26; yy++) for (let xx = 0; xx < 80; xx++) {
+			const i = (yy * 80 + xx) * 4;
+			if (td2.data[i + 3] > 110) {
+				const top = yy < 13;
+				td2.data[i] = top ? 0xc8 : 0x4a; td2.data[i + 1] = top ? 0xff : 0xb8; td2.data[i + 2] = top ? 0x90 : 0x4a; td2.data[i + 3] = 255;
+			} else td2.data[i + 3] = 0;
+		}
+		tw.x.putImageData(td2, 0, 0);
+		const tw2 = new Art(80, 26); tw2.x.drawImage(tw.c, 0, 0); tw.x.drawImage(tw2.c, 1, 0);
+		tw.outline("#ffffff"); tw.outline(OL);
+		ic.x.drawImage(tw.c, 0, 55);
 		out.icon = ic.big(4).toDataURL("image/png");
 	}
 	return out;
