@@ -342,42 +342,53 @@ function build(course) {
 		word("まもれ！", 68, 15, "#ffffff", "#fff0f6", "", "#8a2a4a");
 		word("パンダ城", 98, 28, "#c8ff90", "#4ab84a", "#ffffff", OL, true);
 		lg.save("logo");
-		// アイコン(80x80 を4倍・透過なし)
+		// アイコン(320x320・透過なし)
+		// 上: 空と草原にお城とどうぶつ(80x80 のドット絵を4倍)。下: こい紺の台に、黄色の大きな題字
 		const ic = new Art(80, 80);
-		for (let y = 0; y < 80; y++) ic.rect(0, y, 80, 1, y < 40 ? (y % 4 < 2 ? "#a8e0ff" : "#b8e8ff") : (y % 4 < 2 ? "#8ad860" : "#80d058"));
-		ic.oval(40, 70, 36, 8, "#f4d898");
-		ic.x.drawImage(castleArt.c, 2, -8);
-		ic.x.drawImage(arts.u_chick, -3, 20); ic.x.drawImage(arts.u_lion, 58, 20);
-		// 下に題字「パンダ城」(太いドット文字)
-		const tw = new Art(80, 26);
-		tw.x.font = "bold 19px IPAGothic"; tw.x.textAlign = "center"; tw.x.textBaseline = "middle"; tw.x.fillStyle = "#000";
-		tw.x.fillText("パンダ城", 40, 13);
-		const td2 = tw.x.getImageData(0, 0, 80, 26);
-		for (let yy = 0; yy < 26; yy++) for (let xx = 0; xx < 80; xx++) {
-			const i = (yy * 80 + xx) * 4;
-			if (td2.data[i + 3] > 110) {
-				const top = yy < 13;
-				td2.data[i] = top ? 0xc8 : 0x4a; td2.data[i + 1] = top ? 0xff : 0xb8; td2.data[i + 2] = top ? 0x90 : 0x4a; td2.data[i + 3] = 255;
-			} else td2.data[i + 3] = 0;
-		}
-		tw.x.putImageData(td2, 0, 0);
-		const tw2 = new Art(80, 26); tw2.x.drawImage(tw.c, 0, 0); tw.x.drawImage(tw2.c, 1, 0);
-		tw.outline("#ffffff"); tw.outline(OL);
-		// リボン「まもれ！」
-		const ir = new Art(80, 80);
-		// 紫よりのピンク
-		ir.rect(1, 45, 8, 9, "#8a3aa8"); ir.rect(71, 45, 8, 9, "#8a3aa8");
-		ir.x.clearRect(1, 48, 2, 3); ir.x.clearRect(77, 48, 2, 3);
-		ir.rect(6, 41, 68, 12, "#c85ac8"); ir.rect(6, 41, 68, 2, "#e08ae0"); ir.rect(6, 51, 68, 2, "#a040a8");
-		ir.outline();
-		ic.x.drawImage(ir.c, 0, 0);
-		const mw = new Art(80, 16);
-		mw.x.font = "bold 12px IPAGothic"; mw.x.textAlign = "center"; mw.x.textBaseline = "middle"; mw.x.fillStyle = "#ffffff";
-		mw.x.fillText("まもれ！", 40, 8);
-		mw.crisp(); mw.outline("#5a2070");
-		ic.x.drawImage(mw.c, 0, 39);
-		ic.x.drawImage(tw.c, 0, 56);
-		out.icon = ic.big(4).toDataURL("image/png");
+		for (let y = 0; y < 80; y++) ic.rect(0, y, 80, 1, y < 34 ? (y % 4 < 2 ? "#8ad4ff" : "#9adcff") : (y % 4 < 2 ? "#8ad860" : "#80d058"));
+		ic.x.drawImage(castleArt.c, 2, -6);
+		ic.x.drawImage(arts.u_chick, -3, 24); ic.x.drawImage(arts.u_lion, 58, 24);
+		const fin = document.createElement("canvas"); fin.width = 320; fin.height = 320;
+		const fx = fin.getContext("2d"); fx.imageSmoothingEnabled = false;
+		fx.drawImage(ic.big(4), 0, 0);
+		// 160x160 のドットで文字と台を描いて2倍にする
+		const tl = new Art(160, 160);
+		const color = (a, top, bottom, split) => {
+			const d = a.x.getImageData(0, 0, a.w, a.h);
+			for (let yy = 0; yy < a.h; yy++) for (let xx = 0; xx < a.w; xx++) {
+				const i = (yy * a.w + xx) * 4;
+				if (d.data[i + 3] > 110) {
+					const c = yy < split ? top : bottom;
+					d.data[i] = parseInt(c.slice(1, 3), 16); d.data[i + 1] = parseInt(c.slice(3, 5), 16); d.data[i + 2] = parseInt(c.slice(5, 7), 16); d.data[i + 3] = 255;
+				} else d.data[i + 3] = 0;
+			}
+			a.x.putImageData(d, 0, 0);
+		};
+		// 台(下の帯)
+		tl.rect(0, 104, 160, 56, "#2a1840"); tl.rect(0, 104, 160, 3, "#8a4ac0"); tl.rect(0, 107, 160, 1, "#c08ae8");
+		// リボン「まもれ！」(紫より)
+		const rib = new Art(160, 160);
+		rib.rect(4, 94, 18, 18, "#6a2a8a"); rib.rect(138, 94, 18, 18, "#6a2a8a");
+		rib.x.clearRect(4, 100, 5, 6); rib.x.clearRect(151, 100, 5, 6);
+		rib.rect(14, 86, 132, 22, "#b050c8"); rib.rect(14, 86, 132, 3, "#d888e8"); rib.rect(14, 104, 132, 4, "#8a3aa8");
+		rib.outline("#2a1030"); rib.outline("#ffffff");
+		tl.x.drawImage(rib.c, 0, 0);
+		const mw = new Art(160, 30);
+		mw.x.font = "bold 20px IPAGothic"; mw.x.textAlign = "center"; mw.x.textBaseline = "middle"; mw.x.fillStyle = "#000";
+		mw.x.fillText("まもれ！", 80, 15);
+		color(mw, "#ffffff", "#fff0ff", 15);
+		mw.outline("#4a1460");
+		tl.x.drawImage(mw.c, 0, 82);
+		// 題字「パンダ城」: 黄色、こげ茶と白のふち
+		const tw = new Art(160, 50);
+		tw.x.font = "bold 37px IPAGothic"; tw.x.textAlign = "center"; tw.x.textBaseline = "middle"; tw.x.fillStyle = "#000";
+		tw.x.fillText("パンダ城", 80, 26);
+		const t2 = new Art(160, 50); t2.x.drawImage(tw.c, 0, 0); tw.x.drawImage(t2.c, 1, 0);
+		color(tw, "#fff8a0", "#ffc020", 26);
+		tw.outline("#7a3010"); tw.outline("#7a3010"); tw.outline("#ffffff");
+		tl.x.drawImage(tw.c, 0, 109);
+		fx.drawImage(tl.big(2), 0, 0);
+		out.icon = fin.toDataURL("image/png");
 	}
 	return out;
 }
