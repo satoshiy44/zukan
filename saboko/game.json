@@ -1,0 +1,521 @@
+{
+	"width": 1280,
+	"height": 720,
+	"fps": 30,
+	"main": "./script/_bootstrap.js",
+	"assets": {
+		"bgm": {
+			"type": "audio",
+			"path": "audio/bgm",
+			"systemId": "music",
+			"loop": true,
+			"duration": 25560,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"count": {
+			"type": "audio",
+			"path": "audio/count",
+			"systemId": "sound",
+			"duration": 140,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"finish": {
+			"type": "audio",
+			"path": "audio/finish",
+			"systemId": "sound",
+			"duration": 920,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"gold": {
+			"type": "audio",
+			"path": "audio/gold",
+			"systemId": "sound",
+			"duration": 550,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"hit": {
+			"type": "audio",
+			"path": "audio/hit",
+			"systemId": "sound",
+			"duration": 250,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"jump": {
+			"type": "audio",
+			"path": "audio/jump",
+			"systemId": "sound",
+			"duration": 160,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"pickup": {
+			"type": "audio",
+			"path": "audio/pickup",
+			"systemId": "sound",
+			"duration": 165,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"background": {
+			"type": "image",
+			"path": "image/background.png",
+			"width": 1280,
+			"height": 720
+		},
+		"ghost0": {
+			"type": "image",
+			"path": "image/ghost0.png",
+			"width": 330,
+			"height": 330
+		},
+		"ghost1": {
+			"type": "image",
+			"path": "image/ghost1.png",
+			"width": 330,
+			"height": 330
+		},
+		"ghost2": {
+			"type": "image",
+			"path": "image/ghost2.png",
+			"width": 330,
+			"height": 330
+		},
+		"ghost3": {
+			"type": "image",
+			"path": "image/ghost3.png",
+			"width": 330,
+			"height": 330
+		},
+		"gold_light": {
+			"type": "image",
+			"path": "image/gold_light.png",
+			"width": 90,
+			"height": 90
+		},
+		"gravestone": {
+			"type": "image",
+			"path": "image/gravestone.png",
+			"width": 140,
+			"height": 115
+		},
+		"hero0": {
+			"type": "image",
+			"path": "image/hero0.png",
+			"width": 300,
+			"height": 320
+		},
+		"hero1": {
+			"type": "image",
+			"path": "image/hero1.png",
+			"width": 300,
+			"height": 320
+		},
+		"hero2": {
+			"type": "image",
+			"path": "image/hero2.png",
+			"width": 300,
+			"height": 320
+		},
+		"hero3": {
+			"type": "image",
+			"path": "image/hero3.png",
+			"width": 300,
+			"height": 320
+		},
+		"hud": {
+			"type": "image",
+			"path": "image/hud.png",
+			"width": 390,
+			"height": 72
+		},
+		"intro": {
+			"type": "image",
+			"path": "image/intro.png",
+			"width": 1020,
+			"height": 500
+		},
+		"light": {
+			"type": "image",
+			"path": "image/light.png",
+			"width": 90,
+			"height": 90
+		},
+		"logo": {
+			"type": "image",
+			"path": "image/logo.png",
+			"width": 760,
+			"height": 180
+		},
+		"player": {
+			"type": "image",
+			"path": "image/player.png",
+			"width": 32,
+			"height": 32
+		},
+		"puddle": {
+			"type": "image",
+			"path": "image/puddle.png",
+			"width": 140,
+			"height": 115
+		},
+		"root": {
+			"type": "image",
+			"path": "image/root.png",
+			"width": 140,
+			"height": 115
+		},
+		"shot": {
+			"type": "image",
+			"path": "image/shot.png",
+			"width": 16,
+			"height": 16
+		},
+		"_bootstrap": {
+			"type": "script",
+			"path": "script/_bootstrap.js",
+			"global": true
+		},
+		"main": {
+			"type": "script",
+			"path": "script/main.js",
+			"global": true
+		},
+		"parameterObject": {
+			"type": "script",
+			"path": "script/parameterObject.js",
+			"global": true
+		},
+		"fever": {
+			"type": "audio",
+			"path": "audio/fever",
+			"systemId": "sound",
+			"duration": 600,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"bat": {
+			"type": "image",
+			"path": "image/bat.png",
+			"width": 140,
+			"height": 90
+		},
+		"platform": {
+			"type": "image",
+			"path": "image/platform.png",
+			"width": 320,
+			"height": 100
+		},
+		"pumpkin_stack": {
+			"type": "image",
+			"path": "image/pumpkin_stack.png",
+			"width": 110,
+			"height": 165
+		},
+		"candy": {
+			"type": "image",
+			"path": "image/candy.png",
+			"width": 90,
+			"height": 70
+		},
+		"hole": {
+			"type": "image",
+			"path": "image/hole.png",
+			"width": 300,
+			"height": 80
+		},
+		"lollipop": {
+			"type": "image",
+			"path": "image/lollipop.png",
+			"width": 90,
+			"height": 100
+		},
+		"slope": {
+			"type": "image",
+			"path": "image/slope.png",
+			"width": 340,
+			"height": 150
+		},
+		"ground_tile": {
+			"type": "image",
+			"path": "image/ground_tile.png",
+			"width": 320,
+			"height": 150
+		},
+		"helper0": {
+			"type": "image",
+			"path": "image/helper0.png",
+			"width": 240,
+			"height": 240
+		},
+		"helper1": {
+			"type": "image",
+			"path": "image/helper1.png",
+			"width": 240,
+			"height": 240
+		},
+		"helper2": {
+			"type": "image",
+			"path": "image/helper2.png",
+			"width": 240,
+			"height": 240
+		},
+		"helper3": {
+			"type": "image",
+			"path": "image/helper3.png",
+			"width": 240,
+			"height": 240
+		},
+		"rush_bgm": {
+			"type": "audio",
+			"path": "audio/rush_bgm",
+			"systemId": "music",
+			"loop": true,
+			"duration": 21785,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"bonk": {
+			"type": "audio",
+			"path": "audio/bonk",
+			"systemId": "sound",
+			"duration": 350,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"caught": {
+			"type": "audio",
+			"path": "audio/caught",
+			"systemId": "sound",
+			"duration": 500,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"combo": {
+			"type": "audio",
+			"path": "audio/combo",
+			"systemId": "sound",
+			"duration": 470,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"djump": {
+			"type": "audio",
+			"path": "audio/djump",
+			"systemId": "sound",
+			"duration": 250,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"dodge": {
+			"type": "audio",
+			"path": "audio/dodge",
+			"systemId": "sound",
+			"duration": 570,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"fall": {
+			"type": "audio",
+			"path": "audio/fall",
+			"systemId": "sound",
+			"duration": 600,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"go": {
+			"type": "audio",
+			"path": "audio/go",
+			"systemId": "sound",
+			"duration": 650,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"shout": {
+			"type": "audio",
+			"path": "audio/shout",
+			"systemId": "sound",
+			"duration": 450,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"warn": {
+			"type": "audio",
+			"path": "audio/warn",
+			"systemId": "sound",
+			"duration": 570,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"bubble_l": {
+			"type": "image",
+			"path": "image/bubble_l.png",
+			"width": 360,
+			"height": 130
+		},
+		"bubble_r": {
+			"type": "image",
+			"path": "image/bubble_r.png",
+			"width": 360,
+			"height": 130
+		},
+		"dash_lane": {
+			"type": "image",
+			"path": "image/dash_lane.png",
+			"width": 64,
+			"height": 64
+		},
+		"fx_candy": {
+			"type": "image",
+			"path": "image/fx_candy.png",
+			"width": 40,
+			"height": 40
+		},
+		"fx_dust": {
+			"type": "image",
+			"path": "image/fx_dust.png",
+			"width": 48,
+			"height": 48
+		},
+		"fx_ring": {
+			"type": "image",
+			"path": "image/fx_ring.png",
+			"width": 128,
+			"height": 128
+		},
+		"fx_spark": {
+			"type": "image",
+			"path": "image/fx_spark.png",
+			"width": 32,
+			"height": 32
+		},
+		"fx_star": {
+			"type": "image",
+			"path": "image/fx_star.png",
+			"width": 48,
+			"height": 48
+		},
+		"shadow": {
+			"type": "image",
+			"path": "image/shadow.png",
+			"width": 160,
+			"height": 40
+		},
+		"speedline": {
+			"type": "image",
+			"path": "image/speedline.png",
+			"width": 320,
+			"height": 8
+		},
+		"sweat": {
+			"type": "image",
+			"path": "image/sweat.png",
+			"width": 30,
+			"height": 40
+		},
+		"vignette": {
+			"type": "image",
+			"path": "image/vignette.png",
+			"width": 1280,
+			"height": 720
+		},
+		"warn_hole": {
+			"type": "image",
+			"path": "image/warn_hole.png",
+			"width": 170,
+			"height": 120
+		}
+	},
+	"environment": {
+		"sandbox-runtime": "3",
+		"akashic-runtime": {
+			"version": "~3.13.4-0",
+			"flavor": "-canvas"
+		},
+		"nicolive": {
+			"supportedModes": [
+				"ranking"
+			],
+			"preferredSessionParameters": {
+				"totalTimeLimit": 80
+			}
+		}
+	},
+	"globalScripts": []
+}
