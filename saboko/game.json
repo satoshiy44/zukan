@@ -500,6 +500,18 @@
 			"path": "image/warn_hole.png",
 			"width": 170,
 			"height": 120
+		},
+		"hero_look0": {
+			"type": "image",
+			"path": "image/hero_look0.png",
+			"width": 300,
+			"height": 320
+		},
+		"hero_look1": {
+			"type": "image",
+			"path": "image/hero_look1.png",
+			"width": 300,
+			"height": 320
 		}
 	},
 	"environment": {

@@ -31,16 +31,23 @@ const HIT_PENALTY = 300;
 const FALL_PENALTY = 500;
 const CAUGHT_PENALTY = 500;
 const DASH_TIMES = [10, 24, 38, 52]; // 走り始めてからの秒。白凸男が右まで突進する(最低4回)
+const SPLIT_TIMES = [17, 31, 45]; // 上の道と下の道にわかれるところ
+const SPLIT_LEN = 1800; // わかれ道の長さ(px)
+const SPLIT_UP = 230; // 上の道の高さ
+const SAFE_PT = 500; // 白タイツとちがう道をえらんだボーナス
+const LOOK_SEC = 10; // ふり返る間かく
+const LOOK_LEN = 0.9;
 
 type Kind = "candy" | "lolli" | "gold" | "grave" | "root" | "pumpkin" | "bat" | "hole" | "plat" | "sign";
 interface Obj {
 	kind: Kind; x: number; y: number; w: number; h: number; spr: g.E; done: boolean; vx: number; phase: number; near: boolean;
+	pair: Obj | null; // 穴の看板
 }
 interface Fx { e: g.E; vx: number; vy: number; g: number; life: number; max: number; spin: number; grow: number; base: number; }
 
 export function main(param: GameMainParameterObject): void {
 	const imageIds = [
-		"background", "ground_tile", "hero0", "hero1", "hero2", "hero3", "ghost0", "ghost1", "ghost2", "ghost3",
+		"background", "ground_tile", "hero0", "hero1", "hero2", "hero3", "hero_look0", "hero_look1", "ghost0", "ghost1", "ghost2", "ghost3",
 		"helper0", "helper1", "helper2", "helper3", "candy", "lollipop", "gold_light", "light", "bat", "gravestone",
 		"pumpkin_stack", "root", "platform", "hole", "logo",
 		"fx_star", "fx_spark", "fx_dust", "fx_ring", "fx_candy", "shadow", "sweat", "speedline", "vignette", "warn_hole",
@@ -132,6 +139,9 @@ export function main(param: GameMainParameterObject): void {
 			scene, src: img("hero0"), anchorX: 0.5, anchorY: 0.96, scaleX: HERO_S, scaleY: HERO_S, x: PX, y: GROUND
 		});
 		charLayer.append(hero);
+		const sweatIcon = new g.Sprite({ scene, src: img("sweat"), anchorX: 0.5, anchorY: 0.5, scaleX: 1.1, scaleY: 1.1 });
+		sweatIcon.hide();
+		charLayer.append(sweatIcon);
 		// 吹き出し
 		const bubble = (id: string, f: g.Font, size: number): { e: g.E; l: g.Label } => {
 			const e = new g.E({ scene });
@@ -247,6 +257,7 @@ export function main(param: GameMainParameterObject): void {
 		let runAnim = 0;
 		let squash = 0;
 		let lookBack = 6;
+		let lookLeft = 0;
 		let sweatLeft = 0;
 		let d = 300; // 白凸男との距離
 		let ghostMode = 2; // 0:本気 1:つかれた 2:ふつう
@@ -285,7 +296,15 @@ export function main(param: GameMainParameterObject): void {
 			objLayer.append(s);
 			return s;
 		};
-		const add = (kind: Kind, x: number, y: number): Obj => {
+		// 障害物どうしは、ジャンプして着地してから次をとべる間をかならずあける
+		let lastHazard = -99999;
+		const isHazard = (k: Kind): boolean => k === "grave" || k === "root" || k === "pumpkin" || k === "bat" || k === "hole";
+		const room = (x: number): boolean => x + worldX >= lastHazard + speed * 0.95 + 120;
+		const add = (kind: Kind, x: number, y: number): Obj | null => {
+			if (isHazard(kind)) {
+				if (!room(x)) return null;
+				lastHazard = x + worldX;
+			}
 			let spr: g.E;
 			let w = 40, h = 40;
 			if (kind === "candy") {
@@ -314,8 +333,7 @@ export function main(param: GameMainParameterObject): void {
 			} else {
 				spr = sprAt("warn_hole", 0.8, 0.8, 0.5, 1);
 			}
-			const o: Obj = { kind, x, y, w, h, spr, done: false, vx: 0, phase: rand() * 6, near: false };
-			if (kind === "bat") o.vx = -160;
+			const o: Obj = { kind, x, y, w, h, spr, done: false, vx: 0, phase: rand() * 6, near: false, pair: null };
 			objs.push(o);
 			if (kind === "hole") holes.push(o);
 			if (kind === "plat") plats.push(o);
@@ -348,13 +366,14 @@ export function main(param: GameMainParameterObject): void {
 				add("plat", x + 460, GROUND - HIGH);
 				candyLine(x + 400, 3, 60, GROUND - HIGH - 40);
 				add(rand() < 0.4 + lv * 0.3 ? "gold" : "lolli", x + 600, GROUND - HIGH - 60);
-				if (lv > 0.3) add("grave", x + 330, GROUND);
 				return 760;
 			} else if (r < 0.6) {
 				// 穴(手前に看板)と、上のキャンディ
-				const o = add("sign", x - 220, GROUND);
-				o.w = 0;
-				add("hole", x + 120, GROUND);
+				const hl = add("hole", x + 120, GROUND);
+				if (hl) {
+					hl.pair = add("sign", x - 220, GROUND);
+					if (hl.pair) hl.pair.w = 0;
+				}
 				candyArc(x + 20, 5, 50, ground - 20, 190);
 				return 460;
 			} else if (r < 0.72) {
@@ -377,6 +396,34 @@ export function main(param: GameMainParameterObject): void {
 				candyArc(x + 300, 4, 50, ground, 190);
 				return lv > 0.4 ? 760 : 620;
 			}
+		};
+
+		// ======== わかれ道: 上の道(長い足場)と下の道(地面)。白タイツはどちらかに入る ========
+		interface Split { x0: number; x1: number; lane: number; judged: boolean; label: g.E; }
+		const splits: Split[] = [];
+		let splitIdx = 0;
+		let chase = false; // 白タイツが同じ道でダッシュしてくる
+		const makeSplit = (x: number): number => {
+			const x0 = x + 260;
+			// 上の道へのぼる小さな段
+			add("plat", x0 - 230, GROUND - 120);
+			for (let k = 0; k * 300 < SPLIT_LEN; k++) add("plat", x0 + 150 + k * 300, GROUND - SPLIT_UP);
+			candyLine(x0 + 80, 10, 150, GROUND - SPLIT_UP - 45, true);
+			candyLine(x0 + 150, 10, 150, GROUND - 45, true);
+			const lane = rand() < 0.5 ? 1 : 0; // 1:上 0:下
+			// 道の入り口に、白タイツがどっちに入るかの看板
+			const e = new g.E({ scene, x: x0 - 120, y: GROUND - SPLIT_UP - 210 });
+			e.append(new g.FilledRect({ scene, cssColor: "#2a1630", x: -150, y: 0, width: 300, height: 92 }));
+			e.append(new g.FilledRect({ scene, cssColor: lane ? "#c03a6a" : "#3a6ac0", x: -144, y: 6, width: 288, height: 80 }));
+			label(e, fontW, 26, 0, 10, "白タイツは", "center", 300);
+			label(e, fontY, 34, 0, 42, lane ? "上の道 ↑" : "下の道 ↓", "center", 300);
+			objLayer.append(e);
+			splits.push({ x0, x1: x0 + SPLIT_LEN, lane, judged: false, label: e });
+			lastHazard = x0 + SPLIT_LEN + worldX;
+			talk(ghostTalk, lane ? "上の道を行くぞー！" : "下の道を行くぞー！"); ghostTalkLeft = 2.5;
+			banner("わかれ道！白タイツとちがう道へ！", fontO, 54, 300);
+			se("warn", 0.6);
+			return SPLIT_LEN + 520;
 		};
 
 		// ======== 操作 ========
@@ -517,7 +564,33 @@ export function main(param: GameMainParameterObject): void {
 
 			// ---- 仕掛けを出す ----
 			if (playing && worldX + W + 200 > nextChunk && t < playSec - 3) {
-				nextChunk += chunk(nextChunk - worldX, p) * (1.1 - p * 0.25) + 120;
+				if (splitIdx < SPLIT_TIMES.length && t >= SPLIT_TIMES[splitIdx] && dashState === "none") {
+					splitIdx++;
+					nextChunk += makeSplit(nextChunk - worldX);
+				} else nextChunk += chunk(nextChunk - worldX, p) * (1.1 - p * 0.25) + 120;
+			}
+			// わかれ道の判定: 白タイツが道に入ったとき、さぼこが同じ道なら、ダッシュしてつかまえに来る
+			for (let i = splits.length - 1; i >= 0; i--) {
+				const sp = splits[i];
+				sp.x0 -= move; sp.x1 -= move;
+				sp.label.x -= move; sp.label.modified();
+				if (playing && !sp.judged && sp.x0 + 200 <= ghostX) {
+					sp.judged = true;
+					const myLane = py >= SPLIT_UP - 12 ? 1 : 0;
+					if (myLane === sp.lane && falling <= 0) {
+						chase = true;
+						se("warn", 0.8);
+						talk(ghostTalk, "同じ道だー！まてー！"); ghostTalkLeft = 1.5;
+					} else {
+						const pts = addScore(SAFE_PT);
+						se("dodge", 0.6);
+						banner("セーフ！ +" + pts, fontY, 64, 300);
+						burst("fx_star", PX, GROUND - py - 100, 10, 320, 30);
+					}
+				}
+				if (sp.x1 < -400) {
+					sp.label.destroy(); splits.splice(i, 1);
+				}
 			}
 			for (let i = objs.length - 1; i >= 0; i--) {
 				const o = objs[i];
@@ -645,7 +718,9 @@ export function main(param: GameMainParameterObject): void {
 			if (invuln > 0) invuln -= dt;
 			if (stumble > 0) stumble -= dt;
 			runAnim += speed * dt / 60;
-			const frame = !onGround ? "hero2" : stumble > 0 ? "hero3" : heroFrames[Math.floor(runAnim) % 4];
+			const looking = lookLeft > 0 && falling <= 0;
+			const runFrame = looking ? (Math.floor(runAnim) % 2 ? "hero_look1" : "hero_look0") : heroFrames[Math.floor(runAnim) % 4];
+			const frame = !onGround && !looking ? "hero2" : stumble > 0 ? "hero3" : runFrame;
 			setSrc(hero, frame);
 			squash *= 0.8;
 			hero.scaleX = HERO_S * (1 + squash * 0.5);
@@ -654,20 +729,30 @@ export function main(param: GameMainParameterObject): void {
 			hero.opacity = invuln > 0 && Math.floor(invuln * 14) % 2 === 0 ? 0.35 : 1;
 			hero.angle = stumble > 0 ? -12 : !onGround ? Math.max(-12, Math.min(12, -vy / 120)) : 0;
 			hero.modified();
+			if (lookLeft > 0) {
+				sweatIcon.show();
+				sweatIcon.x = PX + 46; sweatIcon.y = hero.y - 190 + Math.sin(t * 20) * 3;
+				sweatIcon.modified();
+			} else sweatIcon.hide();
 			shadowP.scaleX = 0.8 * Math.max(0.3, 1 - py / 400);
 			shadowP.y = GROUND - groundLevel * (onGround ? 1 : 0);
 			shadowP.opacity = falling > 0 ? 0 : 1;
 			shadowP.modified();
 			// ふり返り(約10びょうごと)と汗
 			if (playing) {
+				// 10びょうに1回、走りながら後ろをふり返る。頭のうしろに汗がとぶ
 				lookBack -= dt;
 				if (lookBack <= 0) {
-					lookBack = 10;
-					sweatLeft = 0.9;
+					lookBack = LOOK_SEC;
+					lookLeft = LOOK_LEN;
 				}
-				if (sweatLeft > 0) {
+				if (lookLeft > 0) {
+					lookLeft -= dt;
 					sweatLeft -= dt;
-					if (Math.floor(sweatLeft * 10) % 3 === 0) particle("sweat", PX - 50, GROUND - py - 200, -140, -120, 0.5, 26, 600);
+					if (sweatLeft <= 0) {
+						sweatLeft = 0.12;
+						particle("sweat", PX + 34, GROUND - py - 205, 140 + rand() * 120, -160 - rand() * 80, 0.5, 24, 900, 0.2);
+					}
 				}
 			}
 
@@ -686,8 +771,19 @@ export function main(param: GameMainParameterObject): void {
 				if (d <= 0) caught();
 			}
 			// 突進
-			if (playing && dashState === "none" && dashIdx < DASH_TIMES.length && t >= DASH_TIMES[dashIdx] && helperState === "none") {
+			const inSplit = splits.some((sp) => sp.x1 > ghostX - 100 && sp.x0 < W + 200) || chase;
+			const dashDue = dashIdx < DASH_TIMES.length && t >= DASH_TIMES[dashIdx];
+			if (playing && dashState === "none" && dashDue && helperState === "none" && !inSplit) {
 				dashState = "warn"; dashT = 3; dashIdx++;
+				// 突進と障害物がかさならないように、まだ画面の外にある障害物をどけて、しばらく置かない
+				for (let i = objs.length - 1; i >= 0; i--) {
+					const o = objs[i];
+					if (isHazard(o.kind) && o.x > W + 20) {
+						o.done = true; o.x = -9999;
+						if (o.pair) o.pair.x = -9999;
+					}
+				}
+				lastHazard = Math.max(lastHazard, worldX + PX + speed * 4.6 - (speed * 0.95 + 120));
 				se("warn", 0.7);
 				talk(ghostTalk, "いくぞー！"); ghostTalkLeft = 3;
 				banner("白凸男の突進がくる！ジャンプでよけろ", fontR, 48, 300);
@@ -727,18 +823,31 @@ export function main(param: GameMainParameterObject): void {
 					dashState = "none"; d = FAR; ghostX = -200;
 				}
 			}
-			if (dashState !== "run" && dashState !== "gone") {
+			if (chase) {
+				// 同じ道: いっきにダッシュしてつかまえる
+				ghostX += 1600 * dt;
+				if (ghostX >= PX - 70) {
+					chase = false;
+					caught();
+					ghostX = PX - 130 - d;
+				}
+			} else if (dashState !== "run" && dashState !== "gone") {
 				const tx = PX - 130 - d;
 				ghostX += (tx - ghostX) * Math.min(1, dt * (dashState === "none" && ghostX < -100 ? 2 : 6));
 			}
 			ghost.x = ghostX + (dashState === "warn" ? Math.sin(t * 50) * 4 : 0);
 			const gRun = dashState === "run" ? 3 : 1;
 			setSrc(ghost, ghostStun > 0 && dashState === "none" ? "ghost3" : ghostFrames[Math.floor(runAnim * gRun * 0.9) % 3]);
-			ghost.y = GROUND - Math.abs(Math.sin(runAnim * Math.PI * gRun)) * 8;
+			// わかれ道の上の道にいるときは、足場の高さを走る
+			let gLift = 0;
+			splits.forEach((sp) => {
+				if (sp.lane === 1 && ghostX > sp.x0 && ghostX < sp.x1) gLift = SPLIT_UP;
+			});
+			ghost.y = GROUND - gLift - Math.abs(Math.sin(runAnim * Math.PI * (chase ? 3 : gRun))) * 8;
 			ghost.angle = ghostStun > 0 ? -18 : dashState === "run" ? 8 : 0;
 			ghost.opacity = dashState === "gone" ? 0 : 1;
 			ghost.modified();
-			shadowG.x = ghostX; shadowG.opacity = ghost.opacity; shadowG.modified();
+			shadowG.x = ghostX; shadowG.y = GROUND - gLift; shadowG.opacity = ghost.opacity; shadowG.modified();
 			if (dashState === "run" && Math.floor(t * 30) % 2 === 0) dust(ghostX - 40, 1);
 			// 白凸男のひとこと
 			if (playing && dashState === "none") {
