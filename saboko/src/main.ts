@@ -8,8 +8,8 @@ const PX = 560; // さぼこの横の位置(画面)
 const INTRO_SEC = 4;
 const END_SEC = 5; // 終わる5秒前に動きと演出を止める
 const RUSH_SEC = 20; // のこり何秒からラッシュ
-const SPEED0 = 470; // 走る速さ(px/秒)
-const SPEED1 = 650;
+const SPEED0 = 564; // 走る速さ(px/秒)
+const SPEED1 = 780;
 const GRAVITY = 3600;
 const HOLD_GRAVITY = 1900; // 長押し中の上昇は重力が弱い(高くとぶ)
 const HOLD_MAX = 0.22;
@@ -30,8 +30,8 @@ const ASSIST_PT = 300;
 const HIT_PENALTY = 300;
 const FALL_PENALTY = 500;
 const CAUGHT_PENALTY = 500;
-const DASH_TIMES = [10, 24, 38, 52]; // 走り始めてからの秒。白凸男が右まで突進する(最低4回)
-const SPLIT_TIMES = [17, 31, 45]; // 上の道と下の道にわかれるところ
+const DASH_TIMES = [7, 18, 29, 40]; // 走り始めてからの秒。白凸男が右まで突進する(最低4回)
+const SPLIT_TIMES = [12, 23, 34]; // 上の道と下の道にわかれるところ
 const SPLIT_LEN = 1800; // わかれ道の長さ(px)
 const SPLIT_UP = 230; // 上の道の高さ
 const SAFE_PT = 500; // 白タイツとちがう道をえらんだボーナス
@@ -58,7 +58,7 @@ export function main(param: GameMainParameterObject): void {
 		"count", "go", "finish", "fever"
 	];
 	const scene = new g.Scene({ game: g.game, assetIds: imageIds.concat(audioIds, ["bgm", "rush_bgm"]) });
-	let time = 80;
+	let time = 60;
 	if (param.sessionParameter.totalTimeLimit) time = param.sessionParameter.totalTimeLimit;
 	// ランキングモードでは g.game.vars.gameState.score をスコアとして扱う
 	g.game.vars.gameState = { score: 0, playThreshold: 100 };
@@ -257,6 +257,7 @@ export function main(param: GameMainParameterObject): void {
 		let runAnim = 0;
 		let squash = 0;
 		let lookBack = 6;
+		let frozen = 0;
 		let lookLeft = 0;
 		let sweatLeft = 0;
 		let d = 300; // 白凸男との距離
@@ -297,7 +298,7 @@ export function main(param: GameMainParameterObject): void {
 			return s;
 		};
 		// 障害物どうしは、ジャンプして着地してから次をとべる間をかならずあける
-		let lastHazard = -99999;
+		let lastHazard = W + SPEED0 * 2; // 走りだしてすぐは障害物を置かない(加速中なので)
 		const isHazard = (k: Kind): boolean => k === "grave" || k === "root" || k === "pumpkin" || k === "bat" || k === "hole";
 		const room = (x: number): boolean => x + worldX >= lastHazard + speed * 0.95 + 120;
 		const add = (kind: Kind, x: number, y: number): Obj | null => {
@@ -411,24 +412,24 @@ export function main(param: GameMainParameterObject): void {
 			candyLine(x0 + 80, 10, 150, GROUND - SPLIT_UP - 45, true);
 			candyLine(x0 + 150, 10, 150, GROUND - 45, true);
 			const lane = rand() < 0.5 ? 1 : 0; // 1:上 0:下
-			// 道の入り口に、白タイツがどっちに入るかの看板
+			// 道の入り口の看板(白タイツがどっちに入るかは書かない)
 			const e = new g.E({ scene, x: x0 - 120, y: GROUND - SPLIT_UP - 210 });
 			e.append(new g.FilledRect({ scene, cssColor: "#2a1630", x: -150, y: 0, width: 300, height: 92 }));
-			e.append(new g.FilledRect({ scene, cssColor: lane ? "#c03a6a" : "#3a6ac0", x: -144, y: 6, width: 288, height: 80 }));
-			label(e, fontW, 26, 0, 10, "白タイツは", "center", 300);
-			label(e, fontY, 34, 0, 42, lane ? "上の道 ↑" : "下の道 ↓", "center", 300);
+			e.append(new g.FilledRect({ scene, cssColor: "#6a3aa8", x: -144, y: 6, width: 288, height: 80 }));
+			label(e, fontW, 26, 0, 10, "わかれ道", "center", 300);
+			label(e, fontY, 34, 0, 42, "上 ↑ ／ 下 ↓", "center", 300);
 			objLayer.append(e);
 			splits.push({ x0, x1: x0 + SPLIT_LEN, lane, judged: false, label: e });
 			lastHazard = x0 + SPLIT_LEN + worldX;
-			talk(ghostTalk, lane ? "上の道を行くぞー！" : "下の道を行くぞー！"); ghostTalkLeft = 2.5;
-			banner("わかれ道！白タイツとちがう道へ！", fontO, 54, 300);
+			talk(ghostTalk, "どっちに行こうかなー"); ghostTalkLeft = 2.5;
+			banner("わかれ道！白タイツと同じ道だとつかまる！", fontO, 50, 300);
 			se("warn", 0.6);
 			return SPLIT_LEN + 520;
 		};
 
 		// ======== 操作 ========
 		const jump = (): void => {
-			if (phase !== "play" || falling > 0) return;
+			if (phase !== "play" || falling > 0 || frozen > 0) return;
 			if (onGround) {
 				vy = JUMP_V; onGround = false; jumps = 1; holdT = 0;
 				se("jump", 0.5);
@@ -467,15 +468,16 @@ export function main(param: GameMainParameterObject): void {
 			if (invuln > 0) return;
 			combo = 0;
 			addScore(-CAUGHT_PENALTY);
-			invuln = 1.8;
+			invuln = 3;
 			stumble = 0.6;
+			frozen = 2; // つかまったら2びょう止まる
 			shake = 0.5;
 			doFlash("#ff2040", 0.5);
 			se("caught", 0.8);
 			banner("つかまった！ -" + CAUGHT_PENALTY, fontR, 64, 330);
 			burst("fx_star", PX - 40, GROUND - 180, 10, 300, 34);
 			d = 280;
-			ghostStun = 0.8;
+			ghostStun = 2.6;
 		};
 
 		// ======== はじめ ========
@@ -546,7 +548,11 @@ export function main(param: GameMainParameterObject): void {
 				g.game.audio.music.play(scene.asset.getAudioById("rush_bgm"));
 			}
 			// 速さ
-			const target = playing ? (SPEED0 + (SPEED1 - SPEED0) * p) * (rush ? 1.15 : 1) * (stumble > 0 ? 0.55 : 1) : 0;
+			if (frozen > 0) {
+				frozen -= dt;
+				speed = 0;
+			}
+			const target = playing && frozen <= 0 ? (SPEED0 + (SPEED1 - SPEED0) * p) * (rush ? 1.15 : 1) * (stumble > 0 ? 0.55 : 1) : 0;
 			speed += (target - speed) * Math.min(1, dt * 4);
 			const move = speed * dt;
 			worldX += move;

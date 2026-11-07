@@ -26,7 +26,7 @@ describe("にげろさぼこ！", () => {
 		expect(Math.floor(state.score)).toBe(state.score);
 		expect(state.score).toBeGreaterThanOrEqual(0);
 		expect(state.playThreshold).toBe(100);
-		await context.advance(65000);
+		await context.advance(45000);
 		expect(game.scene()).toBeDefined();
 		// 白凸男の突進は最低4回、右まで走りぬける
 		expect(game.vars.dashCount).toBeGreaterThanOrEqual(4);
