@@ -484,7 +484,7 @@ export function main(param: GameMainParameterObject): void {
 		const intro = new g.E({ scene });
 		ui.append(intro);
 		intro.append(new g.FilledRect({ scene, cssColor: "rgba(15,8,30,0.6)", width: W, height: H }));
-		intro.append(new g.Sprite({ scene, src: img("logo"), x: W / 2, y: 250, anchorX: 0.5, anchorY: 0.5 }));
+		intro.append(new g.Sprite({ scene, src: img("logo"), x: W / 2, y: 220, anchorX: 0.5, anchorY: 0.5, scaleX: 0.8, scaleY: 0.8 }));
 		label(intro, fontW, 36, W / 2, 360, "タップでジャンプ・長押しで高く・空中でもう1回！", "center", 1200);
 		label(intro, fontY, 32, W / 2, 412, "お菓子を集めて、白凸男からにげきれ！", "center", 1200);
 		label(intro, fontR, 30, W / 2, 460, "「いくぞー！」のあとの突進はジャンプでよけろ", "center", 1200);

@@ -176,8 +176,8 @@
 		"logo": {
 			"type": "image",
 			"path": "image/logo.png",
-			"width": 760,
-			"height": 180
+			"width": 1000,
+			"height": 300
 		},
 		"player": {
 			"type": "image",

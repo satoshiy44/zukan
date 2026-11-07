@@ -47,7 +47,7 @@ npx akashic export zip -o game.zip --nicolive -f
 - `game.json`: 画面・素材・ニコ生ランキング設定
 - `tools/make_assets.py`: 画像・音声生成処理
 - `tools/make_assets.mjs`: 生成処理の起動スクリプト
-- `icon.png`: 投稿用アイコン（256×256）
+- `icon.png`: 投稿用アイコン（320×320・透過なし）。ロゴ・アイコン・紹介画像は `node tools/gen-brand.js` で作る
 - `promo.png`: 紹介画像（1280×720）
 - `投稿用説明文.txt`: 投稿ページ用の説明文
 
