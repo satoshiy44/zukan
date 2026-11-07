@@ -133,7 +133,7 @@ async function draw(srcs) {
 		const cards = [
 			{ img: im.s_candy, s: [180, 260, 760, 391], n: "1", t1: "タップでジャンプ", t2: "お菓子を集めてコンボ！", col: "#ff9a20" },
 			{ img: im.s_split, s: [300, 300, 900, 463], n: "2", t1: "わかれ道は運だめし", t2: "白タイツと同じ道はアウト", col: "#9a4ae0" },
-			{ img: im.s_helper, s: [0, 330, 820, 422], n: "3", t1: "突進はジャンプでよけろ", t2: "女の子が助けにくる！", col: "#e03a5a" }
+			{ img: im.s_helper, s: [0, 330, 820, 422], n: "3", t1: "突進はジャンプでよけろ", t2: "いかにゃが助けにくる！", col: "#e03a5a" }
 		];
 		cards.forEach((cd, i) => {
 			const l = 24 + i * 420, t = 476, w = 392, h = 222;
