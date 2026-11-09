@@ -33,7 +33,7 @@ function build() {
 	tile("t0", (x) => {
 		x.fillStyle = "#efe9dc"; x.fillRect(0, 0, S, S);
 		x.fillStyle = "#1c1b20";
-		const u = 16;
+		const u = 21;
 		for (let r = -1; r < S / u + 1; r++) for (let c = -1; c < S / u + 1; c++) {
 			if ((r + c) % 2) continue;
 			const ox = c * u, oy = r * u;
@@ -41,16 +41,16 @@ function build() {
 			x.lineTo(ox + u, oy + u); x.lineTo(ox + u * 0.5, oy + u * 1.5); x.lineTo(ox, oy + u); x.lineTo(ox + u * 0.5, oy + u * 0.5); x.closePath(); x.fill();
 		}
 	});
-	// ネイビーのストライプ(ななめ)
+	// 青のストライプ(ななめ)
 	tile("t1", (x) => {
-		x.fillStyle = "#1f2d4e"; x.fillRect(0, 0, S, S);
+		x.fillStyle = "#1c3a78"; x.fillRect(0, 0, S, S);
 		x.save(); x.translate(S / 2, S / 2); x.rotate(-Math.PI / 4);
-		for (let k = -S; k < S; k += 22) { x.fillStyle = "#e7dcc4"; x.fillRect(k, -S, 5, S * 2); x.fillStyle = "#c9a45c"; x.fillRect(k + 10, -S, 2, S * 2); }
+		for (let k = -S; k < S; k += 32) { x.fillStyle = "#5fa8ee"; x.fillRect(k, -S, 12, S * 2); x.fillStyle = "#e8f2ff"; x.fillRect(k + 18, -S, 3, S * 2); }
 		x.restore();
 	});
-	// ボルドーのドット
+	// 赤のドット
 	tile("t2", (x) => {
-		x.fillStyle = "#6e1f2e"; x.fillRect(0, 0, S, S);
+		x.fillStyle = "#a8202e"; x.fillRect(0, 0, S, S);
 		x.fillStyle = "#f0e3c8";
 		for (let r = 0; r < 6; r++) for (let c = 0; c < 6; c++) { x.beginPath(); x.arc(c * 24 + (r % 2 ? 12 : 0), r * 24 + 4, 5.5, 0, Math.PI * 2); x.fill(); }
 	});
@@ -63,19 +63,19 @@ function build() {
 		for (let k = -128; k < 256; k += 44) { x.beginPath(); x.moveTo(k, 0); x.lineTo(k + 128 * 0.69, 128); x.stroke(); x.beginPath(); x.moveTo(k + 88, 0); x.lineTo(k + 88 - 128 * 0.69, 128); x.stroke(); }
 		x.setLineDash([]);
 	});
-	// ヘリンボーン(キャメル)
+	// ヘリンボーン(オレンジブラウン)
 	tile("t4", (x) => {
-		x.fillStyle = "#8a6440"; x.fillRect(0, 0, S, S);
+		x.fillStyle = "#c06a20"; x.fillRect(0, 0, S, S);
 		for (let c = 0; c < 8; c++) for (let r = -1; r < 10; r++) {
 			const ox = c * 16, oy = r * 16 + (c % 2 ? 8 : 0);
-			x.strokeStyle = c % 2 ? "#d6b88a" : "#4e3420"; x.lineWidth = 4;
+			x.strokeStyle = c % 2 ? "#f2c48a" : "#6a3010"; x.lineWidth = 4;
 			x.beginPath(); if (c % 2) { x.moveTo(ox, oy); x.lineTo(ox + 16, oy + 16); } else { x.moveTo(ox, oy + 16); x.lineTo(ox + 16, oy); } x.stroke();
 		}
 	});
-	// ローズのギンガム
+	// むらさきのギンガム
 	tile("t5", (x) => {
-		x.fillStyle = "#f3e1e4"; x.fillRect(0, 0, S, S);
-		x.fillStyle = "rgba(150,62,88,0.5)";
+		x.fillStyle = "#ece2f6"; x.fillRect(0, 0, S, S);
+		x.fillStyle = "rgba(96,48,150,0.55)";
 		for (let k = 0; k < S; k += 32) { x.fillRect(k, 0, 16, S); x.fillRect(0, k, S, 16); }
 	});
 	// ゴールドのジョーカー(どの柄とも合う)
