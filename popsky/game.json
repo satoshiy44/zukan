@@ -1,0 +1,365 @@
+{
+	"width": 1280,
+	"height": 720,
+	"fps": 30,
+	"main": "./script/_bootstrap.js",
+	"assets": {
+		"_bootstrap": {
+			"type": "script",
+			"path": "script/_bootstrap.js",
+			"global": true
+		},
+		"main": {
+			"type": "script",
+			"path": "script/main.js",
+			"global": true
+		},
+		"parameterObject": {
+			"type": "script",
+			"path": "script/parameterObject.js",
+			"global": true
+		},
+		"bgm": {
+			"type": "audio",
+			"path": "audio/bgm",
+			"systemId": "music",
+			"duration": 24577,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			},
+			"loop": true
+		},
+		"boss_bgm": {
+			"type": "audio",
+			"path": "audio/boss_bgm",
+			"systemId": "music",
+			"duration": 22291,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			},
+			"loop": true
+		},
+		"se_bell": {
+			"type": "audio",
+			"path": "audio/se_bell",
+			"systemId": "sound",
+			"duration": 500,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_bomb": {
+			"type": "audio",
+			"path": "audio/se_bomb",
+			"systemId": "sound",
+			"duration": 700,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_boom": {
+			"type": "audio",
+			"path": "audio/se_boom",
+			"systemId": "sound",
+			"duration": 400,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_cloudpop": {
+			"type": "audio",
+			"path": "audio/se_cloudpop",
+			"systemId": "sound",
+			"duration": 380,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_count": {
+			"type": "audio",
+			"path": "audio/se_count",
+			"systemId": "sound",
+			"duration": 140,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_damage": {
+			"type": "audio",
+			"path": "audio/se_damage",
+			"systemId": "sound",
+			"duration": 400,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_ding": {
+			"type": "audio",
+			"path": "audio/se_ding",
+			"systemId": "sound",
+			"duration": 250,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_finish": {
+			"type": "audio",
+			"path": "audio/se_finish",
+			"systemId": "sound",
+			"duration": 920,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_go": {
+			"type": "audio",
+			"path": "audio/se_go",
+			"systemId": "sound",
+			"duration": 650,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_hit": {
+			"type": "audio",
+			"path": "audio/se_hit",
+			"systemId": "sound",
+			"duration": 40,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_pop": {
+			"type": "audio",
+			"path": "audio/se_pop",
+			"systemId": "sound",
+			"duration": 160,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_power": {
+			"type": "audio",
+			"path": "audio/se_power",
+			"systemId": "sound",
+			"duration": 650,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_shot": {
+			"type": "audio",
+			"path": "audio/se_shot",
+			"systemId": "sound",
+			"duration": 50,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_warn": {
+			"type": "audio",
+			"path": "audio/se_warn",
+			"systemId": "sound",
+			"duration": 680,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"barrier": {
+			"type": "image",
+			"path": "image/barrier.png",
+			"width": 160,
+			"height": 160
+		},
+		"bell_b": {
+			"type": "image",
+			"path": "image/bell_b.png",
+			"width": 80,
+			"height": 84
+		},
+		"bell_r": {
+			"type": "image",
+			"path": "image/bell_r.png",
+			"width": 80,
+			"height": 84
+		},
+		"bell_w": {
+			"type": "image",
+			"path": "image/bell_w.png",
+			"width": 80,
+			"height": 84
+		},
+		"bell_y": {
+			"type": "image",
+			"path": "image/bell_y.png",
+			"width": 80,
+			"height": 84
+		},
+		"bg": {
+			"type": "image",
+			"path": "image/bg.png",
+			"width": 1280,
+			"height": 720
+		},
+		"bgcloud": {
+			"type": "image",
+			"path": "image/bgcloud.png",
+			"width": 400,
+			"height": 150
+		},
+		"boss": {
+			"type": "image",
+			"path": "image/boss.png",
+			"width": 320,
+			"height": 260
+		},
+		"cloud": {
+			"type": "image",
+			"path": "image/cloud.png",
+			"width": 150,
+			"height": 100
+		},
+		"e_bird": {
+			"type": "image",
+			"path": "image/e_bird.png",
+			"width": 100,
+			"height": 80
+		},
+		"e_jelly": {
+			"type": "image",
+			"path": "image/e_jelly.png",
+			"width": 90,
+			"height": 90
+		},
+		"e_puff": {
+			"type": "image",
+			"path": "image/e_puff.png",
+			"width": 90,
+			"height": 90
+		},
+		"e_ufo": {
+			"type": "image",
+			"path": "image/e_ufo.png",
+			"width": 110,
+			"height": 80
+		},
+		"ebullet": {
+			"type": "image",
+			"path": "image/ebullet.png",
+			"width": 28,
+			"height": 28
+		},
+		"fx_glow": {
+			"type": "image",
+			"path": "image/fx_glow.png",
+			"width": 64,
+			"height": 64
+		},
+		"fx_ring": {
+			"type": "image",
+			"path": "image/fx_ring.png",
+			"width": 128,
+			"height": 128
+		},
+		"fx_star": {
+			"type": "image",
+			"path": "image/fx_star.png",
+			"width": 48,
+			"height": 48
+		},
+		"logo": {
+			"type": "image",
+			"path": "image/logo.png",
+			"width": 1000,
+			"height": 300
+		},
+		"ship0": {
+			"type": "image",
+			"path": "image/ship0.png",
+			"width": 120,
+			"height": 130
+		},
+		"ship1": {
+			"type": "image",
+			"path": "image/ship1.png",
+			"width": 120,
+			"height": 130
+		},
+		"shot": {
+			"type": "image",
+			"path": "image/shot.png",
+			"width": 20,
+			"height": 40
+		},
+		"island": {
+			"type": "image",
+			"path": "image/island.png",
+			"width": 220,
+			"height": 140
+		}
+	},
+	"environment": {
+		"sandbox-runtime": "3",
+		"akashic-runtime": {
+			"version": "~3.13.4-0",
+			"flavor": "-canvas"
+		},
+		"nicolive": {
+			"supportedModes": [
+				"ranking"
+			],
+			"preferredSessionParameters": {
+				"totalTimeLimit": 70
+			}
+		}
+	},
+	"globalScripts": []
+}
