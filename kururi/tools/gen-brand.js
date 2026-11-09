@@ -75,8 +75,8 @@ async function draw(srcs) {
 			x.restore();
 			text(x, "→", l + 175, 598, 40, GOLD_L, "center");
 		});
-		card(864, "3", "回して消すと×1.5", "連鎖でスコアがどんどん上がる", (l) => {
-			text(x, "3 CHAIN", l + 196, 600, 62, GOLD_L, "center", "bold 62px DejaVu Serif");
+		card(864, "3", "回して消すと×2！", "回して連鎖で×3、×4…と上がる", (l) => {
+			text(x, "TURN BONUS", l + 196, 600, 40, GOLD_L, "center", "bold 40px DejaVu Serif");
 		});
 		out.promo = c.toDataURL("image/png");
 	}

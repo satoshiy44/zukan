@@ -319,6 +319,18 @@
 			"type": "script",
 			"path": "script/parameterObject.js",
 			"global": true
+		},
+		"turnbonus": {
+			"type": "audio",
+			"path": "audio/turnbonus",
+			"systemId": "sound",
+			"duration": 1020,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
 		}
 	},
 	"environment": {

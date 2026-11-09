@@ -202,3 +202,6 @@ bgm = raw[:n]
 for i in range(n, len(raw)):
     bgm[i - n] += raw[i]
 save("bgm", bgm, 0.45)
+
+# 回して消したときの特別な音(ほかの音が変わらないよう最後に作る)
+save("turnbonus", mix(sweep(0.35, 400, 1600, "tri", 0.18, 0.6), *[bell(note(n), 0.7, 0.17) for n in (79, 84, 88, 91, 96)], offsets=[0, 0.12, 0.17, 0.22, 0.27, 0.32]))

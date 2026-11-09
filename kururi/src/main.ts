@@ -20,6 +20,7 @@ const AUTO1 = 2.0;
 const CLEAR_PT = 100; // 1枚あたり
 const BIG_PT = 600; // 6枚以上いっぺんに消したおまけ
 const OVER_PENALTY = 1000;
+const TURN_MUL = 2; // 回して消したときの倍率。連鎖するたびに+1(×2→×3→×4…)
 const FALL_V = 1900; // タイルが落ちる速さ(px/秒)
 
 interface Tile { kind: number; spr: g.Sprite; tx: number; ty: number; v: number; }
@@ -31,7 +32,7 @@ export function main(param: GameMainParameterObject): void {
 	];
 	const audioIds = [
 		"drop", "land", "turn", "ng", "clear0", "clear1", "clear2", "clear3", "clear4", "clear5", "bigclear", "joker",
-		"count", "go", "finish", "over"
+		"count", "go", "finish", "over", "turnbonus"
 	];
 	const scene = new g.Scene({ game: g.game, assetIds: imageIds.concat(audioIds, ["bgm"]) });
 	let time = 60;
@@ -53,6 +54,10 @@ export function main(param: GameMainParameterObject): void {
 		scene.append(new g.Sprite({ scene, src: img("bg") }));
 		const root = new g.E({ scene });
 		scene.append(root);
+		// 回して消したときに光る、盤のまわりの金のわく
+		const glow = new g.FilledRect({ scene, cssColor: "#f2cf6a", x: BX - 290, y: BY - 290, width: 580, height: 580, opacity: 0 });
+		root.append(glow);
+		let frameGlow = 0;
 		root.append(new g.Sprite({ scene, src: img("board"), x: BX, y: BY, anchorX: 0.5, anchorY: 0.5 }));
 		// 盤の中身(回すときはこれごと回す)
 		const boardE = new g.E({ scene, x: BX, y: BY });
@@ -92,6 +97,7 @@ export function main(param: GameMainParameterObject): void {
 		label(ui, fontS, 26, 190, 150, "SCORE", "center", 300);
 		const scoreLabel = label(ui, fontW, 52, 190, 182, "0", "center", 320);
 		const chainLabel = label(ui, fontG, 30, 190, 248, "", "center", 320);
+		const turnLabel = label(ui, fontS, 24, 190, 290, "", "center", 320);
 		label(ui, fontS, 26, 1090, 150, "TIME", "center", 300);
 		const timeLabel = label(ui, fontW, 52, 1090, 182, "", "center", 300);
 		label(ui, fontS, 22, 1090, 258, "NEXT", "center", 300);
@@ -170,6 +176,7 @@ export function main(param: GameMainParameterObject): void {
 		let score = 0;
 		let chain = 0;
 		let fromTurn = false; // 回転がきっかけの連鎖
+		let turnCount = 0; // 回して消した回数
 		let turnT = 0;
 		let turnFrom = 0;
 		let clearT = 0;
@@ -303,7 +310,8 @@ export function main(param: GameMainParameterObject): void {
 			clearing = list;
 			clearT = 0;
 			state = "clearing";
-			const mul = chain * (fromTurn ? 1.5 : 1);
+			const turnMul = fromTurn ? TURN_MUL + chain - 1 : 1;
+			const mul = chain * turnMul;
 			let pts = list.length * CLEAR_PT * mul;
 			if (list.length >= 6) pts += BIG_PT;
 			pts = addScore(Math.round(pts));
@@ -320,9 +328,25 @@ export function main(param: GameMainParameterObject): void {
 				banner(chain + " CHAIN", fontS, 64 + Math.min(40, chain * 8), 110 + 260);
 				setText(chainLabel, chain + " CHAIN!");
 			}
-			if (chain === 1 && fromTurn) pop("TURN ×1.5", fontS, 28, cx, cy + 10);
-			if (list.length >= 6 || chain >= 3) {
-				flash.opacity = 0.35; flash.modified(); shake = 0.25;
+			if (fromTurn) {
+				// 回して消した: 金色に光って、大きく「TURN BONUS」
+				if (chain === 1) {
+					turnCount++;
+					setText(turnLabel, "回して消した " + turnCount + "回");
+				}
+				se("turnbonus", 0.8);
+				banner("TURN BONUS ×" + turnMul, fontS, 70 + Math.min(30, chain * 6), 250);
+				flash.cssColor = "#f2cf6a"; flash.opacity = 0.45; flash.modified();
+				shake = 0.3;
+				ringFx(cx, cy, 260, 0.5);
+				for (let k = 0; k < 18; k++) {
+					const a = k / 18 * Math.PI * 2, v = 380 + rand() * 200;
+					particle("fx_star", cx, cy, Math.cos(a) * v, Math.sin(a) * v, 0.7, 26 + rand() * 18, 300, 0.3);
+				}
+				frameGlow = 1;
+			}
+			if (!fromTurn && (list.length >= 6 || chain >= 3)) {
+				flash.cssColor = "#fff4d0"; flash.opacity = 0.35; flash.modified(); shake = 0.25;
 			}
 		};
 		const finishClear = (): void => {
@@ -384,7 +408,7 @@ export function main(param: GameMainParameterObject): void {
 		label(intro, fontW, 32, BX, 320, "盤の列をタップして、タイルを落とそう", "center", 1100);
 		label(intro, fontG, 32, BX, 372, "同じ柄を3つ以上つなげると消える", "center", 1100);
 		label(intro, fontW, 32, BX, 424, "左右のボタンで盤をくるっと回すと、重力の向きが変わる！", "center", 1100);
-		label(intro, fontG, 28, BX, 476, "回して消すとスコア×1.5　連鎖でどんどん高得点", "center", 1100);
+		label(intro, fontG, 28, BX, 476, "回して消すとスコア×2！ 回して連鎖すると×3、×4…", "center", 1100);
 		const countLabel = label(intro, fontS, 90, BX, 520, "", "center", 400);
 
 		// ======== おしまい ========
@@ -499,6 +523,10 @@ export function main(param: GameMainParameterObject): void {
 				root.x = 0; root.y = 0;
 			}
 			root.modified();
+			if (frameGlow > 0) {
+				frameGlow = Math.max(0, frameGlow - dt * 1.6);
+				glow.opacity = frameGlow * 0.55 * (0.7 + Math.sin(t * 30) * 0.3); glow.modified();
+			}
 			if (flash.opacity > 0) {
 				flash.opacity = Math.max(0, flash.opacity - dt * 2); flash.modified();
 			}
