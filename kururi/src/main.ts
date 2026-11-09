@@ -35,7 +35,7 @@ export function main(param: GameMainParameterObject): void {
 		"count", "go", "finish", "over", "turnbonus"
 	];
 	const scene = new g.Scene({ game: g.game, assetIds: imageIds.concat(audioIds, ["bgm"]) });
-	let time = 60;
+	let time = 70;
 	if (param.sessionParameter.totalTimeLimit) time = param.sessionParameter.totalTimeLimit;
 	// ランキングモードでは g.game.vars.gameState.score をスコアとして扱う
 	g.game.vars.gameState = { score: 0 };
