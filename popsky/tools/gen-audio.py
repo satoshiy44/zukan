@@ -130,7 +130,7 @@ def chip(freq, dur, vol=0.25):
 
 # ---- 効果音 ----
 save("se_shot", sweep(0.05, 1400, 900, "sq", 0.08))
-save("se_hit", tone(note(84), 0.04, "sq", 0.1, 0.002, 0.04))
+save("se_hit", tone(note(84), 0.09, "sq", 0.1, 0.002, 0.09))
 save("se_pop", mix(sweep(0.12, 600, 1400, "sq", 0.14), tone(note(91), 0.1, "sq", 0.1, 0.002, 0.1), offsets=[0, 0.06]))
 save("se_cloudpop", mix(sweep(0.18, 300, 900, "tri", 0.2), bell(note(96), 0.3, 0.12), offsets=[0, 0.08]))
 save("se_ding", bell(note(93), 0.25, 0.18))

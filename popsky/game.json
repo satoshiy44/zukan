@@ -157,7 +157,7 @@
 			"type": "audio",
 			"path": "audio/se_hit",
 			"systemId": "sound",
-			"duration": 40,
+			"duration": 90,
 			"hint": {
 				"extensions": [
 					".aac",
