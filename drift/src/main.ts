@@ -17,13 +17,16 @@ const SPEED1 = 29; // 最後のころの速さ
 const HOP_V = 2.3; // ジャンプの初速
 const GRAVITY = 15;
 const LV_SEC = 0.45; // これだけドリフトを続けると、オーラが1段上がる
-const LEAD_SEC = 0.9; // カーブに入るこれだけ前からドリフトしてよい
-const OVER_SEC = 0.45; // カーブが終わってもこれ以上ドリフトを続けるとスピン
-const OUT_SEC = 0.5; // カーブじゃないところで、これ以上ドリフトするとスピン
-const PERFECT_EARLY = 0.13; // 出口のこれだけ前〜PERFECT_LATE後にはなすとパーフェクト
-const PERFECT_LATE = 0.1;
-const GOOD_EARLY = 0.55;
+const ENTRY_TOL = 0.08; // 入口ラインのこれだけ手前で着地しても、ドリフトしてよい(秒)
+const NICE_ENTRY = 0.3; // 入口ラインからこれ以内にドリフトを始めると「ナイス進入」
+const ENTRY_MUL = 1.2; // ナイス進入の点数の倍率
+const SLIP_SEC = 0.2; // カーブじゃないところでこれ以上ドリフトするとスリップ
+const OVER_SEC = 0.25; // 出口をすぎてもこれ以上ドリフトを続けると、ふくらんでスピン
+const PERFECT_EARLY = 0.1; // 出口のこれだけ前〜PERFECT_LATE後にはなすとパーフェクト
+const PERFECT_LATE = 0.08;
+const GOOD_EARLY = 0.35; // これより早くはなすと、ターボでカベにぶつかる
 const SPIN_SEC = 1.1;
+const CRASH_SEC = 0.9;
 const BOOST_V = 12; // ミニターボで上がる速さ
 const BOOST_SEC = [0.25, 0.35, 0.5, 0.65, 0.8, 1.0, 1.3, 1.8];
 const LV_PT = [50, 100, 200, 400, 700, 1100, 1600, 2400]; // はなしたときの点(段ごと)
@@ -62,9 +65,9 @@ const STAGES: Stage[] = [
 
 interface Seg { d0: number; d1: number; k: number; big: boolean; }
 interface Curve {
-	d0: number; d1: number; dir: number; warned: boolean; scored: boolean; scraped: boolean; ended: boolean; n: number;
+	d0: number; d1: number; dir: number; warned: boolean; scored: boolean; scraped: boolean; n: number;
 }
-interface Prop { d: number; x: number; id: string; flip: boolean; kind: "sprite" | "stand" | "gate"; }
+interface Prop { d: number; x: number; id: string; flip: boolean; kind: "sprite" | "stand" | "gate" | "line"; }
 interface Part {
 	x: number; y: number; vx: number; vy: number; g: number; life: number; max: number; size: number; col: string;
 	img: string; grow: number; drag: number;
@@ -135,6 +138,8 @@ export function main(param: GameMainParameterObject): void {
 		let outT = 0;
 		let driftCurve: Curve | null = null;
 		let spinT = 0;
+		let crashSide = 0; // カベにぶつかった向き(0はスピン)
+		let niceEntry = false;
 		let boostT = 0;
 		let boostPow = 0;
 		let scraping = false;
@@ -178,39 +183,50 @@ export function main(param: GameMainParameterObject): void {
 				props.push({ d, x: side * (ROAD + 0.35 + w / 2 + rand() * 1.4), id, flip: rand() < 0.5, kind: "sprite" });
 			}
 		};
+		const addCurve = (d: number, sec: number, dir: number, ang: number, sp: number): number => {
+			const n = curveCount++;
+			const len = sp * sec;
+			const k = Math.min(0.05, ang / len) * dir;
+			segs.push({ d0: d, d1: d + len, k, big: true });
+			curves.push({ d0: d, d1: d + len, dir, warned: false, scored: false, scraped: false, n });
+			// 入口のライン、外がわの矢印の看板、出口のゲート、観客席
+			props.push({ d, x: 0, id: "", flip: false, kind: "line" });
+			for (let q = d + 2; q < d + len - 2; q += 4.5) props.push(
+				{ d: q, x: -dir * (ROAD + 0.55), id: "chevron", flip: dir < 0, kind: "sprite" }
+			);
+			if (len > 30) props.push({ d: d + len * 0.5, x: -dir * (ROAD + 2.4), id: st.stand, flip: false, kind: "stand" });
+			props.push({ d: d + len, x: 0, id: "gate", flip: false, kind: "gate" });
+			addProps(d, d + len, curves[curves.length - 1]);
+			return d + len;
+		};
 		const genCourse = (): void => {
 			while (genEnd < dist + Z_FAR + 120) {
 				const sp = estSpeed(genEnd);
-				// まっすぐ・ゆるいカーブ
 				const first = curveCount === 0;
-				const straight = sp * (first ? 3.4 : 2.4 + rand() * 1.0);
+				// みじかい直線(ゆるく曲がる)
+				const straight = sp * (first ? 3.4 : 0.8 + rand() * 1.0);
 				let d = genEnd;
-				const parts = first ? 1 : 2;
-				for (let i = 0; i < parts; i++) {
-					const len = straight / parts;
-					segs.push({ d0: d, d1: d + len, k: first ? 0 : (rand() * 2 - 1) * 0.005, big: false });
-					d += len;
+				segs.push({ d0: d, d1: d + straight, k: first ? 0 : (rand() * 2 - 1) * 0.004, big: false });
+				addProps(d, d + straight, null);
+				if (!first && rand() < 0.5) {
+					const side = rand() < 0.5 ? -1 : 1;
+					props.push({ d: d + straight * 0.5, x: side * (ROAD + 2.3), id: st.stand, flip: false, kind: "stand" });
 				}
-				addProps(genEnd, d, null);
-				// 大きなカーブ
-				const n = curveCount++;
-				const sec = n === 0 ? 2.0 : Math.min(4.4, 1.9 + rand() * 1.3 + n * 0.14);
-				const len = sp * sec;
-				const dir = rand() < 0.5 ? -1 : 1;
-				const ang = 1.6 + rand() * 0.7;
-				const k = Math.min(0.045, ang / len) * dir;
-				segs.push({ d0: d, d1: d + len, k, big: true });
-				const c: Curve = { d0: d, d1: d + len, dir, warned: false, scored: false, scraped: false, ended: false, n };
-				curves.push(c);
-				// 外がわに矢印の看板、出口にゲート、観客席
-				for (let q = d + 2; q < d + len - 3; q += 5) props.push(
-					{ d: q, x: -dir * (ROAD + 0.55), id: "chevron", flip: dir < 0, kind: "sprite" }
-				);
-				props.push({ d: d + len * 0.45, x: -dir * (ROAD + 2.4), id: st.stand, flip: false, kind: "stand" });
-				props.push({ d: d + len + 3, x: dir * (ROAD + 2.3), id: st.stand, flip: false, kind: "stand" });
-				props.push({ d: d + len, x: 0, id: "gate", flip: false, kind: "gate" });
-				addProps(d, d + len, c);
-				genEnd = d + len;
+				d += straight;
+				// カーブ: 1つだけのときと、左右に切りかえすS字(2〜4つ)
+				const r = rand();
+				const chain = first ? 1 : r < 0.3 ? 1 : r < 0.7 ? 2 : r < 0.9 ? 3 : 4;
+				let dir = rand() < 0.5 ? -1 : 1;
+				for (let j = 0; j < chain; j++) {
+					const t = rand();
+					// みじかい・ふつう・ながいカーブをまぜる
+					let sec = first ? 2.2 : t < 0.35 ? 1.1 + rand() * 0.5 : t < 0.75 ? 1.9 + rand() * 0.8 : 3.3 + rand() * 1.3;
+					if (chain >= 3 && sec > 3) sec = 2.0 + rand() * 0.6;
+					const ang = sec < 1.7 ? 0.9 + rand() * 0.4 : sec < 3 ? 1.4 + rand() * 0.5 : 2.0 + rand() * 0.6;
+					d = addCurve(d, sec, dir, ang, sp);
+					dir = -dir;
+				}
+				genEnd = d;
 			}
 			props.sort((a, b) => a.d - b.d);
 		};
@@ -384,6 +400,28 @@ export function main(param: GameMainParameterObject): void {
 			}
 			r.restore();
 		};
+		// カーブの入口のライン(チェック模様が点滅)
+		const drawLine = (r: g.Renderer, z: number, alpha: number): void => {
+			const z1 = z + 1.4;
+			if (z1 < -0.8) return;
+			const ya = groundY(Math.max(-0.8, z)), yb = groundY(z1), clip = clipFor(z);
+			const on = Math.floor(elapsed * 8) % 2 === 0;
+			r.save();
+			if (alpha < 1) r.opacity(alpha);
+			for (let y = Math.floor(yb); y < Math.min(ya, clip); y += 2) {
+				const t = ya === yb ? 0 : (ya - y) / (ya - yb);
+				const zz = Math.max(-0.8, z) + (z1 - Math.max(-0.8, z)) * t;
+				const sc = scale(zz);
+				const l = W / 2 + (curveX(zz) - camX() - ROAD) * sc;
+				const cw = 2 * ROAD * sc / 9;
+				const row = t < 0.5 ? 0 : 1;
+				for (let i = 0; i < 9; i++) {
+					const dark = (i + row) % 2 === 1;
+					r.fillRect(l + i * cw, y, cw + 1, 2, dark ? "#2a1840" : on ? "#ffe840" : "#ffffff");
+				}
+			}
+			r.restore();
+		};
 		const auraId = (): string => "aura" + Math.min(7, Math.max(0, level - 1));
 		// 虹は1つぶずつ色をかえる
 		const pcol = (c: string): string => c === "rainbow" ? "hsl(" + Math.floor(rand() * 360) + ",95%,62%)" : c;
@@ -420,7 +458,10 @@ export function main(param: GameMainParameterObject): void {
 			}
 			// カート: 向きでうしろ/ななめの絵を使い分ける
 			let id = kartBack, flip = false, rot = 0;
-			if (spinT > 0) {
+			if (spinT > 0 && crashSide !== 0) {
+				// カベにぶつかってぐらぐら
+				rot = Math.sin(spinT * 30) * 0.25 * spinT;
+			} else if (spinT > 0) {
 				const f = Math.floor(spinT * 14) % 4;
 				id = f % 2 === 0 ? kartBack : kartSide;
 				flip = f === 3;
@@ -482,6 +523,8 @@ export function main(param: GameMainParameterObject): void {
 				const alpha = z > Z_FAR - 8 ? Math.max(0, (Z_FAR - z) / 8) : z < 0 ? Math.max(0, 1 + z / 1.6) : 1;
 				if (p.kind === "gate") {
 					items.push({ z, fn: () => drawGate(r, z, alpha) });
+				} else if (p.kind === "line") {
+					items.push({ z: z + 1.4, fn: () => drawLine(r, z, alpha) });
 				} else if (p.kind === "stand") {
 					const id = p.id + (Math.floor(crowdT) % 2);
 					items.push({
@@ -598,10 +641,10 @@ export function main(param: GameMainParameterObject): void {
 		intro.append(new g.Sprite({ scene, src: img("face_" + animal.id), x: 300, y: 262, scaleX: 0.7, scaleY: 0.7 }));
 		label(fontY, 40, 420, 268, "ドライバー：" + animal.name, "left", intro);
 		label(fontC, 40, 420, 318, "コース：" + st.name, "left", intro);
-		label(fontW, 34, W / 2, 400, "カーブの看板が出たら、タップでジャンプ → そのまま長押しでドリフト！", "center", intro);
+		label(fontW, 34, W / 2, 400, "カーブ入口の光るラインに着地するようにタップ → 長押しでドリフト！", "center", intro);
 		label(fontY, 34, W / 2, 448, "長く続けるほど ドレミファソラシド とオーラの色が上がる", "center", intro);
-		label(fontP, 34, W / 2, 496, "カーブの出口「ここで はなす！」で指をはなすとパーフェクト！", "center", intro);
-		label(fontR, 30, W / 2, 544, "はなすのがおそいとスピン！ ドリフトしないとカベにゴリゴリ", "center", intro);
+		label(fontP, 34, W / 2, 496, "出口のゲート「ここで はなす！」で指をはなすとパーフェクト！", "center", intro);
+		label(fontR, 30, W / 2, 544, "早すぎるとスリップ！ おそいとスピン！ 早くはなすとターボでカベにドーン！", "center", intro);
 		const countLabel = label(fontY, 100, W / 2, 586, "", "center", intro);
 
 		// ======== 操作: タップ(ジャンプ) → 長押し(ドリフト) → はなす ========
@@ -620,11 +663,12 @@ export function main(param: GameMainParameterObject): void {
 		});
 
 		// ======== 当てはまるカーブ ========
-		const zoneCurve = (): Curve | null => {
+		// いまドリフトを始めてよいカーブ(入口ラインをこえていて、出口の少し前まで)
+		const entryCurve = (): Curve | null => {
+			const sp = Math.max(10, speed);
 			for (let i = 0; i < curves.length; i++) {
 				const c = curves[i];
-				const sp = Math.max(10, speed);
-				if (dist >= c.d0 - LEAD_SEC * sp && dist <= c.d1 + OVER_SEC * sp) return c;
+				if (dist >= c.d0 - ENTRY_TOL * sp && dist < c.d1 - 0.15 * sp) return c;
 				if (c.d0 > dist + 200) break;
 			}
 			return null;
@@ -634,7 +678,7 @@ export function main(param: GameMainParameterObject): void {
 				const c = curves[i];
 				const sp = Math.max(10, speed);
 				const t = (c.d0 - dist) / sp;
-				if (t < 1.7 && dist < c.d0 + 0.3 * sp) return c;
+				if (t < 1.3 && dist < c.d0 + 0.3 * sp) return c;
 				if (t > 2) break;
 			}
 			return null;
@@ -665,14 +709,21 @@ export function main(param: GameMainParameterObject): void {
 			}
 		};
 		const startDrift = (): void => {
-			const c = zoneCurve();
+			const c = entryCurve();
 			drifting = true;
 			driftT = 0;
 			outT = 0;
 			level = 1;
-			if (c && !c.ended) {
+			niceEntry = false;
+			if (c) {
 				driftCurve = c; driftDir = c.dir;
+				if ((dist - c.d0) / Math.max(10, speed) <= NICE_ENTRY) {
+					niceEntry = true;
+					const p = kartPos();
+					popText("ナイス進入！", fontC, 40, p.x - c.dir * 220, p.y - 240, 0.7);
+				}
 			} else {
+				// 入口ラインより前でドリフトした
 				const n = nextCurve();
 				driftCurve = null; driftDir = n ? n.dir : 1;
 			}
@@ -682,14 +733,16 @@ export function main(param: GameMainParameterObject): void {
 			popText(NOTES[0], lvFonts[0], 44, kp.x, kp.y - 300, 0.6);
 			burst(kp.x, kp.y - 40, 12, LV_COL[0], 380);
 		};
-		const spin = (msg: string): void => {
+		const spin = (msg: string, crashDir = 0): void => {
 			drifting = false;
 			level = 0;
 			driftCurve = null;
-			spinT = SPIN_SEC;
+			spinT = crashDir !== 0 ? CRASH_SEC : SPIN_SEC;
+			crashSide = crashDir;
 			boostT = 0;
-			shake = 0.35;
-			se("spin", 0.7);
+			shake = crashDir !== 0 ? 0.5 : 0.35;
+			se(crashDir !== 0 ? "wall" : "spin", 0.7);
+			if (crashDir !== 0) se("spin", 0.4);
 			if (combo >= 2) popText("コンボがとぎれた…", fontR, 34, W / 2, 200);
 			combo = 0;
 			const kp = kartPos();
@@ -728,22 +781,30 @@ export function main(param: GameMainParameterObject): void {
 			if (!c) return;
 			const sp = Math.max(10, speed);
 			const tEnd = (c.d1 - dist) / sp; // 出口まであと何秒か(マイナスは出口をすぎた)
-			let mult = 1;
-			let rating = "はやい！";
-			let f = fontW;
+			if (tEnd > GOOD_EARLY) {
+				// カーブの途中ではなすと、ミニターボで外がわのカベにぶつかる
+				if (lv >= 2) {
+					const kp2 = kartPos();
+					for (let k = 0; k < 16; k++) {
+						parts.push({
+							x: kp2.x - c.dir * 160, y: kp2.y - 60, vx: -c.dir * (100 + rand() * 300), vy: -200 - rand() * 400, g: 1200,
+							life: 0.5, max: 0.5, size: 10, col: rand() < 0.5 ? "#ffe060" : "#ff7a30", img: "", grow: 0, drag: 0.96
+						});
+					}
+					spin("ターボでカベにドーン！", -c.dir);
+				}
+				return;
+			}
+			let mult = 1.5;
+			let rating = "グッド！";
+			let f = fontY;
 			if (tEnd <= PERFECT_EARLY && tEnd >= -PERFECT_LATE) {
 				mult = 2; rating = "パーフェクト！"; f = fontP;
-			} else if (tEnd <= GOOD_EARLY) {
-				mult = 1.5; rating = "グッド！"; f = fontY;
 			}
-			if (mult > 1) {
-				combo++;
-				c.scored = true;
-			} else if (!c.scored) {
-				c.scored = true;
-			}
+			combo++;
+			c.scored = true;
 			const comboMul = 1 + 0.1 * Math.min(10, Math.max(0, combo - 1));
-			const pts = Math.round(LV_PT[lv - 1] * mult * comboMul);
+			const pts = Math.round(LV_PT[lv - 1] * mult * comboMul * (niceEntry ? ENTRY_MUL : 1));
 			driftScore += pts;
 			bestLv = Math.max(bestLv, lv);
 			// ミニターボ
@@ -768,7 +829,7 @@ export function main(param: GameMainParameterObject): void {
 					firework(); firework(); firework();
 					popText("にじいろパーフェクト！！", fontP, 54, W / 2, 120, 1.4);
 				}
-			} else if (mult > 1) {
+			} else {
 				se("great", 0.5);
 				cheer = Math.min(1, cheer + 0.15);
 			}
@@ -849,14 +910,9 @@ export function main(param: GameMainParameterObject): void {
 				}
 				const sp = Math.max(10, speed);
 				if (!driftCurve) {
-					const c = zoneCurve();
-					if (c && c.dir === driftDir && !c.ended) driftCurve = c;
-					else {
-						outT += dt;
-						if (outT > OUT_SEC) spin("スピン！");
-					}
-				}
-				if (driftCurve && (dist - driftCurve.d1) / sp > OVER_SEC) spin("はなすのがおそい！");
+					outT += dt;
+					if (outT > SLIP_SEC) spin("はやすぎ！スリップ！");
+				} else if ((dist - driftCurve.d1) / sp > OVER_SEC) spin("ふくらんでスピン！");
 			}
 			// カーブで何もしないとカベにゴリゴリ
 			scraping = false;
@@ -867,7 +923,7 @@ export function main(param: GameMainParameterObject): void {
 				if (!c.warned && (c.d0 - dist) / sp < 1.7) {
 					c.warned = true;
 					se("warn", 0.5);
-					if (c.n < 2) popText("タップ＆長押しでドリフト！", fontC, 40, W / 2, 330, 1.6);
+					if (c.n < 2) popText("光るラインでタップ＆長押し！", fontC, 40, W / 2, 330, 1.6);
 				}
 				if (!drifting && spinT <= 0 && py <= 0 && dist > c.d0 + 0.35 * sp && dist < c.d1 - 0.1 * sp) {
 					scraping = true;
@@ -879,9 +935,6 @@ export function main(param: GameMainParameterObject): void {
 						combo = 0;
 						popText("ゴリゴリ…", fontR, 56, kartPos().x, kartPos().y - 320);
 					}
-				}
-				if (!c.ended && dist > c.d1 + OVER_SEC * sp) {
-					c.ended = true;
 				}
 			}
 			if (scraping) {
@@ -908,7 +961,9 @@ export function main(param: GameMainParameterObject): void {
 			if (flash > 0) flash = Math.max(0, flash - dt * 2);
 			// 見た目の横の位置と向き
 			let tx = 0, tyaw = 0;
-			if (drifting) {
+			if (spinT > 0 && crashSide !== 0) {
+				tx = crashSide * (ROAD - 0.5);
+			} else if (drifting) {
 				tx = -driftDir * 0.45; tyaw = driftDir;
 			} else if (scraping) {
 				const c = nextCurve();
@@ -917,7 +972,7 @@ export function main(param: GameMainParameterObject): void {
 			} else {
 				tx = Math.sin(elapsed * 1.3) * 0.08; tyaw = curv * 6;
 			}
-			px += (tx - px) * Math.min(1, dt * 5);
+			px += (tx - px) * Math.min(1, dt * (spinT > 0 && crashSide !== 0 ? 14 : 5));
 			yaw += (tyaw - yaw) * Math.min(1, dt * 10);
 			// カメラの遠近: ターボで少し広角に
 			const kt = K0 * (boostT > 0 ? 0.9 : 1);

@@ -12,7 +12,7 @@ const data = (p) => "data:image/png;base64," + fs.readFileSync(path.join(ROOT, p
 	const p = await b.newPage();
 	const imgs = {
 		logo: data("image/logo.png"), kart: data("image/kart_cat_side.png"), aura: data("image/aura7.png"),
-		warn: data("tools/promo-shot/c_warn.png"), rainbow: data("tools/promo-shot/k_rainbow.png"), perfect: data("tools/promo-shot/m_gate.png"),
+		warn: data("tools/promo-shot/m_line.png"), rainbow: data("tools/promo-shot/k_rainbow.png"), perfect: data("tools/promo-shot/m_gate.png"),
 		faces: ["dog", "cat", "rabbit", "panda", "bear", "penguin", "fox", "pig", "frog", "chick"].map((a) => data("image/face_" + a + ".png"))
 	};
 	const res = await p.evaluate(async (I) => {
@@ -66,9 +66,9 @@ const data = (p) => "data:image/png;base64," + fs.readFileSync(path.join(ROOT, p
 			sub.forEach((s, i) => txt(s, px + w / 2, py + h + 104 + i * 44, 27, "#ffffff"));
 			y.textAlign = "left";
 		};
-		panel(im.warn, 1, "看板が出たらタップ＆長押し", ["ジャンプして", "そのままドリフト！"], 24, "#40a8ff");
+		panel(im.warn, 1, "入口ラインでタップ＆長押し", ["早すぎるとスリップ！", "左右の切りかえもすばやく"], 24, "#40a8ff");
 		panel(im.rainbow, 2, "ドレミファソラシド", ["長く続けるほど音が上がり", "オーラが 白→…→虹 に！"], 440, "#ff70c8");
-		panel(im.perfect, 3, "出口で はなす！", ["ゲートでピタッと はなすと", "パーフェクト ×2！"], 856, "#ffb020");
+		panel(im.perfect, 3, "出口ゲートで はなす！", ["ピタッとでパーフェクト×2", "早いとターボでカベにドーン"], 856, "#ffb020");
 		return { icon, promo: c.toDataURL("image/png") };
 	}, imgs);
 	await b.close();
