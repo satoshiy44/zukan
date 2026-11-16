@@ -1,0 +1,810 @@
+{
+	"width": 1280,
+	"height": 720,
+	"fps": 30,
+	"main": "./script/_bootstrap.js",
+	"assets": {
+		"bgm_c": {
+			"type": "audio",
+			"path": "audio/bgm_c",
+			"systemId": "music",
+			"duration": 23963,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			},
+			"loop": true
+		},
+		"bgm_k": {
+			"type": "audio",
+			"path": "audio/bgm_k",
+			"systemId": "music",
+			"duration": 22822,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			},
+			"loop": true
+		},
+		"bgm_m": {
+			"type": "audio",
+			"path": "audio/bgm_m",
+			"systemId": "music",
+			"duration": 25560,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			},
+			"loop": true
+		},
+		"se_boost1": {
+			"type": "audio",
+			"path": "audio/se_boost1",
+			"systemId": "sound",
+			"duration": 350,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_boost2": {
+			"type": "audio",
+			"path": "audio/se_boost2",
+			"systemId": "sound",
+			"duration": 500,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_boost3": {
+			"type": "audio",
+			"path": "audio/se_boost3",
+			"systemId": "sound",
+			"duration": 840,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_cheer": {
+			"type": "audio",
+			"path": "audio/se_cheer",
+			"systemId": "sound",
+			"duration": 1400,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_count": {
+			"type": "audio",
+			"path": "audio/se_count",
+			"systemId": "sound",
+			"duration": 140,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_do0": {
+			"type": "audio",
+			"path": "audio/se_do0",
+			"systemId": "sound",
+			"duration": 450,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_do1": {
+			"type": "audio",
+			"path": "audio/se_do1",
+			"systemId": "sound",
+			"duration": 450,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_do2": {
+			"type": "audio",
+			"path": "audio/se_do2",
+			"systemId": "sound",
+			"duration": 450,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_do3": {
+			"type": "audio",
+			"path": "audio/se_do3",
+			"systemId": "sound",
+			"duration": 450,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_do4": {
+			"type": "audio",
+			"path": "audio/se_do4",
+			"systemId": "sound",
+			"duration": 450,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_do5": {
+			"type": "audio",
+			"path": "audio/se_do5",
+			"systemId": "sound",
+			"duration": 450,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_do6": {
+			"type": "audio",
+			"path": "audio/se_do6",
+			"systemId": "sound",
+			"duration": 450,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_do7": {
+			"type": "audio",
+			"path": "audio/se_do7",
+			"systemId": "sound",
+			"duration": 450,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_drift": {
+			"type": "audio",
+			"path": "audio/se_drift",
+			"systemId": "sound",
+			"duration": 350,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_finish": {
+			"type": "audio",
+			"path": "audio/se_finish",
+			"systemId": "sound",
+			"duration": 920,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_firework": {
+			"type": "audio",
+			"path": "audio/se_firework",
+			"systemId": "sound",
+			"duration": 720,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_go": {
+			"type": "audio",
+			"path": "audio/se_go",
+			"systemId": "sound",
+			"duration": 650,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_great": {
+			"type": "audio",
+			"path": "audio/se_great",
+			"systemId": "sound",
+			"duration": 200,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_hop": {
+			"type": "audio",
+			"path": "audio/se_hop",
+			"systemId": "sound",
+			"duration": 120,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_land": {
+			"type": "audio",
+			"path": "audio/se_land",
+			"systemId": "sound",
+			"duration": 100,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_perfect": {
+			"type": "audio",
+			"path": "audio/se_perfect",
+			"systemId": "sound",
+			"duration": 680,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_scrape": {
+			"type": "audio",
+			"path": "audio/se_scrape",
+			"systemId": "sound",
+			"duration": 300,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_spin": {
+			"type": "audio",
+			"path": "audio/se_spin",
+			"systemId": "sound",
+			"duration": 800,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_wall": {
+			"type": "audio",
+			"path": "audio/se_wall",
+			"systemId": "sound",
+			"duration": 200,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_warn": {
+			"type": "audio",
+			"path": "audio/se_warn",
+			"systemId": "sound",
+			"duration": 220,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"aura0": {
+			"type": "image",
+			"path": "image/aura0.png",
+			"width": 420,
+			"height": 300
+		},
+		"aura1": {
+			"type": "image",
+			"path": "image/aura1.png",
+			"width": 420,
+			"height": 300
+		},
+		"aura2": {
+			"type": "image",
+			"path": "image/aura2.png",
+			"width": 420,
+			"height": 300
+		},
+		"aura3": {
+			"type": "image",
+			"path": "image/aura3.png",
+			"width": 420,
+			"height": 300
+		},
+		"aura4": {
+			"type": "image",
+			"path": "image/aura4.png",
+			"width": 420,
+			"height": 300
+		},
+		"aura5": {
+			"type": "image",
+			"path": "image/aura5.png",
+			"width": 420,
+			"height": 300
+		},
+		"aura6": {
+			"type": "image",
+			"path": "image/aura6.png",
+			"width": 420,
+			"height": 300
+		},
+		"aura7": {
+			"type": "image",
+			"path": "image/aura7.png",
+			"width": 420,
+			"height": 300
+		},
+		"billboard": {
+			"type": "image",
+			"path": "image/billboard.png",
+			"width": 520,
+			"height": 300
+		},
+		"blimp": {
+			"type": "image",
+			"path": "image/blimp.png",
+			"width": 420,
+			"height": 180
+		},
+		"chevron": {
+			"type": "image",
+			"path": "image/chevron.png",
+			"width": 200,
+			"height": 220
+		},
+		"cloud_c": {
+			"type": "image",
+			"path": "image/cloud_c.png",
+			"width": 2400,
+			"height": 200
+		},
+		"cloud_k": {
+			"type": "image",
+			"path": "image/cloud_k.png",
+			"width": 2400,
+			"height": 200
+		},
+		"cloud_m": {
+			"type": "image",
+			"path": "image/cloud_m.png",
+			"width": 2400,
+			"height": 200
+		},
+		"cone": {
+			"type": "image",
+			"path": "image/cone.png",
+			"width": 80,
+			"height": 100
+		},
+		"curve_sign": {
+			"type": "image",
+			"path": "image/curve_sign.png",
+			"width": 260,
+			"height": 260
+		},
+		"dragon": {
+			"type": "image",
+			"path": "image/dragon.png",
+			"width": 260,
+			"height": 320
+		},
+		"face_bear": {
+			"type": "image",
+			"path": "image/face_bear.png",
+			"width": 160,
+			"height": 160
+		},
+		"face_cat": {
+			"type": "image",
+			"path": "image/face_cat.png",
+			"width": 160,
+			"height": 160
+		},
+		"face_chick": {
+			"type": "image",
+			"path": "image/face_chick.png",
+			"width": 160,
+			"height": 160
+		},
+		"face_dog": {
+			"type": "image",
+			"path": "image/face_dog.png",
+			"width": 160,
+			"height": 160
+		},
+		"face_fox": {
+			"type": "image",
+			"path": "image/face_fox.png",
+			"width": 160,
+			"height": 160
+		},
+		"face_frog": {
+			"type": "image",
+			"path": "image/face_frog.png",
+			"width": 160,
+			"height": 160
+		},
+		"face_panda": {
+			"type": "image",
+			"path": "image/face_panda.png",
+			"width": 160,
+			"height": 160
+		},
+		"face_penguin": {
+			"type": "image",
+			"path": "image/face_penguin.png",
+			"width": 160,
+			"height": 160
+		},
+		"face_pig": {
+			"type": "image",
+			"path": "image/face_pig.png",
+			"width": 160,
+			"height": 160
+		},
+		"face_rabbit": {
+			"type": "image",
+			"path": "image/face_rabbit.png",
+			"width": 160,
+			"height": 160
+		},
+		"far_c": {
+			"type": "image",
+			"path": "image/far_c.png",
+			"width": 2400,
+			"height": 320
+		},
+		"far_k": {
+			"type": "image",
+			"path": "image/far_k.png",
+			"width": 2400,
+			"height": 320
+		},
+		"far_m": {
+			"type": "image",
+			"path": "image/far_m.png",
+			"width": 2400,
+			"height": 320
+		},
+		"flagpole": {
+			"type": "image",
+			"path": "image/flagpole.png",
+			"width": 120,
+			"height": 360
+		},
+		"flame": {
+			"type": "image",
+			"path": "image/flame.png",
+			"width": 80,
+			"height": 140
+		},
+		"gate": {
+			"type": "image",
+			"path": "image/gate.png",
+			"width": 1200,
+			"height": 170
+		},
+		"kart_bear_back": {
+			"type": "image",
+			"path": "image/kart_bear_back.png",
+			"width": 280,
+			"height": 272
+		},
+		"kart_bear_side": {
+			"type": "image",
+			"path": "image/kart_bear_side.png",
+			"width": 300,
+			"height": 272
+		},
+		"kart_cat_back": {
+			"type": "image",
+			"path": "image/kart_cat_back.png",
+			"width": 280,
+			"height": 272
+		},
+		"kart_cat_side": {
+			"type": "image",
+			"path": "image/kart_cat_side.png",
+			"width": 300,
+			"height": 272
+		},
+		"kart_chick_back": {
+			"type": "image",
+			"path": "image/kart_chick_back.png",
+			"width": 280,
+			"height": 272
+		},
+		"kart_chick_side": {
+			"type": "image",
+			"path": "image/kart_chick_side.png",
+			"width": 300,
+			"height": 272
+		},
+		"kart_dog_back": {
+			"type": "image",
+			"path": "image/kart_dog_back.png",
+			"width": 280,
+			"height": 272
+		},
+		"kart_dog_side": {
+			"type": "image",
+			"path": "image/kart_dog_side.png",
+			"width": 300,
+			"height": 272
+		},
+		"kart_fox_back": {
+			"type": "image",
+			"path": "image/kart_fox_back.png",
+			"width": 280,
+			"height": 272
+		},
+		"kart_fox_side": {
+			"type": "image",
+			"path": "image/kart_fox_side.png",
+			"width": 300,
+			"height": 272
+		},
+		"kart_frog_back": {
+			"type": "image",
+			"path": "image/kart_frog_back.png",
+			"width": 280,
+			"height": 272
+		},
+		"kart_frog_side": {
+			"type": "image",
+			"path": "image/kart_frog_side.png",
+			"width": 300,
+			"height": 272
+		},
+		"kart_panda_back": {
+			"type": "image",
+			"path": "image/kart_panda_back.png",
+			"width": 280,
+			"height": 272
+		},
+		"kart_panda_side": {
+			"type": "image",
+			"path": "image/kart_panda_side.png",
+			"width": 300,
+			"height": 272
+		},
+		"kart_penguin_back": {
+			"type": "image",
+			"path": "image/kart_penguin_back.png",
+			"width": 280,
+			"height": 272
+		},
+		"kart_penguin_side": {
+			"type": "image",
+			"path": "image/kart_penguin_side.png",
+			"width": 300,
+			"height": 272
+		},
+		"kart_pig_back": {
+			"type": "image",
+			"path": "image/kart_pig_back.png",
+			"width": 280,
+			"height": 272
+		},
+		"kart_pig_side": {
+			"type": "image",
+			"path": "image/kart_pig_side.png",
+			"width": 300,
+			"height": 272
+		},
+		"kart_rabbit_back": {
+			"type": "image",
+			"path": "image/kart_rabbit_back.png",
+			"width": 280,
+			"height": 272
+		},
+		"kart_rabbit_side": {
+			"type": "image",
+			"path": "image/kart_rabbit_side.png",
+			"width": 300,
+			"height": 272
+		},
+		"lava": {
+			"type": "image",
+			"path": "image/lava.png",
+			"width": 360,
+			"height": 120
+		},
+		"logo": {
+			"type": "image",
+			"path": "image/logo.png",
+			"width": 1000,
+			"height": 380
+		},
+		"pine": {
+			"type": "image",
+			"path": "image/pine.png",
+			"width": 220,
+			"height": 380
+		},
+		"rail": {
+			"type": "image",
+			"path": "image/rail.png",
+			"width": 320,
+			"height": 110
+		},
+		"rock": {
+			"type": "image",
+			"path": "image/rock.png",
+			"width": 200,
+			"height": 130
+		},
+		"shadow": {
+			"type": "image",
+			"path": "image/shadow.png",
+			"width": 260,
+			"height": 120
+		},
+		"smoke": {
+			"type": "image",
+			"path": "image/smoke.png",
+			"width": 96,
+			"height": 96
+		},
+		"spark": {
+			"type": "image",
+			"path": "image/spark.png",
+			"width": 48,
+			"height": 48
+		},
+		"spike": {
+			"type": "image",
+			"path": "image/spike.png",
+			"width": 180,
+			"height": 260
+		},
+		"stand_c0": {
+			"type": "image",
+			"path": "image/stand_c0.png",
+			"width": 960,
+			"height": 460
+		},
+		"stand_c1": {
+			"type": "image",
+			"path": "image/stand_c1.png",
+			"width": 960,
+			"height": 460
+		},
+		"stand_k0": {
+			"type": "image",
+			"path": "image/stand_k0.png",
+			"width": 960,
+			"height": 460
+		},
+		"stand_k1": {
+			"type": "image",
+			"path": "image/stand_k1.png",
+			"width": 960,
+			"height": 460
+		},
+		"stand_m0": {
+			"type": "image",
+			"path": "image/stand_m0.png",
+			"width": 960,
+			"height": 400
+		},
+		"stand_m1": {
+			"type": "image",
+			"path": "image/stand_m1.png",
+			"width": 960,
+			"height": 400
+		},
+		"star": {
+			"type": "image",
+			"path": "image/star.png",
+			"width": 56,
+			"height": 56
+		},
+		"tires": {
+			"type": "image",
+			"path": "image/tires.png",
+			"width": 200,
+			"height": 150
+		},
+		"torch": {
+			"type": "image",
+			"path": "image/torch.png",
+			"width": 100,
+			"height": 300
+		},
+		"touge": {
+			"type": "image",
+			"path": "image/touge.png",
+			"width": 160,
+			"height": 260
+		},
+		"_bootstrap": {
+			"type": "script",
+			"path": "script/_bootstrap.js",
+			"global": true
+		},
+		"main": {
+			"type": "script",
+			"path": "script/main.js",
+			"global": true
+		},
+		"parameterObject": {
+			"type": "script",
+			"path": "script/parameterObject.js",
+			"global": true
+		}
+	},
+	"environment": {
+		"sandbox-runtime": "3",
+		"akashic-runtime": {
+			"version": "~3.13.4-0",
+			"flavor": "-canvas"
+		},
+		"nicolive": {
+			"supportedModes": [
+				"ranking"
+			],
+			"preferredSessionParameters": {
+				"totalTimeLimit": 70
+			}
+		}
+	},
+	"globalScripts": []
+}
