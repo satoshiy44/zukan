@@ -27,7 +27,7 @@ const SKEW = 0.8; // 横に動くと、道がこれだけななめに見える
 const BOOST_V = 12; // ミニターボで上がる速さ
 const BOOST_SEC = [0.25, 0.35, 0.5, 0.65, 0.8, 1.0, 1.3, 1.8];
 const LV_PT = [50, 100, 200, 400, 700, 1100, 1600, 2400]; // はなしたときの点(段ごと)
-const DIST_PT = 3; // 走った距離 1u ごとの点
+const METER = 5; // 1u を何mとして数えるか。最後に、走ったきょり 1m = 1点 を足す
 const NOTES = ["ド", "レ", "ミ", "ファ", "ソ", "ラ", "シ", "ド"];
 const LV_COL = ["#ffffff", "#40a8ff", "#ffe030", "#40e070", "#b060ff", "#ff70c8", "#ff3a3a", "rainbow"];
 const LV_NAME = ["白", "青", "黄", "緑", "紫", "ピンク", "赤", "虹"];
@@ -185,7 +185,7 @@ export function main(param: GameMainParameterObject): void {
 		let cheer = 0; // 観客のもりあがり(0〜1)
 		let crowdT = 0;
 		let K = K0;
-		const totalScore = (): number => driftScore + Math.floor(dist * DIST_PT);
+		const meters = (): number => Math.floor(dist * METER);
 
 		// ======== コース ========
 		const segs: Seg[] = [];
@@ -612,6 +612,7 @@ export function main(param: GameMainParameterObject): void {
 		scene.append(face);
 		const scoreLabel = label(fontW, 46, 118, 18, "0");
 		const timeLabel = label(fontW, 44, W - 24, 18, "", "right");
+		const distLabel = label(fontC, 32, W - 24, 74, "", "right");
 		const comboLabel = label(fontY, 36, 118, 74, "");
 		const pops: Pop[] = [];
 		const popText = (t: string, f: g.Font, size: number, x: number, y: number, life = 0.9): void => {
@@ -816,23 +817,41 @@ export function main(param: GameMainParameterObject): void {
 
 		// ======== おしまい ========
 		let finished = false;
+		// 最後に、走ったきょりを点数にして、画面のまん中で数えながら左上の点数に足す
+		let tallyT = -1;
+		let distPts = 0;
+		let tallyDone = false;
+		let tallyTick = 0;
+		let addLabel: g.Label | null = null;
 		const finish = (): void => {
 			if (finished) return;
 			finished = true;
 			phase = "end";
 			if (drifting) releaseDrift();
-			g.game.vars.gameState.score = totalScore();
+			distPts = meters();
+			// ランキングに使う点数は、すぐに最終の値にしておく
+			g.game.vars.gameState.score = driftScore + distPts;
 			se("finish", 0.7);
 			se("cheer", 0.5);
 			const over = new g.FilledRect({ scene, cssColor: "rgba(30,12,50,0.55)", width: W, height: H });
-			scene.append(over);
-			label(fontY, 100, W / 2, 190, "おしまい！", "center");
-			label(fontW, 72, W / 2, 320, totalScore() + "てん", "center");
-			label(fontP, 40, W / 2, 430, "カーブでドリフト " + drifts + "回", "center");
+			scene.insertBefore(over, face);
+			label(fontY, 96, W / 2, 110, "おしまい！", "center");
+			label(fontC, 48, W / 2, 250, "走ったきょり " + distPts + "m", "center");
+			addLabel = label(fontY, 76, W / 2, 316, "+0", "center");
+			tallyT = 0;
+		};
+		const finishTally = (): void => {
+			tallyDone = true;
+			se("perfect", 0.6);
+			flash = 0.3; flashCol = "#ffffff";
+			burst(W / 2, 360, 30, "rainbow", 600, 12);
+			label(fontW, 64, W / 2, 420, "ごうけい " + (driftScore + distPts) + "てん", "center");
+			label(fontP, 36, W / 2, 510, "カーブでドリフト " + drifts + "回", "center");
 			if (bestLv > 0) label(
-				lvFonts[bestLv - 1], 40, W / 2, 486, "いちばん長いドリフト：" + LV_NAME[bestLv - 1] + "（" + NOTES[bestLv - 1] + "）", "center"
+				lvFonts[bestLv - 1], 36, W / 2, 560, "いちばん長いドリフト：" + LV_NAME[bestLv - 1] + "（" + NOTES[bestLv - 1] + "）", "center"
 			);
 		};
+
 
 		// ======== 毎フレーム ========
 		const bgm = scene.asset.getAudioById(stageNo === 0 ? "bgm_c" : stageNo === 1 ? "bgm_k" : "bgm_m");
@@ -1045,10 +1064,27 @@ export function main(param: GameMainParameterObject): void {
 			}
 
 			// 表示
-			const sc = phase === "end" ? g.game.vars.gameState.score : totalScore();
-			if (phase !== "end") g.game.vars.gameState.score = sc;
+			let sc = driftScore;
+			if (phase === "end") {
+				// 0.4秒まってから、1.2秒で数え上げる
+				tallyT += dt;
+				const t = Math.max(0, Math.min(1, (tallyT - 0.4) / 1.2));
+				const add = Math.round(distPts * t);
+				sc = driftScore + add;
+				if (addLabel) setText(addLabel, "+" + add + "てん");
+				if (t > 0 && t < 1) {
+					tallyTick -= dt;
+					if (tallyTick <= 0) {
+						se("count", 0.25); tallyTick = 0.07;
+					}
+				}
+				if (t >= 1 && !tallyDone) finishTally();
+			} else {
+				g.game.vars.gameState.score = sc;
+			}
 			setText(scoreLabel, sc + "てん");
 			setText(timeLabel, "のこり " + Math.max(0, Math.ceil(playSec - elapsed)));
+			setText(distLabel, (phase === "end" ? distPts : meters()) + "m");
 			setText(comboLabel, combo >= 2 ? combo + "コンボ ×" + comboMul().toFixed(1) : "");
 			meterLabels.forEach((l, i) => {
 				const op = drifting && level > i ? 1 : 0.5;
