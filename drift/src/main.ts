@@ -41,22 +41,29 @@ const ANIMALS: Animal[] = [
 interface Stage {
 	name: string; sky: string[]; far: string; cloud: string; road: string[]; side: string[]; curb: string[]; line: string;
 	props: string[]; stand: string; hill: number; lava: boolean;
+	fans: string[]; row: string; fly: string; // 道ばたの観客・モンスター、さくのうしろの観客の列、空をとぶもの
 }
 const STAGES: Stage[] = [
 	{
 		name: "ポップサーキット", sky: ["#3aa8ff", "#c8f0ff"], far: "far_c", cloud: "cloud_c", road: ["#6c6c80", "#646478"],
 		side: ["#6cc860", "#5fb854"], curb: ["#ff4a5a", "#ffffff"], line: "#ffffff",
-		props: ["tires", "flagpole", "billboard", "cone", "tires", "flagpole"], stand: "stand_c", hill: 0.5, lava: false
+		props: ["tires", "flagpole", "billboard", "cone", "balloons", "flowers", "lights", "tires", "balloons"],
+		stand: "stand_c", hill: 0.5, lava: false,
+		fans: ["fan_a", "fan_b", "fan_c", "fan_d", "fan_e", "fan_f", "fan_g", "fan_h"], row: "row_c", fly: "bird"
 	},
 	{
 		name: "マグマ城", sky: ["#2a0f40", "#d04a6a"], far: "far_k", cloud: "cloud_k", road: ["#4e3e60", "#463858"],
 		side: ["#ff6a20", "#f05418"], curb: ["#2a1830", "#ffb020"], line: "",
-		props: ["torch", "spike", "lava", "dragon", "torch", "spike"], stand: "stand_k", hill: 1.0, lava: true
+		props: ["torch", "spike", "lava", "dragon", "candles", "cauldron", "crystal", "torch", "crystal"],
+		stand: "stand_k", hill: 1.0, lava: true,
+		fans: ["mon_ghost", "mon_imp", "mon_slime", "mon_pump", "mon_ghost", "mon_imp"], row: "row_k", fly: "bat"
 	},
 	{
 		name: "ゆうやけ山道", sky: ["#ff8a7a", "#ffe6a8"], far: "far_m", cloud: "cloud_m", road: ["#5c5c6c", "#565666"],
 		side: ["#7ac858", "#6eb84e"], curb: ["#ffffff", "#ffffff"], line: "#ffd020",
-		props: ["pine", "pine", "rock", "touge", "pine", "rock"], stand: "stand_m", hill: 2.2, lava: false
+		props: ["pine", "pine", "rock", "touge", "chochin", "fence", "mushroom", "hay", "flowers", "pine"],
+		stand: "stand_m", hill: 2.2, lava: false,
+		fans: ["fan_a", "fan_b", "fan_c", "fan_d", "fan_e", "fan_f", "fan_g", "fan_h"], row: "row_m", fly: "bird"
 	}
 ];
 
@@ -64,7 +71,9 @@ interface Seg { d0: number; d1: number; k: number; big: boolean; }
 interface Curve {
 	d0: number; d1: number; dir: number; warned: boolean; scored: boolean; scraped: boolean; n: number;
 }
-interface Prop { d: number; x: number; id: string; flip: boolean; kind: "sprite" | "stand" | "gate" | "line"; }
+interface Prop {
+	d: number; x: number; id: string; flip: boolean; kind: "sprite" | "stand" | "anim"; ph?: number; lift?: number;
+}
 interface Part {
 	x: number; y: number; vx: number; vy: number; g: number; life: number; max: number; size: number; col: string;
 	img: string; grow: number; drag: number;
@@ -85,8 +94,11 @@ export function main(param: GameMainParameterObject): void {
 		"aura0", "aura1", "aura2", "aura3", "aura4", "aura5", "aura6", "aura7",
 		"stand_c0", "stand_c1", "stand_k0", "stand_k1", "stand_m0", "stand_m1",
 		"tires", "flagpole", "billboard", "cone", "torch", "spike", "lava", "dragon", "pine", "rock", "rail", "touge",
-		"far_c", "far_k", "far_m", "cloud_c", "cloud_k", "cloud_m"
+		"far_c", "far_k", "far_m", "cloud_c", "cloud_k", "cloud_m",
+		"balloons", "flowers", "lights", "candles", "cauldron", "crystal", "chochin", "fence", "mushroom", "hay"
 	];
+	["fan_a", "fan_b", "fan_c", "fan_d", "fan_e", "fan_f", "fan_g", "fan_h", "mon_ghost", "mon_imp", "mon_slime", "mon_pump",
+		"bat", "bird", "row_c", "row_k", "row_m"].forEach((a) => imageIds.push(a + "0", a + "1"));
 	ANIMALS.forEach((a) => imageIds.push("kart_" + a.id + "_back", "kart_" + a.id + "_side", "face_" + a.id));
 	const audioIds = [
 		"do0", "do1", "do2", "do3", "do4", "do5", "do6", "do7", "hop", "land", "drift", "boost1", "boost2", "boost3", "great", "perfect",
@@ -109,6 +121,25 @@ export function main(param: GameMainParameterObject): void {
 		imageIds.forEach((id) => {
 			surf[id] = g.SurfaceUtil.asSurface(img(id))!;
 		});
+		// 遠くの物を軽く描くため、道ばたの絵は 1/2・1/4 の大きさのものも作っておく
+		const mips: { [id: string]: g.Surface[] } = {};
+		const mipOf = (id: string, f: number): g.Surface => {
+			if (!mips[id]) {
+				const a = img(id);
+				mips[id] = [2, 4].map((k) => {
+					const m = g.game.resourceFactory.createSurface(Math.ceil(a.width / k), Math.ceil(a.height / k));
+					const mr = m.renderer();
+					mr.begin();
+					mr.save();
+					mr.transform([1 / k, 0, 0, 1 / k, 0, 0]);
+					mr.drawImage(surf[id], 0, 0, a.width, a.height, 0, 0);
+					mr.restore();
+					mr.end();
+					return m;
+				});
+			}
+			return mips[id][f === 2 ? 0 : 1];
+		};
 		const se = (id: string, vol = 0.6): void => {
 			scene.asset.getAudioById("se_" + id).play().changeVolume(vol);
 		};
@@ -166,18 +197,42 @@ export function main(param: GameMainParameterObject): void {
 			const p = Math.min(1, d / ((SPEED0 + SPEED1) / 2 * playSec));
 			return SPEED0 + (SPEED1 - SPEED0) * p + 2;
 		};
+		// 文字の入った看板は左右反転しない
+		const canFlip = (id: string): boolean => id !== "touge" && id !== "billboard";
+		// 道の両わきに、観客・モンスター・小物をびっしり置く
 		const addProps = (d0: number, d1: number, avoid: Curve | null): void => {
-			for (let d = d0 + rand() * 3; d < d1; d += 2.4 + rand() * 2.4) {
-				const side = rand() < 0.5 ? -1 : 1;
-				if (rand() < 0.16) {
-					props.push({ d, x: side * (ROAD + 2.1), id: st.stand, flip: false, kind: "stand" });
-					d += 4;
-					continue;
+			[-1, 1].forEach((side) => {
+				const outer = !!avoid && side === -avoid.dir; // カーブの外がわは観客を多めに
+				for (let d = d0 + rand() * 1.2; d < d1; d += 1.25 + rand() * 0.8) {
+					const r = rand();
+					if (r < (outer ? 0.45 : 0.25)) {
+						// さくのうしろの観客の列
+						props.push({ d, x: side * (ROAD + 1.6), id: st.row, flip: rand() < 0.5, kind: "anim", ph: rand() * 2 });
+						d += 0.8;
+					} else if (r < 0.75) {
+						const id = st.fans[Math.floor(rand() * st.fans.length)];
+						props.push({ d, x: side * (ROAD + 0.85 + rand() * 1.1), id, flip: rand() < 0.5, kind: "anim", ph: rand() * 2 });
+					} else {
+						const id = st.props[Math.floor(rand() * st.props.length)];
+						const w = img(id).width / UNIT;
+						const x = side * (ROAD + 0.8 + w / 2 + rand() * 1.2);
+						props.push({ d, x, id, flip: canFlip(id) && rand() < 0.5, kind: "sprite" });
+					}
+					// 奥にも、もう一列(観客席や大きな物)
+					if (rand() < 0.3) {
+						if (rand() < 0.4) props.push({ d: d + 0.3, x: side * (ROAD + 3.6), id: st.stand, flip: false, kind: "stand" });
+						else {
+							const id = st.props[Math.floor(rand() * st.props.length)];
+							const x = side * (ROAD + 3.0 + rand() * 1.5);
+							props.push({ d: d + 0.3, x, id, flip: canFlip(id) && rand() < 0.5, kind: "sprite" });
+						}
+					}
 				}
-				const id = st.props[Math.floor(rand() * st.props.length)];
-				if (avoid && side === -avoid.dir && d > avoid.d0 && d < avoid.d1) continue;
-				const w = img(id).width / UNIT;
-				props.push({ d, x: side * (ROAD + 0.35 + w / 2 + rand() * 1.4), id, flip: rand() < 0.5, kind: "sprite" });
+			});
+			// 空をとぶ、こうもり・鳥
+			for (let d = d0 + rand() * 6; d < d1; d += 6 + rand() * 6) {
+				const x = (rand() * 2 - 1) * (ROAD + 1.5);
+				props.push({ d, x, id: st.fly, flip: rand() < 0.5, kind: "anim", ph: rand() * 2, lift: 1.3 + rand() * 1.2 });
 			}
 		};
 		const addCurve = (d: number, sec: number, dir: number, ang: number, sp: number): number => {
@@ -190,7 +245,7 @@ export function main(param: GameMainParameterObject): void {
 			for (let q = d + 2; q < d + len - 2; q += 4.5) props.push(
 				{ d: q, x: -dir * (ROAD + 0.55), id: "chevron", flip: dir < 0, kind: "sprite" }
 			);
-			if (len > 30) props.push({ d: d + len * 0.5, x: -dir * (ROAD + 2.4), id: st.stand, flip: false, kind: "stand" });
+			if (len > 30) props.push({ d: d + len * 0.5, x: -dir * (ROAD + 3.6), id: st.stand, flip: false, kind: "stand" });
 			addProps(d, d + len, curves[curves.length - 1]);
 			return d + len;
 		};
@@ -203,10 +258,6 @@ export function main(param: GameMainParameterObject): void {
 				let d = genEnd;
 				segs.push({ d0: d, d1: d + straight, k: first ? 0 : (rand() * 2 - 1) * 0.004, big: false });
 				addProps(d, d + straight, null);
-				if (!first && rand() < 0.5) {
-					const side = rand() < 0.5 ? -1 : 1;
-					props.push({ d: d + straight * 0.5, x: side * (ROAD + 2.3), id: st.stand, flip: false, kind: "stand" });
-				}
 				d += straight;
 				// カーブ: 1つだけのときと、左右に切りかえすS字(2〜4つ)
 				const r = rand();
@@ -310,9 +361,14 @@ export function main(param: GameMainParameterObject): void {
 		const clipZ: number[] = [];
 		const clipV: number[] = [];
 		const clipFor = (z: number): number => {
-			let c = H;
-			for (let i = 0; i < clipZ.length && clipZ[i] <= z; i++) c = clipV[i];
-			return c;
+			// clipZ は小さい順なので、二分探索で z 以下の最後の場所をさがす
+			if (clipZ.length === 0 || clipZ[0] > z) return H;
+			let lo = 0, hi = clipZ.length - 1;
+			while (lo < hi) {
+				const m = (lo + hi + 1) >> 1;
+				if (clipZ[m] <= z) lo = m; else hi = m - 1;
+			}
+			return clipV[lo];
 		};
 		const drawGround = (r: g.Renderer): void => {
 			const h0 = hor();
@@ -359,20 +415,25 @@ export function main(param: GameMainParameterObject): void {
 				z0 = z1; y0 = y1; c0 = c1; s0 = s1;
 			}
 		};
-		const drawSprite = (r: g.Renderer, id: string, x: number, z: number, flip: boolean, alpha: number): void => {
+		const drawSprite = (r: g.Renderer, id: string, x: number, z: number, flip: boolean, alpha: number, lift = 0): void => {
 			const a = img(id);
 			const sc = scale(z) / UNIT;
 			const sx = screenX(x, z);
 			const w = a.width * sc;
 			if (sx + w / 2 < 0 || sx - w / 2 > W) return;
-			const top = groundY(z) - a.height * sc;
-			const visH = Math.min(a.height, (clipFor(z) - top) / sc);
+			if (w < 7 && a.height * sc < 10) return; // 遠くて小さすぎるものは描かない
+			const top = groundY(z) - a.height * sc - lift * scale(z);
+			const visH = lift > 0 ? a.height : Math.min(a.height, (clipFor(z) - top) / sc);
 			if (visH <= 1) return;
+			// 小さく描くときは、小さく作っておいた絵を使う
+			const f = sc < 0.25 ? 4 : sc < 0.5 ? 2 : 1;
+			const ss = sc * f;
 			r.save();
 			if (alpha < 1) r.opacity(alpha);
-			if (flip) r.transform([-sc, 0, 0, sc, sx + w / 2, top]);
-			else r.transform([sc, 0, 0, sc, sx - w / 2, top]);
-			r.drawImage(surf[id], 0, 0, a.width, visH, 0, 0);
+			if (flip) r.transform([-ss, 0, 0, ss, sx + w / 2, top]);
+			else r.transform([ss, 0, 0, ss, sx - w / 2, top]);
+			if (f === 1) r.drawImage(surf[id], 0, 0, a.width, visH, 0, 0);
+			else r.drawImage(mipOf(id, f), 0, 0, Math.ceil(a.width / f), Math.max(1, Math.floor(visH / f)), 0, 0);
 			r.restore();
 		};
 		// 観客席の場所(紙ふぶきを出すため)
@@ -484,6 +545,11 @@ export function main(param: GameMainParameterObject): void {
 							}
 						}
 					});
+				} else if (p.kind === "anim") {
+					// 2コマで動く。ひとりずつタイミングをずらす
+					const id = p.id + (Math.floor(crowdT * 1.3 + (p.ph || 0)) % 2);
+					const lift = p.lift ? p.lift + Math.sin(elapsed * 3 + (p.ph || 0) * 3) * 0.15 : 0;
+					items.push({ z, fn: () => drawSprite(r, id, p.x, z, p.flip, alpha, lift) });
 				} else {
 					items.push({ z, fn: () => drawSprite(r, p.id, p.x, z, p.flip, alpha) });
 				}

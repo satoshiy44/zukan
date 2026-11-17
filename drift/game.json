@@ -789,6 +789,270 @@
 			"type": "script",
 			"path": "script/parameterObject.js",
 			"global": true
+		},
+		"balloons": {
+			"type": "image",
+			"path": "image/balloons.png",
+			"width": 160,
+			"height": 320
+		},
+		"bat0": {
+			"type": "image",
+			"path": "image/bat0.png",
+			"width": 160,
+			"height": 100
+		},
+		"bat1": {
+			"type": "image",
+			"path": "image/bat1.png",
+			"width": 160,
+			"height": 100
+		},
+		"bird0": {
+			"type": "image",
+			"path": "image/bird0.png",
+			"width": 120,
+			"height": 80
+		},
+		"bird1": {
+			"type": "image",
+			"path": "image/bird1.png",
+			"width": 120,
+			"height": 80
+		},
+		"candles": {
+			"type": "image",
+			"path": "image/candles.png",
+			"width": 100,
+			"height": 240
+		},
+		"cauldron": {
+			"type": "image",
+			"path": "image/cauldron.png",
+			"width": 200,
+			"height": 170
+		},
+		"chochin": {
+			"type": "image",
+			"path": "image/chochin.png",
+			"width": 110,
+			"height": 300
+		},
+		"crystal": {
+			"type": "image",
+			"path": "image/crystal.png",
+			"width": 160,
+			"height": 220
+		},
+		"fan_a0": {
+			"type": "image",
+			"path": "image/fan_a0.png",
+			"width": 170,
+			"height": 266
+		},
+		"fan_a1": {
+			"type": "image",
+			"path": "image/fan_a1.png",
+			"width": 170,
+			"height": 266
+		},
+		"fan_b0": {
+			"type": "image",
+			"path": "image/fan_b0.png",
+			"width": 170,
+			"height": 266
+		},
+		"fan_b1": {
+			"type": "image",
+			"path": "image/fan_b1.png",
+			"width": 170,
+			"height": 266
+		},
+		"fan_c0": {
+			"type": "image",
+			"path": "image/fan_c0.png",
+			"width": 170,
+			"height": 266
+		},
+		"fan_c1": {
+			"type": "image",
+			"path": "image/fan_c1.png",
+			"width": 170,
+			"height": 266
+		},
+		"fan_d0": {
+			"type": "image",
+			"path": "image/fan_d0.png",
+			"width": 170,
+			"height": 266
+		},
+		"fan_d1": {
+			"type": "image",
+			"path": "image/fan_d1.png",
+			"width": 170,
+			"height": 266
+		},
+		"fan_e0": {
+			"type": "image",
+			"path": "image/fan_e0.png",
+			"width": 170,
+			"height": 266
+		},
+		"fan_e1": {
+			"type": "image",
+			"path": "image/fan_e1.png",
+			"width": 170,
+			"height": 266
+		},
+		"fan_f0": {
+			"type": "image",
+			"path": "image/fan_f0.png",
+			"width": 170,
+			"height": 266
+		},
+		"fan_f1": {
+			"type": "image",
+			"path": "image/fan_f1.png",
+			"width": 170,
+			"height": 266
+		},
+		"fan_g0": {
+			"type": "image",
+			"path": "image/fan_g0.png",
+			"width": 170,
+			"height": 266
+		},
+		"fan_g1": {
+			"type": "image",
+			"path": "image/fan_g1.png",
+			"width": 170,
+			"height": 266
+		},
+		"fan_h0": {
+			"type": "image",
+			"path": "image/fan_h0.png",
+			"width": 170,
+			"height": 266
+		},
+		"fan_h1": {
+			"type": "image",
+			"path": "image/fan_h1.png",
+			"width": 170,
+			"height": 266
+		},
+		"fence": {
+			"type": "image",
+			"path": "image/fence.png",
+			"width": 300,
+			"height": 110
+		},
+		"flowers": {
+			"type": "image",
+			"path": "image/flowers.png",
+			"width": 260,
+			"height": 110
+		},
+		"hay": {
+			"type": "image",
+			"path": "image/hay.png",
+			"width": 180,
+			"height": 130
+		},
+		"lights": {
+			"type": "image",
+			"path": "image/lights.png",
+			"width": 140,
+			"height": 460
+		},
+		"mon_ghost0": {
+			"type": "image",
+			"path": "image/mon_ghost0.png",
+			"width": 160,
+			"height": 220
+		},
+		"mon_ghost1": {
+			"type": "image",
+			"path": "image/mon_ghost1.png",
+			"width": 160,
+			"height": 220
+		},
+		"mon_imp0": {
+			"type": "image",
+			"path": "image/mon_imp0.png",
+			"width": 160,
+			"height": 220
+		},
+		"mon_imp1": {
+			"type": "image",
+			"path": "image/mon_imp1.png",
+			"width": 160,
+			"height": 220
+		},
+		"mon_pump0": {
+			"type": "image",
+			"path": "image/mon_pump0.png",
+			"width": 160,
+			"height": 220
+		},
+		"mon_pump1": {
+			"type": "image",
+			"path": "image/mon_pump1.png",
+			"width": 160,
+			"height": 220
+		},
+		"mon_slime0": {
+			"type": "image",
+			"path": "image/mon_slime0.png",
+			"width": 160,
+			"height": 220
+		},
+		"mon_slime1": {
+			"type": "image",
+			"path": "image/mon_slime1.png",
+			"width": 160,
+			"height": 220
+		},
+		"mushroom": {
+			"type": "image",
+			"path": "image/mushroom.png",
+			"width": 140,
+			"height": 130
+		},
+		"row_c0": {
+			"type": "image",
+			"path": "image/row_c0.png",
+			"width": 680,
+			"height": 250
+		},
+		"row_c1": {
+			"type": "image",
+			"path": "image/row_c1.png",
+			"width": 680,
+			"height": 250
+		},
+		"row_k0": {
+			"type": "image",
+			"path": "image/row_k0.png",
+			"width": 680,
+			"height": 250
+		},
+		"row_k1": {
+			"type": "image",
+			"path": "image/row_k1.png",
+			"width": 680,
+			"height": 250
+		},
+		"row_m0": {
+			"type": "image",
+			"path": "image/row_m0.png",
+			"width": 680,
+			"height": 250
+		},
+		"row_m1": {
+			"type": "image",
+			"path": "image/row_m1.png",
+			"width": 680,
+			"height": 250
 		}
 	},
 	"environment": {

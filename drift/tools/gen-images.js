@@ -621,6 +621,250 @@ function build() {
 		x.lineWidth = 12; x.strokeStyle = OL; x.strokeText("★ ここで はなす！ ★", 600, 87); x.fillStyle = "#ffffff"; x.fillText("★ ここで はなす！ ★", 600, 87);
 		save("gate", c);
 	}
+	// ======== 道ばたの観客・モンスター(2コマ) ========
+	// 立って応援する動物のファン 150x240 (足もとが下はし)
+	const fan = (name, fur, shirt, kind, item, frame) => {
+		const [c, x] = mk(170, 266);
+		x.translate(10, 26);
+		const cx = 75, hy = 92, r = 34;
+		// 足
+		[-1, 1].forEach((s) => rr(x, cx + s * 14 - 9, 196, 18, 40, 8, shade(shirt, -0.45), OL, 4));
+		// うで(frame0: 両手を上げる / frame1: 片手をふる)
+		const up = frame === 0;
+		const hand = (s, hx, hy2) => {
+			x.strokeStyle = OL; x.lineWidth = 15; x.beginPath(); x.moveTo(cx + s * 26, 150); x.lineTo(hx, hy2); x.stroke();
+			x.strokeStyle = shirt; x.lineWidth = 9; x.stroke();
+			ell(x, hx, hy2, 9, 9, fur, OL, 3);
+		};
+		const lh = up ? [cx - 56, 60] : [cx - 46, 178];
+		const rh = up ? [cx + 56, 60] : [cx + 58, 84];
+		// 持ち物(うしろに描く)
+		const hx = rh[0], hyy = rh[1];
+		if (item === "flag") {
+			x.strokeStyle = OL; x.lineWidth = 5; x.beginPath(); x.moveTo(hx, hyy + 10); x.lineTo(hx + 4, hyy - 70); x.stroke();
+			poly(x, [[hx + 4, hyy - 70], [hx + 60, hyy - 56 + frame * 10], [hx + 4, hyy - 36]], shade(shirt, 0.2), OL, 4);
+		}
+		if (item === "towel" && up) {
+			rr(x, lh[0] - 4, lh[1] - 20, rh[0] - lh[0] + 8, 26, 6, "#ffffff", OL, 4);
+			x.fillStyle = shirt; x.fillRect(lh[0] + 10, lh[1] - 14, rh[0] - lh[0] - 20, 12);
+		}
+		if (item === "sign") {
+			const bx = up ? cx : cx + 20, by = up ? 30 : 34;
+			rr(x, bx - 46, by - 26, 92, 52, 8, "#ffffff", OL, 5);
+			x.font = "bold 30px sans-serif"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillStyle = shirt; x.fillText(frame ? "GO!" : "★♥", bx, by + 2);
+		}
+		if (item === "stick") [lh, rh].forEach((h) => { x.strokeStyle = shirt; x.lineWidth = 9; x.beginPath(); x.moveTo(h[0], h[1]); x.lineTo(h[0] + (h === lh ? -8 : 8), h[1] - 44); x.stroke(); ell(x, h[0] + (h === lh ? -8 : 8), h[1] - 46, 7, 7, "#ffffff"); });
+		hand(-1, lh[0], lh[1]);
+		hand(1, rh[0], rh[1]);
+		// からだ(Tシャツ)
+		ell(x, cx, 168, 34, 38, shirt, OL, 5);
+		star(x, cx, 166, 12, "#ffffff");
+		// 頭(上下にはずむ)
+		crowdHead(x, cx, hy + (up ? -4 : 2), r, fur, false, kind);
+		save(name + frame, c);
+	};
+	const FAN_SET = [
+		["fan_a", "#ffb050", "#ff5a7a", "cat", "flag"], ["fan_b", "#ffffff", "#4aa8ff", "bunny", "towel"],
+		["fan_c", "#a8743e", "#ffd030", "bear", "sign"], ["fan_d", "#ffb4c4", "#9a6aff", "round", "stick"],
+		["fan_e", "#e0a868", "#40c870", "bear", "flag"], ["fan_f", "#9ad0ff", "#ff8a30", "cat", "sign"],
+		["fan_g", "#70d060", "#ff5ab0", "round", "towel"], ["fan_h", "#ffe050", "#3a7ae8", "bunny", "stick"]
+	];
+	FAN_SET.forEach((f) => [0, 1].forEach((fr) => fan(f[0], f[1], f[2], f[3], f[4], fr)));
+	// マグマ城のモンスター 160x220
+	const monster = (name, frame) => {
+		const [c, x] = mk(160, 220);
+		const b = frame ? -6 : 0;
+		if (name === "mon_ghost") {
+			x.save(); x.translate(0, -24 + b * 2);
+			x.beginPath(); x.arc(80, 110, 52, Math.PI, 0); x.lineTo(132, 190);
+			for (let k = 0; k < 4; k++) x.quadraticCurveTo(132 - (k + 0.5) * 26, 172, 132 - (k + 1) * 26, 190);
+			x.closePath(); x.fillStyle = "#f4f0ff"; x.fill(); x.lineWidth = 5; x.strokeStyle = OL; x.stroke();
+			ell(x, 62, 104, 7, 10, OL); ell(x, 98, 104, 7, 10, OL); ell(x, 80, 130, 10, frame ? 12 : 6, "#ff7a9a", OL, 3);
+			ell(x, 50, 122, 9, 5, "rgba(255,120,160,0.6)"); ell(x, 110, 122, 9, 5, "rgba(255,120,160,0.6)");
+			[-1, 1].forEach((s) => ell(x, 80 + s * 58, 132 + (frame ? -20 : 0) * s, 14, 9, "#f4f0ff", OL, 4, s * 0.6));
+			x.restore();
+		}
+		if (name === "mon_imp") {
+			[-1, 1].forEach((s) => poly(x, [[80 + s * 30, 120], [80 + s * (78 + frame * 6), 92 - frame * 14], [80 + s * 62, 140]], "#6a3a8a", OL, 4));
+			[-1, 1].forEach((s) => rr(x, 80 + s * 14 - 8, 180, 16, 36, 6, "#8a4ab0", OL, 4));
+			ell(x, 80, 160, 34, 34, "#9a5ad0", OL, 5);
+			ell(x, 80, 168, 20, 16, "#c8a0f0");
+			// 旗(三つ又じゃなくて応援の旗)
+			x.strokeStyle = OL; x.lineWidth = 5; x.beginPath(); x.moveTo(126, 176); x.lineTo(134, 40 + b); x.stroke();
+			poly(x, [[134, 40 + b], [158, 56 + b + frame * 6], [134, 74 + b]], "#ff8a20", OL, 3);
+			crowdHead(x, 80, 96 + b, 40, "#b07ae0", frame === 1, "imp");
+		}
+		if (name === "mon_slime") {
+			const sq = frame ? 1.15 : 1, h = frame ? 0.85 : 1;
+			x.beginPath(); x.ellipse(80, 216 - 60 * h, 62 * sq, 60 * h, 0, Math.PI, 0); x.lineTo(80 + 66 * sq, 216); x.lineTo(80 - 66 * sq, 216); x.closePath();
+			x.fillStyle = "#6ad8a0"; x.fill(); x.lineWidth = 5; x.strokeStyle = OL; x.stroke();
+			ell(x, 54, 216 - 92 * h, 14, 8, "rgba(255,255,255,0.7)", null, 0, -0.5);
+			ell(x, 64, 216 - 50 * h, 7, 10, OL); ell(x, 96, 216 - 50 * h, 7, 10, OL);
+			x.strokeStyle = OL; x.lineWidth = 4; x.beginPath(); x.arc(80, 216 - 36 * h, 10, 0.2, Math.PI - 0.2); x.stroke();
+		}
+		if (name === "mon_pump") {
+			[-1, 1].forEach((s) => rr(x, 80 + s * 16 - 8, 184, 16, 34, 6, "#3a2a4a", OL, 4));
+			ell(x, 80, 168, 30, 26, "#3a2a4a", OL, 5);
+			[-1, 1].forEach((s) => { x.strokeStyle = OL; x.lineWidth = 12; x.beginPath(); x.moveTo(80 + s * 24, 160); x.lineTo(80 + s * 54, frame ? 100 : 130); x.stroke(); });
+			ell(x, 80, 100 + b, 56, 46, "#ff8a20", OL, 5);
+			[-30, 0, 30].forEach((o) => { x.strokeStyle = "rgba(160,60,0,0.6)"; x.lineWidth = 4; x.beginPath(); x.ellipse(80 + o, 100 + b, 14, 44, 0, 0, Math.PI * 2); x.stroke(); });
+			rr(x, 74, 46 + b, 12, 18, 4, "#4a8a3a", OL, 3);
+			poly(x, [[56, 92 + b], [68, 78 + b], [74, 96 + b]], "#ffe060", OL, 3); poly(x, [[104, 92 + b], [92, 78 + b], [86, 96 + b]], "#ffe060", OL, 3);
+			poly(x, [[60, 112 + b], [100, 112 + b], [80, 128 + b]], "#ffe060", OL, 3);
+		}
+		save(name + frame, c);
+	};
+	["mon_ghost", "mon_imp", "mon_slime", "mon_pump"].forEach((m) => [0, 1].forEach((fr) => monster(m, fr)));
+	// こうもり(空をとぶ) 160x100
+	[0, 1].forEach((frame) => {
+		const [c, x] = mk(160, 100);
+		[-1, 1].forEach((s) => {
+			const wy = frame ? 70 : 18;
+			poly(x, [[80 + s * 18, 50], [80 + s * 76, wy], [80 + s * 60, 60], [80 + s * 46, wy + 14 - frame * 20], [80 + s * 30, 62]], "#5a3a7a", OL, 4);
+		});
+		ell(x, 80, 52, 24, 22, "#6a4a8a", OL, 5);
+		[-1, 1].forEach((s) => poly(x, [[80 + s * 8, 34], [80 + s * 18, 18], [80 + s * 20, 38]], "#6a4a8a", OL, 3));
+		ell(x, 72, 50, 5, 6, "#ffe060"); ell(x, 88, 50, 5, 6, "#ffe060");
+		save("bat" + frame, c);
+	});
+	// 鳥(山道の空) 120x80
+	[0, 1].forEach((frame) => {
+		const [c, x] = mk(120, 80);
+		[-1, 1].forEach((s) => poly(x, [[60 + s * 10, 44], [60 + s * 56, frame ? 62 : 14], [60 + s * 30, 48]], "#ffffff", OL, 4));
+		ell(x, 60, 46, 20, 14, "#ffffff", OL, 4); poly(x, [[76, 44], [92, 48], [76, 52]], "#ffa020", OL, 2);
+		ell(x, 68, 42, 3, 3, OL);
+		save("bird" + frame, c);
+	});
+	// ======== 道ばたの小物(ふやす) ========
+	{
+		// 風船のたば 160x320
+		const [c, x] = mk(160, 320);
+		x.strokeStyle = "#ffffff"; x.lineWidth = 3;
+		[[40, 70], [80, 40], [120, 76], [60, 120], [104, 126]].forEach(([bx, by]) => { x.beginPath(); x.moveTo(bx, by + 30); x.lineTo(80, 316); x.stroke(); });
+		[[40, 70, "#ff5a7a"], [80, 40, "#ffe040"], [120, 76, "#4ab0ff"], [60, 120, "#70e070"], [104, 126, "#b070ff"]].forEach(([bx, by, col]) => {
+			ell(x, bx, by, 30, 36, col, OL, 4); ell(x, bx - 10, by - 12, 8, 12, "rgba(255,255,255,0.6)");
+		});
+		rr(x, 66, 296, 28, 22, 4, "#e0e0f0", OL, 4);
+		save("balloons", c);
+	}
+	{
+		// 花だん 260x110
+		const [c, x] = mk(260, 110);
+		rr(x, 6, 60, 248, 46, 10, "#c8865a", OL, 5);
+		seed = 5;
+		for (let i = 0; i < 9; i++) {
+			const fx = 26 + i * 26, fy = 44 + (i % 2) * 10, col = ["#ff5a8a", "#ffe040", "#ffffff", "#ff8a30", "#b070ff"][i % 5];
+			ell(x, fx, fy + 16, 6, 14, "#4aa04a");
+			for (let k = 0; k < 5; k++) { const a = k / 5 * Math.PI * 2; ell(x, fx + Math.cos(a) * 10, fy + Math.sin(a) * 10, 8, 8, col, OL, 2); }
+			ell(x, fx, fy, 6, 6, "#ffd020", OL, 2);
+		}
+		save("flowers", c);
+	}
+	{
+		// 照明のやぐら 140x460
+		const [c, x] = mk(140, 460);
+		x.strokeStyle = "#a0a8c8"; x.lineWidth = 6;
+		x.beginPath(); x.moveTo(40, 460); x.lineTo(62, 120); x.moveTo(100, 460); x.lineTo(78, 120); x.stroke();
+		for (let y = 160; y < 460; y += 50) { x.beginPath(); x.moveTo(44 + (460 - y) * 0.05, y); x.lineTo(96 - (460 - y) * 0.05, y + 40); x.stroke(); }
+		rr(x, 10, 30, 120, 96, 10, "#4a4a6a", OL, 6);
+		for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) ell(x, 34 + i * 36, 58 + j * 40, 14, 14, "#fff8c0", OL, 3);
+		save("lights", c);
+	}
+	{
+		// ろうそく台 100x240
+		const [c, x] = mk(100, 240);
+		rr(x, 30, 200, 40, 36, 6, "#5a4a6a", OL, 4);
+		rr(x, 44, 120, 12, 84, 4, "#7a6a8a", OL, 4);
+		[24, 50, 76].forEach((cx2, i) => {
+			rr(x, cx2 - 8, 70 + (i === 1 ? -16 : 0), 16, 52, 4, "#f4ecd8", OL, 3);
+			ell(x, cx2, 60 + (i === 1 ? -16 : 0), 8, 14, "#ffb020"); ell(x, cx2, 64 + (i === 1 ? -16 : 0), 4, 7, "#fff4a0");
+		});
+		x.strokeStyle = OL; x.lineWidth = 6; x.beginPath(); x.moveTo(24, 124); x.quadraticCurveTo(50, 140, 76, 124); x.stroke();
+		save("candles", c);
+	}
+	{
+		// 大なべ 200x170
+		const [c, x] = mk(200, 170);
+		ell(x, 100, 50, 60, 20, "#7aff8a"); ell(x, 70, 30, 12, 12, "#9aff9a", OL, 3); ell(x, 120, 20, 8, 8, "#9aff9a", OL, 3); ell(x, 100, 40, 6, 6, "#c8ffc8");
+		x.beginPath(); x.moveTo(30, 60); x.quadraticCurveTo(20, 150, 100, 152); x.quadraticCurveTo(180, 150, 170, 60); x.closePath();
+		x.fillStyle = "#3a3448"; x.fill(); x.lineWidth = 6; x.strokeStyle = OL; x.stroke();
+		ell(x, 100, 60, 72, 14, "#2a2436", OL, 5);
+		[[60, 166], [140, 166]].forEach(([lx, ly]) => rr(x, lx - 8, 140, 16, ly - 140, 4, "#2a2436", OL, 3));
+		poly(x, [[70, 168], [100, 150], [130, 168]], "#ff6a20");
+		save("cauldron", c);
+	}
+	{
+		// 光るクリスタル 160x220
+		const [c, x] = mk(160, 220);
+		[[80, 216, 30, 200, "#c08aff"], [44, 216, 20, 130, "#9ad0ff"], [118, 216, 22, 150, "#ff8ad0"]].forEach(([bx, by, w, h, col]) => {
+			poly(x, [[bx - w, by], [bx - w * 0.8, by - h * 0.75], [bx, by - h], [bx + w * 0.8, by - h * 0.75], [bx + w, by]], col, OL, 5);
+			poly(x, [[bx - w * 0.3, by - 10], [bx - w * 0.4, by - h * 0.7], [bx, by - h * 0.92], [bx, by - 10]], "rgba(255,255,255,0.35)");
+		});
+		save("crystal", c);
+	}
+	{
+		// ちょうちんの柱 110x300
+		const [c, x] = mk(110, 300);
+		rr(x, 48, 60, 14, 240, 4, "#8a5a3a", OL, 4);
+		rr(x, 20, 56, 90, 10, 3, "#8a5a3a", OL, 3);
+		[[40, 112], [86, 112]].forEach(([lx, ly]) => {
+			x.strokeStyle = OL; x.lineWidth = 3; x.beginPath(); x.moveTo(lx, 66); x.lineTo(lx, ly - 34); x.stroke();
+			ell(x, lx, ly, 22, 32, "#ff5a4a", OL, 4); rr(x, lx - 14, ly - 36, 28, 8, 3, "#2a1840"); rr(x, lx - 14, ly + 28, 28, 8, 3, "#2a1840");
+			[-14, 0, 14].forEach((o) => { x.strokeStyle = "rgba(120,20,20,0.5)"; x.lineWidth = 2; x.beginPath(); x.moveTo(lx - 20, ly + o); x.lineTo(lx + 20, ly + o); x.stroke(); });
+		});
+		save("chochin", c);
+	}
+	{
+		// 木のさく 300x110
+		const [c, x] = mk(300, 110);
+		[20, 110, 200, 280].forEach((px) => rr(x, px - 9, 14, 18, 96, 4, "#b07a4a", OL, 4));
+		rr(x, 4, 34, 292, 16, 4, "#c8905a", OL, 4); rr(x, 4, 68, 292, 16, 4, "#c8905a", OL, 4);
+		save("fence", c);
+	}
+	{
+		// きのこ 140x130
+		const [c, x] = mk(140, 130);
+		rr(x, 54, 64, 32, 62, 10, "#fff0d8", OL, 5);
+		x.beginPath(); x.ellipse(70, 66, 62, 52, 0, Math.PI, 0); x.closePath(); x.fillStyle = "#ff5a5a"; x.fill(); x.lineWidth = 5; x.strokeStyle = OL; x.stroke();
+		[[44, 40, 10], [86, 30, 12], [100, 56, 7], [56, 60, 6]].forEach(([mx, my, r]) => ell(x, mx, my, r, r, "#ffffff"));
+		save("mushroom", c);
+	}
+	{
+		// わらの山 180x130
+		const [c, x] = mk(180, 130);
+		x.beginPath(); x.moveTo(10, 126); x.quadraticCurveTo(20, 10, 90, 8); x.quadraticCurveTo(160, 10, 170, 126); x.closePath();
+		x.fillStyle = "#f0c860"; x.fill(); x.lineWidth = 5; x.strokeStyle = OL; x.stroke();
+		x.strokeStyle = "#c89a30"; x.lineWidth = 3; for (let i = 0; i < 8; i++) { x.beginPath(); x.moveTo(30 + i * 16, 120); x.lineTo(40 + i * 14, 40 + (i % 3) * 10); x.stroke(); }
+		save("hay", c);
+	}
+	// ======== 道ぞいの観客の列(さくのうしろに大ぜい) 680x250 ========
+	const row = (name, fence, kinds, cols, frame) => {
+		const [c, x] = mk(680, 250);
+		const list = crowd(x, [
+			{ x0: 10, w: 660, n: 10, y: 92, r: 30 },
+			{ x0: 0, w: 680, n: 9, y: 140, r: 34 }
+		], cols, kinds);
+		// からだ
+		list.forEach((p) => ell(x, p.x, p.y + p.r * 1.3, p.r * 0.85, p.r * 0.9, shade(p.col, -0.25), OL, 3));
+		drawCrowd(x, list, frame);
+		if (fence === "barrier") {
+			rr(x, 0, 186, 680, 64, 6, "#ffffff", OL, 5);
+			for (let i = 0; i < 17; i++) { x.fillStyle = i % 2 ? "#ff4a5a" : "#ffffff"; x.fillRect(4 + i * 40, 190, 40, 56); }
+			x.lineWidth = 5; x.strokeStyle = OL; x.strokeRect(2, 186, 676, 64);
+		} else if (fence === "iron") {
+			x.fillStyle = "#2a2436"; x.fillRect(0, 196, 680, 12); x.fillRect(0, 236, 680, 12);
+			for (let i = 0; i < 28; i++) { rr(x, 6 + i * 24, 180, 8, 70, 2, "#2a2436"); poly(x, [[4 + i * 24, 182], [10 + i * 24, 166], [16 + i * 24, 182]], "#ffb020", OL, 2); }
+		} else {
+			[10, 230, 450, 670].forEach((px) => rr(x, px - 9, 180, 18, 70, 4, "#b07a4a", OL, 4));
+			rr(x, 0, 196, 680, 16, 4, "#c8905a", OL, 4); rr(x, 0, 228, 680, 16, 4, "#c8905a", OL, 4);
+		}
+		save(name + frame, c);
+	};
+	[0, 1].forEach((fr) => {
+		row("row_c", "barrier", ["cat", "bear", "bunny", "round"], FURS, fr);
+		row("row_k", "iron", ["ghost", "imp", "ghost", "round"], ["#e8e0ff", "#c8b0ff", "#ff9ab0", "#a0e0c0", "#ffd080", "#b8c0d0"], fr);
+		row("row_m", "wood", ["cat", "bear", "bunny", "round"], FURS, fr);
+	});
 	return out;
 }
 
