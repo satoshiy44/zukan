@@ -923,7 +923,7 @@ export function main(param: GameMainParameterObject): void {
 			// カベ
 			if (wallCool > 0) wallCool -= dt;
 			if (bumpT > 0) bumpT -= dt;
-			if (wallSide !== 0) {
+			if (wallSide !== 0 && phase === "play") {
 				scrapeSnd -= dt;
 				if (scrapeSnd <= 0) {
 					se("scrape", 0.4); scrapeSnd = 0.28;
@@ -943,6 +943,8 @@ export function main(param: GameMainParameterObject): void {
 			if (phase !== "intro") {
 				let want = -curv * PUSH;
 				if (drifting) want = cNow && cNow.dir === driftDir ? driftDir * DRIFT_IN : want + driftDir * TURN;
+				// おしまいのあとは、道なりに走って、道のまん中へもどる
+				if (phase === "end") want = -px * 0.04;
 				vx += (want - vx) * Math.min(1, move * GRIP);
 				px += vx * move;
 			}
