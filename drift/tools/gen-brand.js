@@ -35,15 +35,11 @@ const data = (p) => "data:image/png;base64," + fs.readFileSync(path.join(ROOT, p
 				x.moveTo(x0, y0 - i * w * 0.95); x.quadraticCurveTo(cxp, cyp - i * w * 0.95, x1, y1 - i * w * 0.8); x.stroke();
 			});
 		};
-		// ---- アイコン ----
+		// ---- アイコン: 正方形のロゴを、むらさきの夜空にのせる ----
 		const ic = document.createElement("canvas"); ic.width = 320; ic.height = 320; const x = ic.getContext("2d");
-		const g = x.createLinearGradient(0, 0, 0, 320); g.addColorStop(0, "#3aa8ff"); g.addColorStop(1, "#bfefff"); x.fillStyle = g; x.fillRect(0, 0, 320, 320);
-		x.fillStyle = "#6cc860"; x.beginPath(); x.ellipse(160, 360, 260, 120, 0, 0, Math.PI * 2); x.fill();
-		rainbow(x, -20, 250, 210, 215, 90, 290, 13);
-		x.globalAlpha = 0.85; x.drawImage(im.aura, 60, 80, 280, 200); x.globalAlpha = 1;
-		x.save(); x.translate(200, 196); x.rotate(-0.12); x.drawImage(im.kart, -115, -110, 230, 220); x.restore();
-		word(x, "ドリフト", 160, 52, 66, "#ffe860", "#ff8a20", -0.05);
-		word(x, "いっぽん", 112, 120, 46, "#9ae8ff", "#3a8ae8", -0.05);
+		const g = x.createRadialGradient(160, 150, 20, 160, 160, 240); g.addColorStop(0, "#5a2a9a"); g.addColorStop(1, "#24103f");
+		x.fillStyle = g; x.fillRect(0, 0, 320, 320);
+		x.drawImage(im.logo, -6, -6, 332, 332);
 		const icon = ic.toDataURL("image/png");
 		// ---- 紹介画像: 虹のドリフトの画面を大きく、左に遊び方、下に3コースと見どころ ----
 		const c = document.createElement("canvas"); c.width = 1280; c.height = 720; const y = c.getContext("2d");
@@ -60,7 +56,11 @@ const data = (p) => "data:image/png;base64," + fs.readFileSync(path.join(ROOT, p
 			y.font = "bold " + size + "px IPAGothic"; y.textAlign = align || "left"; y.textBaseline = "middle";
 			y.lineWidth = size * 0.3; y.strokeStyle = OL; y.strokeText(t, tx, ty); y.fillStyle = col; y.fillText(t, tx, ty);
 		};
-		y.drawImage(im.logo, 6, 6, 600, 240);
+		y.drawImage(im.logo, 14, 4, 232, 232);
+		txt("タップ・長押し・はなす", 262, 74, 30, "#ffffff");
+		txt("だけで遊べる！", 262, 118, 30, "#ffffff");
+		txt("ポップな", 262, 172, 30, "#ff8ad8");
+		txt("ドリフトレース", 390, 172, 40, "#ffe860");
 		// 動物ドライバー
 		y.fillStyle = "#ffffff"; y.beginPath(); y.roundRect(700, 14, 566, 104, 22); y.fill(); y.lineWidth = 5; y.strokeStyle = OL; y.stroke();
 		y.textAlign = "center"; txt("ドライバー10種 × コース3種がランダム！", 983, 38, 24, "#ff5a9a", "center");

@@ -658,7 +658,7 @@ export function main(param: GameMainParameterObject): void {
 		const intro = new g.E({ scene });
 		scene.append(intro);
 		intro.append(new g.FilledRect({ scene, cssColor: "rgba(30,12,50,0.6)", width: W, height: H }));
-		intro.append(new g.Sprite({ scene, src: img("logo"), x: W / 2, y: 140, anchorX: 0.5, anchorY: 0.5, scaleX: 0.62, scaleY: 0.62 }));
+		intro.append(new g.Sprite({ scene, src: img("logo"), x: W / 2, y: 130, anchorX: 0.5, anchorY: 0.5, scaleX: 0.5, scaleY: 0.5 }));
 		intro.append(new g.Sprite({ scene, src: img("face_" + animal.id), x: 300, y: 262, scaleX: 0.7, scaleY: 0.7 }));
 		label(fontY, 40, 420, 268, "ドライバー：" + animal.name, "left", intro);
 		label(fontC, 40, 420, 318, "コース：" + st.name, "left", intro);

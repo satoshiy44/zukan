@@ -670,8 +670,8 @@
 		"logo": {
 			"type": "image",
 			"path": "image/logo.png",
-			"width": 1000,
-			"height": 400
+			"width": 480,
+			"height": 480
 		},
 		"pine": {
 			"type": "image",
