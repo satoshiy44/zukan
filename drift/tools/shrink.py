@@ -4,6 +4,8 @@ import os
 from PIL import Image
 
 for f in glob.glob(os.path.join(os.path.dirname(__file__), "..", "image", "*.png")):
+    if os.path.basename(f) == "logo.png":
+        continue  # ロゴはグラデーションがきれいに出るよう、そのまま
     im = Image.open(f).convert("RGBA")
     q = im.quantize(256, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.NONE)
     q.save(f, optimize=True)

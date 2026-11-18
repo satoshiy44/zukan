@@ -873,35 +873,80 @@ function build() {
 	const b = await chromium.launch();
 	const p = await b.newPage();
 	const res = await p.evaluate(build);
-	// ロゴ(1000x380)
-	res.logo = await p.evaluate(async (kart) => {
-		const im = await new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.src = kart; });
-		const c = document.createElement("canvas"); c.width = 1000; c.height = 380; const x = c.getContext("2d");
+	// ロゴ(1000x400): カーブする道・虹のオーラでドリフトするカート・ドレミの音符・白い風
+	res.logo = await p.evaluate(async (src) => {
+		const load = (u) => new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.src = u; });
+		const kart = await load(src.kart), smoke = await load(src.smoke);
+		const c = document.createElement("canvas"); c.width = 1000; c.height = 400; const x = c.getContext("2d");
 		const OL = "#2a1840";
 		x.lineJoin = "round"; x.lineCap = "round";
-		// 虹のドリフトの跡
-		const cols = ["#ff4040", "#ff9a30", "#ffe040", "#50e070", "#40b0ff", "#9a60ff"];
-		cols.forEach((col, i) => {
-			x.strokeStyle = col; x.lineWidth = 16; x.beginPath();
-			x.moveTo(40, 330 - i * 15); x.quadraticCurveTo(420, 380 - i * 15, 720, 250 - i * 12); x.stroke();
+		// カーブする道(紅白の縁石)。別のキャンバスに描いて、両はしをふわっと消す
+		{
+			const rc = document.createElement("canvas"); rc.width = 1000; rc.height = 400; const q = rc.getContext("2d");
+			q.lineCap = "butt";
+			const path = (o) => { q.beginPath(); q.moveTo(-20, 300 + o); q.quadraticCurveTo(540, 362 + o, 1020, 272 + o); };
+			[[96, OL], [86, "#ffffff"], [74, "#6c6c80"]].forEach(([w, col]) => { q.strokeStyle = col; q.lineWidth = w; path(0); q.stroke(); });
+			q.setLineDash([22, 22]); q.strokeStyle = "#ff4a5a"; q.lineWidth = 8; path(-40); q.stroke(); path(40); q.stroke();
+			q.globalCompositeOperation = "destination-out";
+			const fade = q.createLinearGradient(0, 0, 1000, 0);
+			fade.addColorStop(0, "rgba(0,0,0,1)"); fade.addColorStop(0.12, "rgba(0,0,0,0)"); fade.addColorStop(0.88, "rgba(0,0,0,0)"); fade.addColorStop(1, "rgba(0,0,0,1)");
+			q.fillStyle = fade; q.fillRect(0, 0, 1000, 400);
+			x.drawImage(rc, 0, 0);
+		}
+		// タイヤのあと(虹)
+		["#ff4040", "#ff9a30", "#ffe040", "#50e070", "#40b0ff", "#9a60ff"].forEach((col, i) => {
+			x.strokeStyle = col; x.lineWidth = 7; x.globalAlpha = 0.9; x.beginPath();
+			x.moveTo(90, 310 - i * 7); x.quadraticCurveTo(460, 352 - i * 7, 690, 312 - i * 6); x.stroke();
 		});
-		const word = (t, cx, cy, size, c0, c1, rot) => {
-			x.save(); x.translate(cx, cy); x.rotate(rot || 0);
+		x.globalAlpha = 1;
+		// 白い風
+		x.strokeStyle = "#ffffff"; x.lineWidth = 6;
+		[[30, 120, 150], [10, 170, 110], [40, 225, 130]].forEach(([sx, sy, len]) => { x.beginPath(); x.moveTo(sx, sy); x.lineTo(sx + len, sy - 4); x.stroke(); });
+		// オーラとけむりとカート
+		// 虹色の光の輪
+		for (let i = 0; i < 18; i++) {
+			const t = i / 18 * Math.PI * 2, ax = 806 + Math.cos(t) * 150, ay = 214 + Math.sin(t) * 96;
+			const g = x.createRadialGradient(ax, ay, 4, ax, ay, 70);
+			g.addColorStop(0, "hsla(" + Math.round(i * 20) + ",95%,65%,0.75)"); g.addColorStop(1, "hsla(" + Math.round(i * 20) + ",95%,65%,0)");
+			x.fillStyle = g; x.beginPath(); x.arc(ax, ay, 70, 0, Math.PI * 2); x.fill();
+		}
+		{
+			const g = x.createRadialGradient(806, 214, 10, 806, 214, 150);
+			g.addColorStop(0, "rgba(255,255,255,0.55)"); g.addColorStop(1, "rgba(255,255,255,0)");
+			x.fillStyle = g; x.beginPath(); x.arc(806, 214, 150, 0, Math.PI * 2); x.fill();
+		}
+		[[650, 300, 90], [600, 316, 70], [700, 314, 80]].forEach(([sx, sy, r]) => x.drawImage(smoke, sx - r / 2, sy - r / 2, r, r));
+		x.save(); x.translate(800, 214); x.rotate(-0.14); x.drawImage(kart, -134, -122, 268, 243); x.restore();
+		// 文字(ななめに)
+		const word = (t, cx, cy, size, c0, c1) => {
+			x.save(); x.translate(cx, cy); x.transform(1, -0.06, -0.22, 1, 0, 0);
 			x.font = "bold " + size + "px IPAGothic"; x.textAlign = "center"; x.textBaseline = "middle";
-			x.lineWidth = size * 0.34; x.strokeStyle = OL; x.strokeText(t, 5, 8);
-			x.lineWidth = size * 0.3; x.strokeText(t, 0, 0);
-			x.lineWidth = size * 0.15; x.strokeStyle = "#ffffff"; x.strokeText(t, 0, 0);
-			const g = x.createLinearGradient(0, -size / 2, 0, size / 2); g.addColorStop(0, c0); g.addColorStop(1, c1);
+			x.lineWidth = size * 0.36; x.strokeStyle = OL; x.strokeText(t, 6, 9); x.strokeText(t, 0, 0);
+			x.lineWidth = size * 0.17; x.strokeStyle = "#ffffff"; x.strokeText(t, 0, 0);
+			const g = x.createLinearGradient(0, -size / 2, 0, size / 2); g.addColorStop(0, c0); g.addColorStop(0.55, c1); g.addColorStop(1, c1);
 			x.fillStyle = g; x.fillText(t, 0, 0);
+			// つや
+			x.save(); x.beginPath(); x.rect(-size * 3, -size / 2, size * 6, size * 0.34); x.clip();
+			x.fillStyle = "rgba(255,255,255,0.35)"; x.fillText(t, 0, 0); x.restore();
 			x.restore();
 		};
-		word("ドリフト", 380, 104, 140, "#ffe860", "#ff8a20", -0.06);
-		word("いっぽん", 500, 250, 120, "#9ae8ff", "#3a8ae8", -0.06);
-		x.save(); x.translate(830, 240); x.rotate(-0.12); x.drawImage(im, -140, -123, 280, 245); x.restore();
+		word("ドリフト", 390, 118, 156, "#fff27a", "#ff8a1a");
+		word("いっぽん", 470, 262, 124, "#a6f0ff", "#2f86f0");
+		// ドレミの音符
+		const note = (nx, ny, col, sz, rot) => {
+			x.save(); x.translate(nx, ny); x.rotate(rot);
+			x.fillStyle = col; x.strokeStyle = OL; x.lineWidth = 4;
+			x.beginPath(); x.ellipse(0, 0, sz * 0.5, sz * 0.38, -0.4, 0, Math.PI * 2); x.fill(); x.stroke();
+			x.fillRect(sz * 0.36, -sz * 1.4, sz * 0.14, sz * 1.4); x.strokeRect(sz * 0.36, -sz * 1.4, sz * 0.14, sz * 1.4);
+			x.beginPath(); x.moveTo(sz * 0.5, -sz * 1.4); x.quadraticCurveTo(sz * 1.1, -sz * 1.1, sz * 0.9, -sz * 0.6); x.lineWidth = 7; x.strokeStyle = col; x.stroke();
+			x.restore();
+		};
+		note(712, 60, "#ff70c8", 34, 0.2); note(780, 26, "#ffe030", 26, -0.1); note(930, 64, "#40e070", 30, 0.25); note(980, 150, "#40a8ff", 24, 0.1);
+		// 星
 		const st = (cx, cy, r, col) => { x.beginPath(); for (let k = 0; k < 10; k++) { const a = k / 10 * Math.PI * 2 - Math.PI / 2, q = k % 2 ? r * 0.42 : r; x.lineTo(cx + Math.cos(a) * q, cy + Math.sin(a) * q); } x.closePath(); x.fillStyle = col; x.fill(); x.lineWidth = 4; x.strokeStyle = OL; x.stroke(); };
-		st(80, 70, 30, "#ffe040"); st(150, 200, 18, "#ff70c8"); st(940, 80, 26, "#40d0ff"); st(720, 60, 16, "#ffe040");
+		st(70, 50, 30, "#ffe040"); st(140, 300, 16, "#ff70c8"); st(640, 30, 18, "#70e8ff");
 		return c.toDataURL("image/png");
-	}, res.kart_cat_side);
+	}, { kart: res.kart_cat_side, smoke: res.smoke });
 	await b.close();
 	Object.keys(res).forEach((k) => fs.writeFileSync(path.join(OUT, k + ".png"), Buffer.from(res[k].split(",")[1], "base64")));
 	console.log("wrote", Object.keys(res).length, "images");

@@ -671,7 +671,7 @@
 			"type": "image",
 			"path": "image/logo.png",
 			"width": 1000,
-			"height": 380
+			"height": 400
 		},
 		"pine": {
 			"type": "image",
