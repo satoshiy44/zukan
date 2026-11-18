@@ -1,0 +1,16 @@
+# もちつきペッタン
+
+上のレーンの「おもち」の印にあわせてタップしてもちをつき、「たぬきの手」の印では押さないリズムゲーム(ニコ生ランキングゲーム)。
+自作ゲームパーティー2026冬「お正月部門」に応募する作品。
+
+- 曲(太鼓・かね・琴)は、ゲームの時計で8分音符ごとに鳴らしている。テンポが上がっても判定とずれない
+- 譜面は `SECTIONS`(区間ごとのテンポと並び)から作る。T=つく、h=たぬきの手、.=休み
+- 16回つくとおもち完成。ぴったりの割合で種類がかわる
+- 調整用の数字は `src/main.ts` の上にまとめてある
+
+## 作り直し
+- 画像: `node tools/gen-images.js` のあと `python3 tools/shrink.py`(256色にへらして軽くする。ロゴはそのまま)
+- アイコン・紹介画像: `node tools/gen-brand.js`(アイコンはそのあと ffmpeg の palettegen/paletteuse で256色にして、`-vf format=rgb24` で透過なし・100KB以下にする)
+- 音: `python3 tools/gen-audio.py`(効果音は se_ をつける)
+- 素材を足したら `npx akashic scan asset`
+- 投稿用 zip: `npx akashic export zip -o ../dist/mochitsuki-pettan.zip --nicolive -f`

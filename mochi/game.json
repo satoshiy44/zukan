@@ -1,0 +1,483 @@
+{
+	"width": 1280,
+	"height": 720,
+	"fps": 30,
+	"main": "./script/_bootstrap.js",
+	"assets": {
+		"se_cheer": {
+			"type": "audio",
+			"path": "audio/se_cheer",
+			"systemId": "sound",
+			"duration": 1200,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_complete": {
+			"type": "audio",
+			"path": "audio/se_complete",
+			"systemId": "sound",
+			"duration": 950,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_count": {
+			"type": "audio",
+			"path": "audio/se_count",
+			"systemId": "sound",
+			"duration": 140,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_don": {
+			"type": "audio",
+			"path": "audio/se_don",
+			"systemId": "sound",
+			"duration": 350,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_finish": {
+			"type": "audio",
+			"path": "audio/se_finish",
+			"systemId": "sound",
+			"duration": 1380,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_go": {
+			"type": "audio",
+			"path": "audio/se_go",
+			"systemId": "sound",
+			"duration": 850,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_good": {
+			"type": "audio",
+			"path": "audio/se_good",
+			"systemId": "sound",
+			"duration": 300,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_hai": {
+			"type": "audio",
+			"path": "audio/se_hai",
+			"systemId": "sound",
+			"duration": 180,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_k0": {
+			"type": "audio",
+			"path": "audio/se_k0",
+			"systemId": "sound",
+			"duration": 500,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_k1": {
+			"type": "audio",
+			"path": "audio/se_k1",
+			"systemId": "sound",
+			"duration": 500,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_k2": {
+			"type": "audio",
+			"path": "audio/se_k2",
+			"systemId": "sound",
+			"duration": 500,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_k3": {
+			"type": "audio",
+			"path": "audio/se_k3",
+			"systemId": "sound",
+			"duration": 500,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_k4": {
+			"type": "audio",
+			"path": "audio/se_k4",
+			"systemId": "sound",
+			"duration": 500,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_k5": {
+			"type": "audio",
+			"path": "audio/se_k5",
+			"systemId": "sound",
+			"duration": 500,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_k6": {
+			"type": "audio",
+			"path": "audio/se_k6",
+			"systemId": "sound",
+			"duration": 500,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_k7": {
+			"type": "audio",
+			"path": "audio/se_k7",
+			"systemId": "sound",
+			"duration": 500,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_k8": {
+			"type": "audio",
+			"path": "audio/se_k8",
+			"systemId": "sound",
+			"duration": 500,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_k9": {
+			"type": "audio",
+			"path": "audio/se_k9",
+			"systemId": "sound",
+			"duration": 500,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_ka": {
+			"type": "audio",
+			"path": "audio/se_ka",
+			"systemId": "sound",
+			"duration": 60,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_miss": {
+			"type": "audio",
+			"path": "audio/se_miss",
+			"systemId": "sound",
+			"duration": 150,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_ouch": {
+			"type": "audio",
+			"path": "audio/se_ouch",
+			"systemId": "sound",
+			"duration": 550,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_perfect": {
+			"type": "audio",
+			"path": "audio/se_perfect",
+			"systemId": "sound",
+			"duration": 550,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_pettan": {
+			"type": "audio",
+			"path": "audio/se_pettan",
+			"systemId": "sound",
+			"duration": 180,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_rush": {
+			"type": "audio",
+			"path": "audio/se_rush",
+			"systemId": "sound",
+			"duration": 700,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"bg": {
+			"type": "image",
+			"path": "image/bg.png",
+			"width": 1280,
+			"height": 720
+		},
+		"crowd0": {
+			"type": "image",
+			"path": "image/crowd0.png",
+			"width": 1280,
+			"height": 230
+		},
+		"crowd1": {
+			"type": "image",
+			"path": "image/crowd1.png",
+			"width": 1280,
+			"height": 230
+		},
+		"judge": {
+			"type": "image",
+			"path": "image/judge.png",
+			"width": 120,
+			"height": 120
+		},
+		"logo": {
+			"type": "image",
+			"path": "image/logo.png",
+			"width": 480,
+			"height": 480
+		},
+		"m_anko": {
+			"type": "image",
+			"path": "image/m_anko.png",
+			"width": 120,
+			"height": 100
+		},
+		"m_ichigo": {
+			"type": "image",
+			"path": "image/m_ichigo.png",
+			"width": 120,
+			"height": 100
+		},
+		"m_kin": {
+			"type": "image",
+			"path": "image/m_kin.png",
+			"width": 120,
+			"height": 100
+		},
+		"m_kinako": {
+			"type": "image",
+			"path": "image/m_kinako.png",
+			"width": 120,
+			"height": 100
+		},
+		"m_kusa": {
+			"type": "image",
+			"path": "image/m_kusa.png",
+			"width": 120,
+			"height": 100
+		},
+		"mochi": {
+			"type": "image",
+			"path": "image/mochi.png",
+			"width": 300,
+			"height": 170
+		},
+		"note_te": {
+			"type": "image",
+			"path": "image/note_te.png",
+			"width": 100,
+			"height": 100
+		},
+		"note_tsuki": {
+			"type": "image",
+			"path": "image/note_tsuki.png",
+			"width": 100,
+			"height": 100
+		},
+		"ring": {
+			"type": "image",
+			"path": "image/ring.png",
+			"width": 300,
+			"height": 300
+		},
+		"spark": {
+			"type": "image",
+			"path": "image/spark.png",
+			"width": 48,
+			"height": 48
+		},
+		"splash": {
+			"type": "image",
+			"path": "image/splash.png",
+			"width": 220,
+			"height": 120
+		},
+		"star": {
+			"type": "image",
+			"path": "image/star.png",
+			"width": 56,
+			"height": 56
+		},
+		"tanuki_hand": {
+			"type": "image",
+			"path": "image/tanuki_hand.png",
+			"width": 420,
+			"height": 520
+		},
+		"tanuki_idle": {
+			"type": "image",
+			"path": "image/tanuki_idle.png",
+			"width": 420,
+			"height": 520
+		},
+		"tanuki_ouch": {
+			"type": "image",
+			"path": "image/tanuki_ouch.png",
+			"width": 420,
+			"height": 520
+		},
+		"tray": {
+			"type": "image",
+			"path": "image/tray.png",
+			"width": 260,
+			"height": 60
+		},
+		"usagi_down": {
+			"type": "image",
+			"path": "image/usagi_down.png",
+			"width": 420,
+			"height": 520
+		},
+		"usagi_mid": {
+			"type": "image",
+			"path": "image/usagi_mid.png",
+			"width": 420,
+			"height": 520
+		},
+		"usagi_up": {
+			"type": "image",
+			"path": "image/usagi_up.png",
+			"width": 420,
+			"height": 520
+		},
+		"usu": {
+			"type": "image",
+			"path": "image/usu.png",
+			"width": 460,
+			"height": 280
+		},
+		"usu_front": {
+			"type": "image",
+			"path": "image/usu_front.png",
+			"width": 460,
+			"height": 80
+		},
+		"_bootstrap": {
+			"type": "script",
+			"path": "script/_bootstrap.js",
+			"global": true
+		},
+		"main": {
+			"type": "script",
+			"path": "script/main.js",
+			"global": true
+		},
+		"parameterObject": {
+			"type": "script",
+			"path": "script/parameterObject.js",
+			"global": true
+		}
+	},
+	"environment": {
+		"sandbox-runtime": "3",
+		"akashic-runtime": {
+			"version": "~3.13.4-0",
+			"flavor": "-canvas"
+		},
+		"nicolive": {
+			"supportedModes": [
+				"ranking"
+			],
+			"preferredSessionParameters": {
+				"totalTimeLimit": 70
+			}
+		}
+	},
+	"globalScripts": []
+}
