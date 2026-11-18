@@ -292,12 +292,6 @@
 				]
 			}
 		},
-		"bg": {
-			"type": "image",
-			"path": "image/bg.png",
-			"width": 1280,
-			"height": 720
-		},
 		"crowd0": {
 			"type": "image",
 			"path": "image/crowd0.png",
@@ -325,12 +319,6 @@
 		"m_anko": {
 			"type": "image",
 			"path": "image/m_anko.png",
-			"width": 120,
-			"height": 100
-		},
-		"m_ichigo": {
-			"type": "image",
-			"path": "image/m_ichigo.png",
 			"width": 120,
 			"height": 100
 		},
@@ -462,6 +450,378 @@
 			"type": "script",
 			"path": "script/parameterObject.js",
 			"global": true
+		},
+		"se_f0": {
+			"type": "audio",
+			"path": "audio/se_f0",
+			"systemId": "sound",
+			"duration": 320,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_f1": {
+			"type": "audio",
+			"path": "audio/se_f1",
+			"systemId": "sound",
+			"duration": 320,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_f2": {
+			"type": "audio",
+			"path": "audio/se_f2",
+			"systemId": "sound",
+			"duration": 320,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_f3": {
+			"type": "audio",
+			"path": "audio/se_f3",
+			"systemId": "sound",
+			"duration": 320,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_f4": {
+			"type": "audio",
+			"path": "audio/se_f4",
+			"systemId": "sound",
+			"duration": 320,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_f5": {
+			"type": "audio",
+			"path": "audio/se_f5",
+			"systemId": "sound",
+			"duration": 320,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_f6": {
+			"type": "audio",
+			"path": "audio/se_f6",
+			"systemId": "sound",
+			"duration": 320,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_f7": {
+			"type": "audio",
+			"path": "audio/se_f7",
+			"systemId": "sound",
+			"duration": 320,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_f8": {
+			"type": "audio",
+			"path": "audio/se_f8",
+			"systemId": "sound",
+			"duration": 320,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_f9": {
+			"type": "audio",
+			"path": "audio/se_f9",
+			"systemId": "sound",
+			"duration": 320,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_s0": {
+			"type": "audio",
+			"path": "audio/se_s0",
+			"systemId": "sound",
+			"duration": 350,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_s1": {
+			"type": "audio",
+			"path": "audio/se_s1",
+			"systemId": "sound",
+			"duration": 350,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_s2": {
+			"type": "audio",
+			"path": "audio/se_s2",
+			"systemId": "sound",
+			"duration": 350,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_s3": {
+			"type": "audio",
+			"path": "audio/se_s3",
+			"systemId": "sound",
+			"duration": 350,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_s4": {
+			"type": "audio",
+			"path": "audio/se_s4",
+			"systemId": "sound",
+			"duration": 350,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_s5": {
+			"type": "audio",
+			"path": "audio/se_s5",
+			"systemId": "sound",
+			"duration": 350,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_s6": {
+			"type": "audio",
+			"path": "audio/se_s6",
+			"systemId": "sound",
+			"duration": 350,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_s7": {
+			"type": "audio",
+			"path": "audio/se_s7",
+			"systemId": "sound",
+			"duration": 350,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_s8": {
+			"type": "audio",
+			"path": "audio/se_s8",
+			"systemId": "sound",
+			"duration": 350,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"se_s9": {
+			"type": "audio",
+			"path": "audio/se_s9",
+			"systemId": "sound",
+			"duration": 350,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"bg_asa": {
+			"type": "image",
+			"path": "image/bg_asa.png",
+			"width": 1280,
+			"height": 720
+		},
+		"bg_takara": {
+			"type": "image",
+			"path": "image/bg_takara.png",
+			"width": 1280,
+			"height": 720
+		},
+		"bg_ume": {
+			"type": "image",
+			"path": "image/bg_ume.png",
+			"width": 1280,
+			"height": 720
+		},
+		"bg_yuki": {
+			"type": "image",
+			"path": "image/bg_yuki.png",
+			"width": 1280,
+			"height": 720
+		},
+		"bg_yuu": {
+			"type": "image",
+			"path": "image/bg_yuu.png",
+			"width": 1280,
+			"height": 720
+		},
+		"glow": {
+			"type": "image",
+			"path": "image/glow.png",
+			"width": 600,
+			"height": 600
+		},
+		"kadomatsu": {
+			"type": "image",
+			"path": "image/kadomatsu.png",
+			"width": 220,
+			"height": 360
+		},
+		"m_kouhaku": {
+			"type": "image",
+			"path": "image/m_kouhaku.png",
+			"width": 120,
+			"height": 100
+		},
+		"ov_arm": {
+			"type": "image",
+			"path": "image/ov_arm.png",
+			"width": 240,
+			"height": 70
+		},
+		"ov_asa": {
+			"type": "image",
+			"path": "image/ov_asa.png",
+			"width": 1280,
+			"height": 720
+		},
+		"ov_crowd0": {
+			"type": "image",
+			"path": "image/ov_crowd0.png",
+			"width": 1280,
+			"height": 720
+		},
+		"ov_crowd1": {
+			"type": "image",
+			"path": "image/ov_crowd1.png",
+			"width": 1280,
+			"height": 720
+		},
+		"ov_kine": {
+			"type": "image",
+			"path": "image/ov_kine.png",
+			"width": 300,
+			"height": 110
+		},
+		"ov_mochi": {
+			"type": "image",
+			"path": "image/ov_mochi.png",
+			"width": 300,
+			"height": 300
+		},
+		"ov_takara": {
+			"type": "image",
+			"path": "image/ov_takara.png",
+			"width": 1280,
+			"height": 720
+		},
+		"ov_tanuki": {
+			"type": "image",
+			"path": "image/ov_tanuki.png",
+			"width": 260,
+			"height": 280
+		},
+		"ov_ume": {
+			"type": "image",
+			"path": "image/ov_ume.png",
+			"width": 1280,
+			"height": 720
+		},
+		"ov_usagi": {
+			"type": "image",
+			"path": "image/ov_usagi.png",
+			"width": 240,
+			"height": 260
+		},
+		"ov_usu": {
+			"type": "image",
+			"path": "image/ov_usu.png",
+			"width": 400,
+			"height": 400
+		},
+		"ov_yuki": {
+			"type": "image",
+			"path": "image/ov_yuki.png",
+			"width": 1280,
+			"height": 720
+		},
+		"ov_yuu": {
+			"type": "image",
+			"path": "image/ov_yuu.png",
+			"width": 1280,
+			"height": 720
+		},
+		"rays": {
+			"type": "image",
+			"path": "image/rays.png",
+			"width": 800,
+			"height": 800
 		}
 	},
 	"environment": {

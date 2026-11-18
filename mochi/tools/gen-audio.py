@@ -180,3 +180,34 @@ for k in range(22):
     voices.append(sweep(random.uniform(0.3, 0.6), f, f * random.uniform(1.1, 1.4), "tri", 0.05, 0.5))
     offs.append(random.uniform(0, 0.5))
 save("se_cheer", mix(cheer, *voices, offsets=[0] + offs))
+
+
+# ---- 曲を5つにするための楽器: 三味線(s)・笛(f) ----
+def shamisen(freq, dur, vol=0.3):
+    out = []
+    ph = 0.0
+    for i in range(int(dur * SR)):
+        t = i / SR
+        ph += freq / SR
+        p = ph % 1.0
+        v = (2 * p - 1) * 0.6 + math.sin(2 * math.pi * ph * 2) * 0.3
+        out.append(v * math.exp(-t * 11) * vol * min(1, t / 0.001))
+    return lowpass(out, 0.5)
+
+
+def fue(freq, dur, vol=0.25):
+    out = []
+    ph = 0.0
+    for i in range(int(dur * SR)):
+        t = i / SR
+        f = freq * (1 + 0.012 * math.sin(2 * math.pi * 5.5 * t) * min(1, t / 0.15))
+        ph += f / SR
+        v = math.sin(2 * math.pi * ph) + 0.15 * math.sin(4 * math.pi * ph)
+        e = min(1, t / 0.04) * max(0.0, 1 - max(0.0, t - dur * 0.6) / (dur * 0.4))
+        out.append((v + random.uniform(-0.08, 0.08)) * e * vol)
+    return out
+
+
+for i, n in enumerate((62, 64, 67, 69, 71, 74, 76, 79, 81, 83)):
+    save("se_s%d" % i, shamisen(note(n - 12), 0.35, 0.32))
+    save("se_f%d" % i, fue(note(n + 12), 0.32, 0.22))

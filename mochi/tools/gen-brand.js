@@ -11,10 +11,10 @@ const data = (p) => "data:image/png;base64," + fs.readFileSync(path.join(ROOT, p
 	const b = await chromium.launch();
 	const p = await b.newPage();
 	const imgs = {
-		logo: data("image/logo.png"), tsuki: data("image/note_tsuki.png"), te: data("image/note_te.png"),
-		hero: data("tools/promo-shot/hero.png"), ouch: data("tools/promo-shot/ouch.png"), made: data("tools/promo-shot/made.png"),
-		rush: data("tools/promo-shot/rush.png"), end: data("tools/promo-shot/end.png"),
-		mochis: ["m_kin", "m_ichigo", "m_kinako", "m_anko", "m_kusa"].map((m) => data("image/" + m + ".png"))
+		logo: data("image/logo.png"), tsuki: data("image/note_tsuki.png"), te: data("image/note_te.png"), judge: data("image/judge.png"),
+		tap: data("tools/promo-shot/tap.png"), ouch: data("tools/promo-shot/ouch.png"), over: data("tools/promo-shot/over.png"),
+		glow: data("tools/promo-shot/glow.png"), night: data("tools/promo-shot/night.png"),
+		mochis: ["m_kin", "m_kouhaku", "m_kinako", "m_anko", "m_kusa"].map((m) => data("image/" + m + ".png"))
 	};
 	const res = await p.evaluate(async (I) => {
 		const load = (s) => new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.src = s; });
@@ -28,48 +28,58 @@ const data = (p) => "data:image/png;base64," + fs.readFileSync(path.join(ROOT, p
 		x.lineWidth = 14; x.strokeStyle = "#e8402a"; x.strokeRect(7, 7, 306, 306);
 		x.drawImage(im.logo, -4, -4, 328, 328);
 		const icon = ic.toDataURL("image/png");
-		// ---- 紹介画像 ----
+		// ---- 紹介画像: 「ここでタップ！」と「押しちゃダメ！」を大きく見せる ----
 		const c = document.createElement("canvas"); c.width = 1280; c.height = 720; const y = c.getContext("2d");
 		y.lineJoin = "round"; y.lineCap = "round";
-		y.fillStyle = "#3a1e2a"; y.fillRect(0, 0, 1280, 720);
-		// 右がわに、コンボ中の画面を大きく(上のスコア表示は切る)
-		const hk = im.hero.width / 1280;
-		y.drawImage(im.hero, 290 * hk, 105 * hk, 990 * hk, 490 * hk, 462, 0, 909, 450);
-		let gl = y.createLinearGradient(440, 0, 700, 0); gl.addColorStop(0, "rgba(58,30,42,1)"); gl.addColorStop(1, "rgba(58,30,42,0)");
-		y.fillStyle = gl; y.fillRect(440, 0, 260, 460);
-		gl = y.createLinearGradient(0, 380, 0, 470); gl.addColorStop(0, "rgba(58,30,42,0)"); gl.addColorStop(1, "rgba(58,30,42,1)");
-		y.fillStyle = gl; y.fillRect(0, 380, 1280, 90);
-		const txt = (t, tx, ty, size, col, align) => {
+		const bgG = y.createLinearGradient(0, 0, 0, 720); bgG.addColorStop(0, "#fff0d8"); bgG.addColorStop(1, "#ffd8b0");
+		y.fillStyle = bgG; y.fillRect(0, 0, 1280, 720);
+		for (let i = 0; i < 32; i++) { y.fillStyle = i % 2 ? "#e8402a" : "#ffffff"; y.fillRect(i * 40, 0, 40, 12); y.fillRect(i * 40, 708, 40, 12); }
+		const txt = (t, tx, ty, size, col, align, stroke) => {
 			y.font = "bold " + size + "px IPAGothic"; y.textAlign = align || "left"; y.textBaseline = "middle";
-			y.lineWidth = size * 0.3; y.strokeStyle = OL; y.strokeText(t, tx, ty); y.fillStyle = col; y.fillText(t, tx, ty);
+			y.lineWidth = size * 0.3; y.strokeStyle = stroke || OL; y.strokeText(t, tx, ty); y.fillStyle = col; y.fillText(t, tx, ty);
 		};
-		// 紅白のふち
-		for (let i = 0; i < 32; i++) { y.fillStyle = i % 2 ? "#e8402a" : "#ffffff"; y.fillRect(i * 40, 0, 40, 10); y.fillRect(i * 40, 710, 40, 10); }
-		y.drawImage(im.logo, 14, 14, 250, 250);
-		txt("お正月の", 280, 70, 32, "#ffffff");
-		txt("もちつき", 280, 116, 44, "#ffd8e8");
-		txt("リズムゲーム！", 280, 166, 36, "#ffe860");
-		// 遊び方
-		const row = (ty, icn, head, sub, col) => {
-			y.fillStyle = "rgba(255,255,255,0.1)"; y.beginPath(); y.roundRect(20, ty - 36, 470, 72, 36); y.fill();
-			y.drawImage(icn, 30, ty - 30, 60, 60);
-			txt(head, 104, ty - 12, 28, col);
-			txt(sub, 104, ty + 20, 20, "#ffffff");
+		// 上: ロゴとタイトル
+		y.drawImage(im.logo, 16, 14, 170, 170);
+		txt("お正月の もちつき リズムゲーム！", 200, 66, 44, "#ffffff");
+		txt("上のレーンの印を見て、タップするかしないか！", 200, 130, 30, "#ffe860");
+		// 大きなカード
+		const card = (cx, col, title, shot, crop, draw, sub1, sub2) => {
+			const L = cx - 300, T = 226, Wd = 600, Ht = 396;
+			y.fillStyle = "#ffffff"; y.beginPath(); y.roundRect(L, T, Wd, Ht, 30); y.fill();
+			y.lineWidth = 12; y.strokeStyle = col; y.stroke(); y.lineWidth = 5; y.strokeStyle = OL; y.stroke();
+			// 見出しのリボン
+			y.fillStyle = col; y.beginPath(); y.roundRect(L + 40, T - 34, Wd - 80, 72, 36); y.fill(); y.lineWidth = 5; y.strokeStyle = OL; y.stroke();
+			txt(title, cx, T + 2, 50, "#ffffff", "center");
+			// ゲームの画面(切り抜き)
+			y.save(); y.beginPath(); y.roundRect(L + 316, T + 58, 260, 230, 18); y.clip();
+			y.drawImage(shot, crop[0], crop[1], crop[2], crop[3], L + 316, T + 58, 260, 230); y.restore();
+			y.lineWidth = 5; y.strokeStyle = OL; y.beginPath(); y.roundRect(L + 316, T + 58, 260, 230, 18); y.stroke();
+			draw(L + 160, T + 172);
+			txt(sub1, cx, T + 318, 34, col, "center", OL);
+			txt(sub2, cx, T + 364, 26, "#ffffff", "center", OL);
 		};
-		row(306, im.tsuki, "おもちの印でタップ！", "輪にかさなったらペッタン！", "#ffe860");
-		row(388, im.te, "たぬきの手は押さない！", "押すと手をついて「いたーっ！」", "#70e8ff");
-		// 下の4枚
-		const thumbs = [[im.made, "16回つくとおもち完成", "#ffe860"], [im.ouch, "手をつくと減点…", "#70e8ff"], [im.rush, "最後は点数2ばいラッシュ", "#ff8ad8"], [im.end, "おもちを積み上げよう", "#ffffff"]];
-		thumbs.forEach(([shot, cap, col], i) => {
-			const tx = 22 + i * 312, ty = 470, w = 300, h = 169;
-			y.fillStyle = "#ffd040"; y.beginPath(); y.roundRect(tx - 6, ty - 6, w + 12, h + 12, 16); y.fill();
-			y.save(); y.beginPath(); y.roundRect(tx, ty, w, h, 11); y.clip(); y.drawImage(shot, tx, ty, w, h); y.restore();
-			txt(cap, tx + w / 2, ty + h + 32, 24, col, "center");
-		});
-		// 完成するおもち
-		y.fillStyle = "#ffffff"; y.beginPath(); y.roundRect(840, 22, 420, 96, 22); y.fill(); y.lineWidth = 5; y.strokeStyle = OL; y.stroke();
-		txt("ぴったりが多いほど豪華に！", 1050, 44, 22, "#e8402a", "center");
-		im.mochis.forEach((m, i) => y.drawImage(m, 856 + i * 80, 58, 72, 60));
+		card(330, "#ff9a20", "ここでタップ！", im.tap, [300, 120, 620, 548], (x0, y0) => {
+			// 判定の輪にかさなったおもちの印(大きく)
+			y.drawImage(im.judge, x0 - 130, y0 - 130, 260, 260);
+			y.drawImage(im.tsuki, x0 - 100, y0 - 100, 200, 200);
+		}, "おもちの印が 輪にかさなったら", "ペッタン！ ぴったりほど高得点");
+		card(950, "#3a8ae8", "押しちゃダメ！", im.ouch, [770, 230, 400, 354], (x0, y0) => {
+			y.drawImage(im.te, x0 - 100, y0 - 100, 200, 200);
+			// 大きな ✕
+			y.strokeStyle = "#ff3a3a"; y.lineWidth = 34;
+			y.beginPath(); y.moveTo(x0 - 110, y0 - 110); y.lineTo(x0 + 110, y0 + 110); y.moveTo(x0 + 110, y0 - 110); y.lineTo(x0 - 110, y0 + 110); y.stroke();
+			y.strokeStyle = "#ffffff"; y.lineWidth = 12;
+			y.beginPath(); y.moveTo(x0 - 104, y0 - 104); y.lineTo(x0 + 104, y0 + 104); y.moveTo(x0 + 104, y0 - 104); y.lineTo(x0 - 104, y0 + 104); y.stroke();
+		}, "たぬきの手の印のときは", "押すと手をついて -300点…");
+		// 下: いろいろ変わる
+		const chip = (cx, t, col) => {
+			y.font = "bold 26px IPAGothic"; const w = y.measureText(t).width + 50;
+			y.fillStyle = col; y.beginPath(); y.roundRect(cx - w / 2, 646, w, 50, 25); y.fill(); y.lineWidth = 4; y.strokeStyle = OL; y.stroke();
+			txt(t, cx, 672, 26, "#ffffff", "center");
+		};
+		chip(250, "曲5つ×背景5つがランダム", "#e8402a");
+		chip(660, "朝→昼→夕方→夜", "#8a5ae8");
+		chip(1040, "10秒ごとにカメラ切りかえ", "#2a9a6a");
 		return { icon, promo: c.toDataURL("image/png") };
 	}, imgs);
 	await b.close();

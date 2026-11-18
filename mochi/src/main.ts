@@ -32,15 +32,58 @@ const SECTIONS: Section[] = [
 	{ t: 36, bpm: 132, pats: ["ThThThTh", "TTTTThTh", "Th.hThTh", "ThTh..Th", "ThT.ThTT"], name: "れんだも来るよ！", rush: false },
 	{ t: 48, bpm: 146, pats: ["TTTTThTh", "Th.hThTh", "ThT.ThTT", "ThThThTh", "TTThTTTh"], name: "大もちラッシュ！ 点数2ばい", rush: true }
 ];
-// 琴のメロディ(8分音符ごと。-1 は休み)。陽音階の 0〜9 番
-const MELODY = [
-	5, -1, 4, 5, 7, -1, 5, -1, 4, -1, 2, 4, 5, -1, -1, -1,
-	3, -1, 4, 5, 4, -1, 2, -1, 1, -1, 2, 4, 2, -1, -1, -1,
-	5, -1, 7, 8, 7, -1, 5, 4, 5, -1, 7, -1, 9, -1, 8, 7,
-	5, -1, 4, 2, 4, -1, 5, -1, 2, -1, 1, -1, 0, -1, -1, -1
+// 曲は5つ。ゲームの時計で8分音符ごとに鳴らす。inst: k=琴 s=三味線 f=笛 / mel: 陽音階の 0〜9 番(-1 は休み)
+// drum: 8分音符8つぶんの太鼓。D=太鼓(強) d=太鼓 k=かね .=なし
+interface Song { name: string; inst: string; drum: string; mel: number[]; }
+const SONGS: Song[] = [
+	{
+		name: "おめでた音頭", inst: "k", drum: "DkdkDkdk", mel: [
+			5, -1, 4, 5, 7, -1, 5, -1, 4, -1, 2, 4, 5, -1, -1, -1, 3, -1, 4, 5, 4, -1, 2, -1, 1, -1, 2, 4, 2, -1, -1, -1,
+			5, -1, 7, 8, 7, -1, 5, 4, 5, -1, 7, -1, 9, -1, 8, 7, 5, -1, 4, 2, 4, -1, 5, -1, 2, -1, 1, -1, 0, -1, -1, -1
+		]
+	},
+	{
+		name: "ペッタンばやし", inst: "s", drum: "DkkdDkdk", mel: [
+			2, 2, 4, -1, 5, 4, 2, -1, 4, 4, 5, -1, 7, 5, 4, -1, 5, 7, 8, 7, 5, -1, 4, -1, 2, 4, 2, -1, 0, -1, -1, -1,
+			2, 2, 4, -1, 5, 4, 2, -1, 4, 4, 5, -1, 7, 8, 9, -1, 8, 7, 5, 7, 8, -1, 7, -1, 5, 4, 2, 4, 5, -1, -1, -1
+		]
+	},
+	{
+		name: "はつひの笛", inst: "f", drum: "Dk.kdk.k", mel: [
+			5, -1, -1, -1, 7, -1, 8, -1, 7, -1, 5, -1, 4, -1, -1, -1, 2, -1, 4, -1, 5, -1, 7, -1, 5, -1, -1, -1, -1, -1, -1, -1,
+			8, -1, -1, -1, 9, -1, 8, -1, 7, -1, 5, -1, 7, -1, -1, -1, 5, -1, 4, -1, 2, -1, 4, -1, 5, -1, -1, -1, -1, -1, -1, -1
+		]
+	},
+	{
+		name: "もちもち三味線", inst: "s", drum: "DkdkDddk", mel: [
+			0, -1, 2, 0, 4, -1, 2, -1, 5, -1, 4, 2, 4, -1, -1, -1, 0, -1, 2, 0, 4, -1, 5, -1, 7, -1, 5, 4, 5, -1, -1, -1,
+			7, -1, 8, 7, 5, -1, 4, -1, 5, -1, 4, 2, 0, -1, 2, -1, 4, -1, 5, 4, 2, -1, 0, -1, 2, -1, -1, -1, 0, -1, -1, -1
+		]
+	},
+	{
+		name: "宝船のうた", inst: "k", drum: "DkkkDkdk", mel: [
+			9, -1, 8, -1, 7, -1, 5, -1, 7, -1, 8, 9, 8, -1, -1, -1, 7, -1, 5, -1, 4, -1, 5, -1, 7, -1, -1, -1, -1, -1, -1, -1,
+			4, 5, 7, -1, 8, -1, 7, -1, 5, -1, 4, -1, 5, -1, 7, -1, 8, -1, 7, -1, 5, -1, 4, -1, 5, -1, -1, -1, -1, -1, -1, -1
+		]
+	}
 ];
-const MOCHI_TYPES = ["m_kin", "m_ichigo", "m_kinako", "m_anko", "m_kusa"];
-const MOCHI_NAMES = ["金ぱくもち", "いちご大福", "きなこもち", "あんこもち", "草もち"];
+// 背景は5つ(空はゲームが時間帯ごとに描く)
+const THEMES = [
+	{ id: "asa", name: "富士の見える神社" }, { id: "yuki", name: "雪の神社" }, { id: "ume", name: "梅の庭" },
+	{ id: "yuu", name: "城下町" }, { id: "takara", name: "宝船のうたげ" }
+];
+// 時間帯は 朝→昼→夕方→夜。空の色と、画面全体にかける色
+interface TimeOfDay { name: string; sky: string[]; tint: number[]; }
+const TIMES: TimeOfDay[] = [
+	{ name: "朝", sky: ["#7aa8f0", "#ffc8a8", "#ffe8b8"], tint: [255, 190, 140, 0.1] },
+	{ name: "昼", sky: ["#3a96f0", "#86ccff", "#d8f4ff"], tint: [255, 255, 255, 0] },
+	{ name: "夕方", sky: ["#5a3a8a", "#ff7a5a", "#ffc870"], tint: [255, 110, 60, 0.18] },
+	{ name: "夜", sky: ["#0a1238", "#1e2c66", "#3a4a86"], tint: [20, 30, 90, 0.4] }
+];
+const SHOT_SEC = 10; // カメラを切りかえる間かく(秒)
+const UP_ZOOM = 1.75; // アップのときの大きさ
+const MOCHI_TYPES = ["m_kin", "m_kouhaku", "m_kinako", "m_anko", "m_kusa"];
+const MOCHI_NAMES = ["金ぱくもち", "紅白もち", "きなこもち", "あんこもち", "草もち"];
 
 interface Ev { t: number; kind: "T" | "h"; done: boolean; res: string; rush: boolean; }
 interface Slot { t: number; idx: number; beat: boolean; rush: boolean; }
@@ -60,13 +103,16 @@ class View extends g.E {
 
 export function main(param: GameMainParameterObject): void {
 	const imageIds = [
-		"bg", "crowd0", "crowd1", "usu", "usu_front", "mochi", "usagi_up", "usagi_mid", "usagi_down",
+		"crowd0", "crowd1", "kadomatsu", "glow", "rays",
+
+		"ov_crowd0", "ov_crowd1", "ov_usu", "ov_mochi", "ov_usagi", "ov_kine", "ov_tanuki", "ov_arm",
+		"usu", "usu_front", "mochi", "usagi_up", "usagi_mid", "usagi_down",
 		"tanuki_idle", "tanuki_hand", "tanuki_ouch", "note_tsuki", "note_te", "judge", "ring", "tray", "spark", "star", "splash", "logo"
-	].concat(MOCHI_TYPES);
+	].concat(MOCHI_TYPES, THEMES.map((t) => "bg_" + t.id), THEMES.map((t) => "ov_" + t.id));
 	const audioIds = [
 		"don", "ka", "pettan", "perfect", "good", "miss", "ouch", "hai", "complete", "count", "go", "finish", "rush", "cheer"
 	];
-	for (let i = 0; i < 10; i++) audioIds.push("k" + i);
+	for (let i = 0; i < 10; i++) audioIds.push("k" + i, "s" + i, "f" + i);
 	const scene = new g.Scene({ game: g.game, assetIds: imageIds.concat(audioIds.map((a) => "se_" + a)) });
 	let time = 70;
 	if (param.sessionParameter.totalTimeLimit) time = param.sessionParameter.totalTimeLimit;
@@ -114,6 +160,10 @@ export function main(param: GameMainParameterObject): void {
 			}
 		}
 
+		// 曲と背景は、ゲームごとにランダム
+		const song = SONGS[Math.floor(rand() * SONGS.length)];
+		const theme = THEMES[Math.floor(rand() * THEMES.length)];
+
 		// ======== 状態 ========
 		let phase: "intro" | "play" | "end" = "intro";
 		let introLeft = INTRO_SEC;
@@ -135,11 +185,12 @@ export function main(param: GameMainParameterObject): void {
 		let crowdT = 0;
 		let cheer = 0;
 		let sectionName = "";
+		let glowT = 0; // おもち完成の光
+		let shot = 0; // 0=いつもの 1=アップ 2=俯瞰
+		let todIdx = 0;
 		const parts: Part[] = [];
 
 		// ======== 絵 ========
-		const bg = new g.Sprite({ scene, src: img("bg") });
-		scene.append(bg);
 		const view = new View({ scene, width: W, height: H });
 		scene.append(view);
 		const nextT = (): Ev | null => {
@@ -165,47 +216,91 @@ export function main(param: GameMainParameterObject): void {
 			r.drawImage(surf[id], 0, 0, a.width, a.height, 0, 0);
 			r.restore();
 		};
-		view.draw = (r: g.Renderer): void => {
-			r.save();
-			if (shake > 0) r.translate(Math.sin(shake * 70) * shake * 18, Math.cos(shake * 53) * shake * 10);
-			// 観客
-			drawImg(r, "crowd" + (Math.floor(crowdT) % 2), 0, 318);
-			// 舞台(臼・もち・うさぎ・たぬき)は少し小さく、画面の下はしを中心にちぢめる
-			r.save();
-			r.transform([STAGE_S, 0, 0, STAGE_S, W / 2 * (1 - STAGE_S), H * (1 - STAGE_S)]);
-			// 臼ともち
-			drawImg(r, "usu", MOCHI_X - 230, 470);
-			const grow = 0.72 + 0.4 * Math.min(1, hits / PER_MOCHI);
-			const sq = Math.max(0, squash);
-			const mw = 300 * grow * (1 + sq * 0.35), mh = 170 * grow * (1 - sq * 0.45);
-			drawImg(r, "mochi", MOCHI_X - mw / 2, MOCHI_Y - mh, mw / 300, mh / 170);
-			drawImg(r, "usu_front", MOCHI_X - 230, 530);
-			// うさぎ(つき手)
-			const n = nextT();
-			let uid = "usagi_mid";
-			if (now - lastHit < 0.12) uid = "usagi_down";
-			else if (phase === "play" && n && n.t - now < slotLen() * 1.1) uid = "usagi_up";
-			drawImg(r, uid, 230, 63);
-			// たぬき(返し手)
-			const tid = ouchT > 0 ? "tanuki_ouch" : handIn() ? "tanuki_hand" : "tanuki_idle";
-			drawImg(r, tid, 640, 90);
-			// 完成したおもち(おぼんの上に積む)
-			drawImg(r, "tray", 1010, 650);
-			made.forEach((m, i) => {
-				const col = i % 2, row = Math.floor(i / 2);
-				if (row > 4) return;
-				drawImg(r, MOCHI_TYPES[m], 1040 + col * 100 + (row % 2) * 30, 590 - row * 56, 0.8, 0.8);
-			});
-			// タイミングの輪(もちの上で小さくなる)
-			if (n && phase === "play") {
-				const k = (n.t - now) / (slotLen() * 2);
-				if (k > -0.1 && k < 1) {
-					const s = 0.28 + Math.max(0, k) * 0.9;
-					const a = img("ring");
-					drawImg(r, "ring", MOCHI_X - a.width * s / 2, MOCHI_Y - 70 - a.height * s / 2, s, s, Math.min(1, (1 - k) * 2));
-				}
+		// ---- 時間帯: 朝→昼→夕方→夜 ----
+		const hex = (c: string): number[] => {
+			const n = parseInt(c.slice(1), 16);
+			return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+		};
+		const mix3 = (a: number[], b: number[], t: number): number[] => [0, 1, 2].map((i) => a[i] + (b[i] - a[i]) * t);
+		const rgb = (c: number[]): string => "rgb(" + c.map((v) => Math.round(v)).join(",") + ")";
+		// いまの時間帯(0〜3)と、次の時間帯へのうつりかわり(0〜1)
+		const todNow = (): { i: number; t: number } => {
+			const f = Math.max(0, Math.min(3.999, now / playSec * 4));
+			const i = Math.floor(f), fr = f - i;
+			return { i, t: i < 3 ? Math.max(0, (fr - 0.85) / 0.15) : 0 };
+		};
+		const drawSky = (r: g.Renderer): void => {
+			const td = todNow(), a = TIMES[td.i], b = TIMES[Math.min(3, td.i + 1)];
+			const N = 18;
+			for (let k = 0; k < N; k++) {
+				const v = k / (N - 1) * 2;
+				const ia = Math.min(1, Math.floor(v)), fv = v - ia;
+				const ca = mix3(hex(a.sky[ia]), hex(a.sky[ia + 1]), fv), cb = mix3(hex(b.sky[ia]), hex(b.sky[ia + 1]), fv);
+				const col = rgb(mix3(ca, cb, td.t));
+				r.fillRect(0, k * 440 / N, W, 440 / N + 1, col);
 			}
-			// パーティクル
+			const p = Math.min(1, now / playSec);
+			// お日さま(朝にのぼって夕方にしずむ)
+			if (p < 0.8) {
+				const q = p / 0.75;
+				const x = 160 + q * 960, y = 360 - Math.sin(Math.min(1, q) * Math.PI) * 280;
+				r.save();
+				r.opacity(Math.max(0, Math.min(1, (0.8 - p) * 10)));
+				const gl = img("glow");
+				r.transform([0.6, 0, 0, 0.6, x - gl.width * 0.3, y - gl.height * 0.3]);
+				r.drawImage(surf.glow, 0, 0, gl.width, gl.height, 0, 0);
+				r.restore();
+				r.save();
+				r.opacity(Math.max(0, Math.min(1, (0.8 - p) * 10)));
+				r.fillRect(x - 46, y - 46, 92, 92, p > 0.55 ? "#ff8a4a" : "#fff0a0");
+				r.restore();
+			}
+			// 夜: 月と星
+			if (p > 0.72) {
+				const al = Math.min(1, (p - 0.72) * 8);
+				r.save();
+				r.opacity(al);
+				for (let k = 0; k < 40; k++) {
+					const sx2 = (k * 197) % W, sy2 = (k * 83) % 330, tw = 2 + ((k * 7) % 3);
+					r.fillRect(sx2, sy2, tw, tw, "#fff8d0");
+				}
+				r.fillRect(980, 80, 70, 70, "#fff8d8");
+				r.fillRect(1004, 80, 46, 46, TIMES[3].sky[0]);
+				r.restore();
+			}
+		};
+		const drawTint = (r: g.Renderer): void => {
+			const td = todNow(), a = TIMES[td.i].tint, b = TIMES[Math.min(3, td.i + 1)].tint;
+			const m = (k: number): number => a[k] + (b[k] - a[k]) * td.t;
+			if (m(3) <= 0.001) return;
+			r.save();
+			r.opacity(m(3));
+			r.fillRect(0, 0, W, H, "rgb(" + Math.round(m(0)) + "," + Math.round(m(1)) + "," + Math.round(m(2)) + ")");
+			r.restore();
+		};
+		// ---- おもち完成の光(臼のうしろで回る光の筋と、臼をつつむ光) ----
+		const drawGlow = (r: g.Renderer, cx: number, cy: number, s: number): void => {
+			if (glowT <= 0) return;
+			const a = Math.min(1, glowT);
+			const ry = img("rays"), gl = img("glow");
+			const rot = now * 1.5, rs = s * (1.1 + (1.6 - glowT) * 0.3);
+			r.save();
+			r.setCompositeOperation("lighter");
+			r.opacity(a * 0.9);
+			const c = Math.cos(rot) * rs, si = Math.sin(rot) * rs;
+			r.transform([c, si, -si, c, cx, cy]);
+			r.drawImage(surf.rays, 0, 0, ry.width, ry.height, -ry.width / 2, -ry.height / 2);
+			r.setCompositeOperation("source-over");
+			r.restore();
+			r.save();
+			r.setCompositeOperation("lighter");
+			r.opacity(a * (0.6 + Math.sin(now * 20) * 0.2));
+			r.transform([s * 1.3, 0, 0, s * 0.9, cx - gl.width * s * 0.65, cy - gl.height * s * 0.45]);
+			r.drawImage(surf.glow, 0, 0, gl.width, gl.height, 0, 0);
+			r.setCompositeOperation("source-over");
+			r.restore();
+		};
+		const drawParts = (r: g.Renderer): void => {
 			parts.forEach((p) => {
 				r.save();
 				r.opacity(Math.min(1, p.life / p.max * 2));
@@ -219,8 +314,142 @@ export function main(param: GameMainParameterObject): void {
 				}
 				r.restore();
 			});
+		};
+		const drawRing = (r: g.Renderer, cx: number, cy: number, base: number): void => {
+			const n = nextT();
+			if (!n || phase !== "play") return;
+			const k = (n.t - now) / (slotLen() * 2);
+			if (k <= -0.1 || k >= 1) return;
+			const s = base * (0.28 + Math.max(0, k) * 0.9);
+			const a = img("ring");
+			drawImg(r, "ring", cx - a.width * s / 2, cy - a.height * s / 2, s, s, Math.min(1, (1 - k) * 2));
+		};
+		// 観客のジャンプ(おもち完成のとき)
+		const crowdJump = (): number => glowT > 0 ? -Math.abs(Math.sin(glowT * 14)) * 34 * Math.min(1, glowT) : 0;
+		// ---- 横から見た画面(いつもの・アップ) ----
+		const drawSide = (r: g.Renderer): void => {
+			drawImg(r, "bg_" + theme.id, 0, 0);
+			drawImg(r, "crowd" + (Math.floor(crowdT) % 2), 0, 318 + crowdJump());
+			// 門松は観客の手前
+			drawImg(r, "kadomatsu", -20, 330);
+			drawImg(r, "kadomatsu", 1080, 330);
+			// 舞台(臼・もち・うさぎ・たぬき)は少し小さく、画面の下はしを中心にちぢめる
+			r.save();
+			r.transform([STAGE_S, 0, 0, STAGE_S, W / 2 * (1 - STAGE_S), H * (1 - STAGE_S)]);
+			drawGlow(r, MOCHI_X, 520, 1);
+			drawImg(r, "usu", MOCHI_X - 230, 470);
+			const grow = 0.72 + 0.4 * Math.min(1, hits / PER_MOCHI);
+			const sq = Math.max(0, squash);
+			const mw = 300 * grow * (1 + sq * 0.35), mh = 170 * grow * (1 - sq * 0.45);
+			drawImg(r, "mochi", MOCHI_X - mw / 2, MOCHI_Y - mh, mw / 300, mh / 170);
+			drawImg(r, "usu_front", MOCHI_X - 230, 530);
+			if (glowT > 0) {
+				// 臼のふちが金色に光る
+				r.save();
+				r.setCompositeOperation("lighter");
+				r.opacity(Math.min(1, glowT) * 0.55);
+				drawImg(r, "usu", MOCHI_X - 230, 470);
+				r.setCompositeOperation("source-over");
+				r.restore();
+			}
+			drawImg(r, rabbitPose(), 230, 63 + (glowT > 0 ? crowdJump() * 0.5 : 0));
+			const tid = ouchT > 0 ? "tanuki_ouch" : handIn() ? "tanuki_hand" : "tanuki_idle";
+			drawImg(r, tid, 640, 90 + (glowT > 0 && ouchT <= 0 ? crowdJump() * 0.5 : 0));
+			// 完成したおもち(おぼんの上に積む)
+			drawImg(r, "tray", 1010, 650);
+			made.forEach((m, i) => {
+				const col = i % 2, row = Math.floor(i / 2);
+				if (row > 4) return;
+				drawImg(r, MOCHI_TYPES[m], 1040 + col * 100 + (row % 2) * 30, 590 - row * 56, 0.8, 0.8);
+			});
+			drawRing(r, MOCHI_X, MOCHI_Y - 70, 1);
+			drawParts(r);
 			r.restore();
+		};
+		const rabbitPose = (): string => {
+			const n = nextT();
+			if (now - lastHit < 0.12) return "usagi_down";
+			if (phase === "play" && n && n.t - now < slotLen() * 1.1) return "usagi_up";
+			return "usagi_mid";
+		};
+		// ---- 上から見た画面(俯瞰) ----
+		const OV_X = 640, OV_Y = 450;
+		const drawOver = (r: g.Renderer): void => {
+			drawImg(r, "ov_" + theme.id, 0, 0);
+			drawGlow(r, OV_X, OV_Y, 1.1);
+			const u = img("ov_usu");
+			drawImg(r, "ov_usu", OV_X - u.width / 2, OV_Y - u.height / 2);
+			const grow = 0.6 + 0.35 * Math.min(1, hits / PER_MOCHI);
+			const sq = Math.max(0, squash);
+			const ms = grow * (1 + sq * 0.25);
+			const mo = img("ov_mochi");
+			drawImg(r, "ov_mochi", OV_X - mo.width * ms / 2, OV_Y - mo.height * ms / 2, ms, ms);
+			if (glowT > 0) {
+				r.save();
+				r.setCompositeOperation("lighter");
+				r.opacity(Math.min(1, glowT) * 0.5);
+				drawImg(r, "ov_usu", OV_X - u.width / 2, OV_Y - u.height / 2);
+				r.setCompositeOperation("source-over");
+				r.restore();
+			}
+			drawRing(r, OV_X, OV_Y, 1);
+			// うさぎと杵(上げているほど、カメラに近くて大きい)
+			const us = img("ov_usagi");
+			const hop = glowT > 0 ? crowdJump() * 0.3 : 0;
+			drawImg(r, "ov_usagi", 330 - us.width / 2, OV_Y - us.height / 2 + hop);
+			const pose = rabbitPose();
+			const ks = pose === "usagi_down" ? 1 : pose === "usagi_up" ? 1.4 : 1.18;
+			const kx = pose === "usagi_down" ? OV_X - 245 : pose === "usagi_up" ? 360 : 380;
+			const ka = pose === "usagi_down" ? 0 : pose === "usagi_up" ? -0.18 : -0.08;
+			const ki = img("ov_kine");
+			r.save();
+			const c = Math.cos(ka) * ks, si = Math.sin(ka) * ks;
+			r.transform([c, si, -si, c, kx, OV_Y]);
+			r.drawImage(surf.ov_kine, 0, 0, ki.width, ki.height, -10, -ki.height / 2);
 			r.restore();
+			// たぬきと手
+			const tn = img("ov_tanuki"), ar = img("ov_arm");
+			const shake2 = ouchT > 0 ? Math.sin(now * 60) * 8 : 0;
+			const reach = handIn() ? 0.95 : 0.4;
+			r.save();
+			r.transform([reach, 0, 0, 1, 930 - ar.width * reach, OV_Y - 60 - ar.height / 2]);
+			r.drawImage(surf.ov_arm, 0, 0, ar.width, ar.height, 0, 0);
+			r.restore();
+			drawImg(r, "ov_tanuki", 990 - tn.width / 2 + shake2, OV_Y - tn.height / 2 + (glowT > 0 && ouchT <= 0 ? hop : 0));
+			if (ouchT > 0) {
+				for (let k = 0; k < 3; k++) {
+					const t = now * 9 + k * 2.1, st = img("star");
+					drawImg(r, "star", 960 + Math.cos(t) * 70 - st.width / 2, OV_Y - 20 + Math.sin(t) * 40 - st.height / 2);
+				}
+			}
+			// まわりの観客
+			const cs = 1 + (glowT > 0 ? Math.abs(Math.sin(glowT * 14)) * 0.02 : 0);
+			drawImg(r, "ov_crowd" + (Math.floor(crowdT) % 2), W / 2 * (1 - cs), H / 2 * (1 - cs), cs, cs);
+			// 完成したおもち
+			made.forEach((m, i) => {
+				if (i > 9) return;
+				drawImg(r, MOCHI_TYPES[m], 1150 - (i % 5) * 70, 560 + Math.floor(i / 5) * 56, 0.6, 0.6);
+			});
+			drawParts(r);
+		};
+		// カメラ: いつもの / アップ(もちに寄る) / 俯瞰
+		const camMat = (): number[] => {
+			if (shot !== 1) return [1, 0, 0, 1, 0, 0];
+			const fx = W / 2, fy = H * (1 - STAGE_S) + 500 * STAGE_S;
+			return [UP_ZOOM, 0, 0, UP_ZOOM, W / 2 - fx * UP_ZOOM, 450 - fy * UP_ZOOM];
+		};
+		view.draw = (r: g.Renderer): void => {
+			drawSky(r);
+			r.save();
+			if (shake > 0) r.translate(Math.sin(shake * 70) * shake * 18, Math.cos(shake * 53) * shake * 10);
+			if (shot === 2) {
+				drawOver(r);
+			} else {
+				r.transform(camMat());
+				drawSide(r);
+			}
+			r.restore();
+			drawTint(r);
 			// レーン
 			r.save();
 			r.opacity(0.75);
@@ -276,6 +505,7 @@ export function main(param: GameMainParameterObject): void {
 		const timeLabel = label(fontW, 44, W - 24, 18, "", "right");
 		const comboLabel = label(fontY, 40, 20, 210, "");
 		const mochiLabel = label(fontY, 32, W - 24, 70, "", "right");
+		const todLabel = label(fontC, 30, W - 24, 108, "", "right");
 		const pops: Pop[] = [];
 		const popText = (t: string, f: g.Font, size: number, x: number, y: number, life = 0.8): void => {
 			const l = label(f, size, x, y, t, "center");
@@ -295,7 +525,8 @@ export function main(param: GameMainParameterObject): void {
 		label(fontC, 34, W / 2, 352, "「たぬきの手」のときは押しちゃダメ！ 手をついちゃうよ", "center", intro);
 		label(fontY, 34, W / 2, 404, "16回つくと おもち完成！ ぴったりが多いほど豪華なおもちに", "center", intro);
 		label(fontP, 34, W / 2, 456, "だんだん速くなって、最後は大もちラッシュ（点数2ばい）！", "center", intro);
-		const countLabel = label(fontY, 100, W / 2, 540, "", "center", intro);
+		label(fontW, 30, W / 2, 510, "ステージ：" + theme.name + "　　曲：" + song.name, "center", intro);
+		const countLabel = label(fontY, 100, W / 2, 560, "", "center", intro);
 
 		// ======== エフェクト ========
 		const burst = (x: number, y: number, n: number, sp: number, cols: string[]): void => {
@@ -323,12 +554,22 @@ export function main(param: GameMainParameterObject): void {
 			}
 		};
 		// 舞台の中の位置を、画面の位置にする
-		const sx = (x: number): number => W / 2 * (1 - STAGE_S) + x * STAGE_S;
-		const sy = (y: number): number => H * (1 - STAGE_S) + y * STAGE_S;
+		// (カメラがアップや俯瞰のときも、文字がもちのまわりに出るようにする)
+		const sx = (x: number): number => {
+			if (shot === 2) return x;
+			const b = W / 2 * (1 - STAGE_S) + x * STAGE_S;
+			return shot === 1 ? W / 2 + (b - W / 2) * UP_ZOOM : b;
+		};
+		const sy = (y: number): number => {
+			if (shot === 2) return y - 20;
+			const b = H * (1 - STAGE_S) + y * STAGE_S;
+			return shot === 1 ? Math.max(260, 450 + (b - (H * (1 - STAGE_S) + 500 * STAGE_S)) * UP_ZOOM) : b;
+		};
 		const comboMul = (): number => 1 + Math.min(50, combo) / 25;
 
 		// ======== おもち完成 ========
 		const completeMochi = (): void => {
+			glowT = 1.8;
 			const ratio = perfectsInMochi / PER_MOCHI;
 			const type = ratio >= 0.9 ? 0 : ratio >= 0.75 ? 1 : ratio >= 0.55 ? 2 : ratio >= 0.35 ? 3 : 4;
 			made.push(type);
@@ -462,12 +703,12 @@ export function main(param: GameMainParameterObject): void {
 				// 曲: 8分音符ごとに太鼓・かね・琴
 				while (slotIdx < slots.length && slots[slotIdx].t <= now) {
 					const s = slots[slotIdx];
-					if (s.beat) {
-						se("don", s.idx % 8 === 0 ? 0.55 : 0.38);
-						lastBeat = s.t;
-					} else se("ka", 0.3);
-					const m = MELODY[s.idx % MELODY.length];
-					if (m >= 0) se("k" + m, s.rush ? 0.42 : 0.32);
+					const dr = song.drum.charAt(s.idx % 8);
+					if (dr === "D" || dr === "d") se("don", dr === "D" ? 0.55 : 0.38);
+					else if (dr === "k") se("ka", 0.3);
+					if (s.beat) lastBeat = s.t;
+					const m = song.mel[s.idx % song.mel.length];
+					if (m >= 0) se(song.inst + m, (s.rush ? 0.42 : 0.32) * (song.inst === "f" ? 1.1 : 1));
 					slotIdx++;
 				}
 				// たぬきの「はいっ」と、のがした「つく」
@@ -500,6 +741,23 @@ export function main(param: GameMainParameterObject): void {
 				}
 			}
 			if (ouchT > 0) ouchT -= dt;
+			if (glowT > 0) glowT -= dt;
+			if (phase === "play") {
+				// 10秒ごとにカメラを切りかえる(いつもの→アップ→俯瞰)
+				const ns = Math.floor(now / SHOT_SEC) % 3;
+				if (ns !== shot) {
+					shot = ns;
+					flash = Math.max(flash, 0.3); flashCol = "#ffffff";
+				}
+				// 時間帯がかわったら知らせる
+				const ti = todNow().i;
+				if (ti !== todIdx) {
+					todIdx = ti;
+					popText(["", "お昼になったよ！", "夕方になったよ！", "夜になったよ！"][ti], fontW, 44, W / 2, 330, 1.4);
+				}
+			} else if (phase === "end") {
+				shot = 0;
+			}
 			if (squash > 0) squash = Math.max(-0.3, squash - dt * 9);
 			else if (squash < 0) squash = Math.min(0, squash + dt * 3);
 			if (shake > 0) shake = Math.max(0, shake - dt);
@@ -530,6 +788,7 @@ export function main(param: GameMainParameterObject): void {
 			setText(timeLabel, "のこり " + Math.max(0, Math.ceil(playSec - now)));
 			setText(comboLabel, combo >= 2 ? combo + "コンボ ×" + comboMul().toFixed(1) : "");
 			setText(mochiLabel, "おもち " + made.length + "こ");
+			setText(todLabel, "じかん：" + TIMES[todNow().i].name);
 			view.modified();
 		});
 	});

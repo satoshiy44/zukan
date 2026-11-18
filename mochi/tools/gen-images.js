@@ -40,67 +40,156 @@ function build() {
 	const eyes = (x, cx, cy, gap, r) => [-1, 1].forEach((s) => { ell(x, cx + s * gap, cy, r, r * 1.25, OL); ell(x, cx + s * gap - r * 0.3, cy - r * 0.45, r * 0.42, r * 0.42, "#ffffff"); });
 	const cheeks = (x, cx, cy, gap, r) => [-1, 1].forEach((s) => ell(x, cx + s * gap, cy, r, r * 0.6, "rgba(255,110,150,0.6)"));
 
-	// ======== 背景(1280x720): 初日の出の神社 ========
-	{
-		const [c, x] = mk(1280, 720);
-		const g = x.createLinearGradient(0, 0, 0, 420);
-		g.addColorStop(0, "#5a7ae8"); g.addColorStop(0.55, "#ffb0a0"); g.addColorStop(1, "#ffe6a0");
-		x.fillStyle = g; x.fillRect(0, 0, 1280, 720);
-		// 初日の出
-		const sg = x.createRadialGradient(905, 300, 30, 905, 300, 360);
-		sg.addColorStop(0, "rgba(255,240,180,0.9)"); sg.addColorStop(1, "rgba(255,200,120,0)");
-		x.fillStyle = sg; x.fillRect(0, 0, 1280, 720);
-		ell(x, 905, 300, 96, 96, "#ff7a4a");
-		ell(x, 905, 300, 120, 120, null, "rgba(255,200,120,0.5)", 14);
-		// 富士山
-		poly(x, [[300, 420], [560, 200], [720, 200], [980, 420]], "#6a7ac8");
-		poly(x, [[520, 236], [560, 200], [720, 200], [760, 236], [700, 226], [660, 250], [620, 228], [580, 246]], "#ffffff");
-		// 雲
-		[[180, 160], [1090, 120], [930, 230], [300, 260]].forEach(([cx, cy]) => {
-			[[0, 0, 50], [46, -12, 40], [86, 4, 34], [-40, 6, 32]].forEach(([dx, dy, r]) => ell(x, cx + dx, cy + dy, r, r * 0.6, "rgba(255,255,255,0.9)"));
-		});
-		// 遠くの山なみ
-		x.fillStyle = "#8a6ab0"; x.beginPath(); x.moveTo(0, 430);
-		for (let i = 0; i <= 16; i++) x.lineTo(i * 80, 400 + Math.sin(i * 1.7) * 20);
-		x.lineTo(1280, 430); x.fill();
-		// 神社の地面(石だたみ)
-		x.fillStyle = "#e8d8c0"; x.fillRect(0, 420, 1280, 300);
+	// ======== 背景(1280x720) 5種類。門松は観客の手前に出すので別の絵 ========
+	const groundStones = (x, base, a, b) => {
+		x.fillStyle = base; x.fillRect(0, 420, 1280, 300);
 		for (let r = 0; r < 8; r++) for (let k = 0; k < 18; k++) {
 			const y = 430 + r * 38, w = 90 + r * 8, ox = (r % 2) * w / 2;
-			rr(x, ((k * w + ox) % 1400) - 60, y, w - 4, 34, 6, r % 2 ? "#e0cdb2" : "#ead9c0");
+			rr(x, ((k * w + ox) % 1400) - 60, y, w - 4, 34, 6, r % 2 ? a : b);
 		}
-		// 鳥居
-		const tr = (cx, w, h, y0) => {
-			rr(x, cx - w / 2 + 20, y0, 26, h, 4, "#e8402a", OL, 5); rr(x, cx + w / 2 - 46, y0, 26, h, 4, "#e8402a", OL, 5);
-			rr(x, cx - w / 2 - 20, y0 - 34, w + 40, 26, 8, "#2a1820", OL, 5);
-			rr(x, cx - w / 2 - 6, y0 - 8, w + 12, 20, 4, "#e8402a", OL, 5);
-			rr(x, cx - w / 2 + 6, y0 + 34, w - 12, 16, 4, "#e8402a", OL, 4);
-			rr(x, cx - 28, y0 + 6, 56, 30, 4, "#2a1820", "#ffd040", 3);
-		};
-		tr(640, 520, 260, 170);
-		// ちょうちんの列
+	};
+	const torii = (x, cx, w, h, y0) => {
+		rr(x, cx - w / 2 + 20, y0, 26, h, 4, "#e8402a", OL, 5); rr(x, cx + w / 2 - 46, y0, 26, h, 4, "#e8402a", OL, 5);
+		rr(x, cx - w / 2 - 20, y0 - 34, w + 40, 26, 8, "#2a1820", OL, 5);
+		rr(x, cx - w / 2 - 6, y0 - 8, w + 12, 20, 4, "#e8402a", OL, 5);
+		rr(x, cx - w / 2 + 6, y0 + 34, w - 12, 16, 4, "#e8402a", OL, 4);
+		rr(x, cx - 28, y0 + 6, 56, 30, 4, "#2a1820", "#ffd040", 3);
+	};
+	const lanterns = (x, glow) => {
 		x.strokeStyle = OL; x.lineWidth = 3; x.beginPath(); x.moveTo(0, 120); x.quadraticCurveTo(640, 200, 1280, 120); x.stroke();
 		for (let i = 0; i < 14; i++) {
 			const lx = 40 + i * 92, ly = 120 + Math.sin(i / 13 * Math.PI) * 58 + 22;
-			ell(x, lx, ly, 22, 28, i % 2 ? "#ff5a4a" : "#ffffff", OL, 3);
+			if (glow) { const gg = x.createRadialGradient(lx, ly, 4, lx, ly, 70); gg.addColorStop(0, "rgba(255,200,120,0.6)"); gg.addColorStop(1, "rgba(255,200,120,0)"); x.fillStyle = gg; x.fillRect(lx - 70, ly - 70, 140, 140); }
+			ell(x, lx, ly, 22, 28, i % 2 ? "#ff5a4a" : (glow ? "#fff2c0" : "#ffffff"), OL, 3);
 			rr(x, lx - 12, ly - 32, 24, 7, 2, OL); rr(x, lx - 12, ly + 25, 24, 7, 2, OL);
 		}
-		// 紅白の幕
+	};
+	const curtain = (x) => {
 		for (let i = 0; i < 32; i++) { x.fillStyle = i % 2 ? "#ff4a5a" : "#ffffff"; x.fillRect(i * 40, 392, 40, 40); }
 		x.strokeStyle = OL; x.lineWidth = 4; x.strokeRect(-2, 392, 1284, 40);
-		// 門松
-		const kado = (cx) => {
-			rr(x, cx - 54, 560, 108, 120, 14, "#c89a50", OL, 5);
-			for (let k = 0; k < 5; k++) { x.strokeStyle = "#a0783a"; x.lineWidth = 3; x.beginPath(); x.moveTo(cx - 54, 580 + k * 20); x.lineTo(cx + 54, 580 + k * 20); x.stroke(); }
-			[[-24, 380], [0, 340], [24, 400]].forEach(([dx, top]) => {
-				poly(x, [[cx + dx - 16, 570], [cx + dx - 16, top + 26], [cx + dx + 16, top], [cx + dx + 16, 570]], "#5ab84a", OL, 5);
-				ell(x, cx + dx, top + 14, 14, 6, "#d8f0b0", null, 0, -0.6);
+	};
+	const sky = (x, cols) => {
+		const g = x.createLinearGradient(0, 0, 0, 420);
+		cols.forEach((c, i) => g.addColorStop(i / (cols.length - 1), c));
+		x.fillStyle = g; x.fillRect(0, 0, 1280, 720);
+	};
+	const clouds = (x, list, col) => list.forEach(([cx, cy]) => {
+		[[0, 0, 50], [46, -12, 40], [86, 4, 34], [-40, 6, 32]].forEach(([dx, dy, r]) => ell(x, cx + dx, cy + dy, r, r * 0.6, col));
+	});
+	const fuji = (x, body, snow) => {
+		poly(x, [[300, 420], [560, 200], [720, 200], [980, 420]], body);
+		poly(x, [[520, 236], [560, 200], [720, 200], [760, 236], [700, 226], [660, 250], [620, 228], [580, 246]], snow);
+	};
+	const hills = (x, col) => {
+		x.fillStyle = col; x.beginPath(); x.moveTo(0, 430);
+		for (let i = 0; i <= 16; i++) x.lineTo(i * 80, 400 + Math.sin(i * 1.7) * 20);
+		x.lineTo(1280, 430); x.fill();
+	};
+	const BG = {
+		asa: (x) => { // 初日の出の神社
+			fuji(x, "#6a7ac8", "#ffffff");
+			clouds(x, [[180, 160], [1090, 120], [930, 230], [300, 260]], "rgba(255,255,255,0.9)");
+			hills(x, "#8a6ab0");
+			groundStones(x, "#e8d8c0", "#e0cdb2", "#ead9c0");
+			torii(x, 640, 520, 260, 170); lanterns(x, false); curtain(x);
+		},
+		yuki: (x) => { // 雪の夜の初詣
+			fuji(x, "#7a8ac8", "#ffffff");
+			hills(x, "#8a9ad0");
+			groundStones(x, "#e8f0ff", "#dbe6f8", "#f2f6ff");
+			torii(x, 640, 520, 260, 170);
+			// 屋根の雪
+			rr(x, 640 - 280, 128, 560, 14, 7, "#ffffff");
+			lanterns(x, true); curtain(x);
+			seed = 33; for (let i = 0; i < 60; i++) ell(x, rnd() * 1280, 430 + rnd() * 290, 2 + rnd() * 3, 2 + rnd() * 3, "rgba(255,255,255,0.9)");
+		},
+		ume: (x) => { // 梅の庭
+			clouds(x, [[200, 120], [1000, 90], [700, 200]], "rgba(255,255,255,0.95)");
+			hills(x, "#7ab87a");
+			// お屋敷(しょうじ)
+			rr(x, 330, 250, 620, 160, 0, "#f8f0e0", OL, 5);
+			for (let k = 0; k < 8; k++) { x.strokeStyle = "#8a5a3a"; x.lineWidth = 4; x.beginPath(); x.moveTo(330 + k * 78, 250); x.lineTo(330 + k * 78, 410); x.stroke(); }
+			for (let k = 1; k < 4; k++) { x.strokeStyle = "#c8a070"; x.lineWidth = 2; x.beginPath(); x.moveTo(330, 250 + k * 40); x.lineTo(950, 250 + k * 40); x.stroke(); }
+			poly(x, [[280, 252], [400, 170], [880, 170], [1000, 252]], "#4a4a6a", OL, 5);
+			// 梅の木
+			const ume = (bx, flip) => {
+				x.strokeStyle = "#4a2a20"; x.lineWidth = 18; x.beginPath(); x.moveTo(bx, 420); x.quadraticCurveTo(bx + flip * 40, 300, bx + flip * 120, 220); x.stroke();
+				x.lineWidth = 9; x.beginPath(); x.moveTo(bx + flip * 30, 330); x.quadraticCurveTo(bx + flip * 120, 300, bx + flip * 200, 300); x.stroke();
+				x.beginPath(); x.moveTo(bx + flip * 80, 260); x.quadraticCurveTo(bx + flip * 60, 180, bx + flip * 20, 140); x.stroke();
+				seed = bx; for (let i = 0; i < 40; i++) {
+					const fx = bx + flip * (rnd() * 220), fy = 130 + rnd() * 220, col = rnd() < 0.6 ? "#ff7aa8" : "#ffffff";
+					for (let k = 0; k < 5; k++) { const a = k / 5 * Math.PI * 2; ell(x, fx + Math.cos(a) * 6, fy + Math.sin(a) * 6, 5, 5, col); }
+					ell(x, fx, fy, 3, 3, "#ffd040");
+				}
+			};
+			ume(140, 1); ume(1140, -1);
+			// 白い砂利の庭
+			x.fillStyle = "#ecead8"; x.fillRect(0, 420, 1280, 300);
+			for (let k = 0; k < 12; k++) { x.strokeStyle = "#d8d4bc"; x.lineWidth = 3; x.beginPath(); x.moveTo(0, 440 + k * 24); x.quadraticCurveTo(640, 430 + k * 24 + 10, 1280, 440 + k * 24); x.stroke(); }
+			curtain(x);
+		},
+		yuu: (x) => { // 夕焼けの城下町
+			clouds(x, [[900, 120], [200, 150], [1100, 220]], "rgba(255,255,255,0.85)");
+			// お城
+			const cx = 820;
+			rr(x, cx - 160, 300, 320, 110, 0, "#ffffff", OL, 5);
+			[[0, 300, 360, 40], [0, 230, 280, 36], [0, 170, 200, 32], [0, 120, 130, 28]].forEach(([dx, y, w, h]) => {
+				poly(x, [[cx - w / 2 - 20, y], [cx - w / 2 + 20, y - h], [cx + w / 2 - 20, y - h], [cx + w / 2 + 20, y]], "#3a3a5a", OL, 4);
+				if (y < 300) rr(x, cx - w / 2 + 30, y, w - 60, 30, 0, "#ffffff", OL, 4);
 			});
-			[[-50, 540], [50, 540], [-20, 520], [30, 530]].forEach(([dx, dy]) => { for (let k = 0; k < 5; k++) { const a = k / 5 * Math.PI * 2; ell(x, cx + dx + Math.cos(a) * 14, dy + Math.sin(a) * 14, 9, 9, "#2a7a3a"); } });
-			ell(x, cx - 30, 548, 10, 10, "#ff4a4a", OL, 2); ell(x, cx + 34, 538, 10, 10, "#ff4a4a", OL, 2);
-		};
-		kado(90); kado(1190);
-		save("bg", c);
+			poly(x, [[cx - 20, 92], [cx - 34, 74], [cx - 14, 84]], "#ffd040", OL, 2); poly(x, [[cx + 20, 92], [cx + 34, 74], [cx + 14, 84]], "#ffd040", OL, 2);
+			// 町の屋根
+			for (let i = 0; i < 12; i++) { const rx = i * 110 - 20; poly(x, [[rx, 420], [rx + 20, 380], [rx + 100, 380], [rx + 120, 420]], i % 2 ? "#5a3a5a" : "#4a3050", OL, 3); }
+			groundStones(x, "#e8cfb0", "#dcc0a0", "#ecd6b8");
+			lanterns(x, true); curtain(x);
+		},
+		takara: (x) => { // 宝船の宴
+			// 金の雲
+			clouds(x, [[160, 110], [1080, 90], [380, 260], [960, 260]], "#ffe080");
+			clouds(x, [[200, 130], [1120, 110]], "rgba(255,255,255,0.6)");
+			// 宝船
+			const sx = 640, sy = 290;
+			x.beginPath(); x.moveTo(sx - 230, sy); x.quadraticCurveTo(sx, sy + 90, sx + 230, sy); x.lineTo(sx + 260, sy - 40); x.lineTo(sx - 260, sy - 40); x.closePath();
+			x.fillStyle = "#c8402a"; x.fill(); x.lineWidth = 6; x.strokeStyle = OL; x.stroke();
+			rr(x, sx - 200, sy - 40, 400, 14, 4, "#ffd040", OL, 3);
+			rr(x, sx - 8, sy - 230, 16, 200, 4, "#8a5a3a", OL, 4);
+			rr(x, sx - 120, sy - 220, 240, 150, 10, "#ffffff", OL, 5);
+			x.font = "bold 90px IPAGothic"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillStyle = "#e8402a"; x.fillText("宝", sx, sy - 146);
+			// 鶴
+			const tsuru = (tx, ty, s) => {
+				poly(x, [[tx, ty], [tx - 50 * s, ty - 30 * s], [tx - 10 * s, ty - 4 * s]], "#ffffff", OL, 3);
+				poly(x, [[tx, ty], [tx + 50 * s, ty - 34 * s], [tx + 12 * s, ty - 2 * s]], "#ffffff", OL, 3);
+				ell(x, tx, ty + 4 * s, 18 * s, 8 * s, "#ffffff", OL, 3);
+				x.strokeStyle = OL; x.lineWidth = 3; x.beginPath(); x.moveTo(tx + 16 * s, ty + 2 * s); x.lineTo(tx + 40 * s, ty - 8 * s); x.stroke();
+				ell(x, tx + 42 * s, ty - 9 * s, 4 * s, 4 * s, "#ff4a4a");
+			};
+			tsuru(230, 230, 1.2); tsuru(1050, 200, 1); tsuru(1150, 290, 0.8);
+			hills(x, "#d89a5a");
+			// 赤いもうせん
+			x.fillStyle = "#c8382a"; x.fillRect(0, 420, 1280, 300);
+			x.fillStyle = "#ffd040"; x.fillRect(0, 432, 1280, 8);
+			curtain(x);
+		}
+	};
+	Object.keys(BG).forEach((k) => {
+		const [c, x] = mk(1280, 720);
+		BG[k](x);
+		save("bg_" + k, c);
+	});
+	// 門松(220x360、観客の手前に置く)
+	{
+		const [c, x] = mk(220, 360);
+		x.translate(0, -330);
+		const cx = 110;
+		rr(x, cx - 54, 560, 108, 120, 14, "#c89a50", OL, 5);
+		for (let k = 0; k < 5; k++) { x.strokeStyle = "#a0783a"; x.lineWidth = 3; x.beginPath(); x.moveTo(cx - 54, 580 + k * 20); x.lineTo(cx + 54, 580 + k * 20); x.stroke(); }
+		[[-24, 380], [0, 340], [24, 400]].forEach(([dx, top]) => {
+			poly(x, [[cx + dx - 16, 570], [cx + dx - 16, top + 26], [cx + dx + 16, top], [cx + dx + 16, 570]], "#5ab84a", OL, 5);
+			ell(x, cx + dx, top + 14, 14, 6, "#d8f0b0", null, 0, -0.6);
+		});
+		[[-50, 540], [50, 540], [-20, 520], [30, 530]].forEach(([dx, dy]) => { for (let k = 0; k < 5; k++) { const a = k / 5 * Math.PI * 2; ell(x, cx + dx + Math.cos(a) * 14, dy + Math.sin(a) * 14, 9, 9, "#2a7a3a"); } });
+		ell(x, cx - 30, 548, 10, 10, "#ff4a4a", OL, 2); ell(x, cx + 34, 538, 10, 10, "#ff4a4a", OL, 2);
+		save("kadomatsu", c);
 	}
 
 	// ======== 観客(1280x230, 2コマ) ========
@@ -286,7 +375,15 @@ function build() {
 	const done = (name, fn) => { const [c, x] = mk(120, 100); fn(x); save(name, c); };
 	const base = (x, col) => { x.beginPath(); x.moveTo(12, 86); x.quadraticCurveTo(8, 22, 60, 18); x.quadraticCurveTo(112, 22, 108, 86); x.closePath(); x.fillStyle = col; x.fill(); x.lineWidth = 5; x.strokeStyle = OL; x.stroke(); ell(x, 44, 36, 14, 6, "rgba(255,255,255,0.7)", null, 0, -0.3); };
 	done("m_kin", (x) => { base(x, "#fffaf0"); [[40, 50], [72, 40], [60, 66], [84, 64]].forEach(([a, b]) => star(x, a, b, 8, "#ffd030", OL, 2)); });
-	done("m_ichigo", (x) => { base(x, "#ffe8f0"); poly(x, [[46, 30], [60, 4], [76, 30]], "#ff4a5a", OL, 4); poly(x, [[50, 12], [60, 2], [70, 12], [60, 8]], "#4ab84a"); });
+	done("m_kouhaku", (x) => {
+		// 紅白もち: 左が白、右が紅
+		base(x, "#fffaf0");
+		x.save(); x.beginPath(); x.moveTo(12, 86); x.quadraticCurveTo(8, 22, 60, 18); x.quadraticCurveTo(112, 22, 108, 86); x.closePath(); x.clip();
+		x.fillStyle = "#ff8aa8"; x.fillRect(60, 0, 60, 100); x.restore();
+		x.beginPath(); x.moveTo(12, 86); x.quadraticCurveTo(8, 22, 60, 18); x.quadraticCurveTo(112, 22, 108, 86); x.closePath(); x.lineWidth = 5; x.strokeStyle = OL; x.stroke();
+		x.strokeStyle = OL; x.lineWidth = 3; x.beginPath(); x.moveTo(60, 20); x.lineTo(60, 86); x.stroke();
+		ell(x, 40, 36, 12, 5, "rgba(255,255,255,0.8)", null, 0, -0.3);
+	});
 	done("m_kinako", (x) => { base(x, "#e8c070"); for (let i = 0; i < 18; i++) ell(x, 24 + (i * 37) % 76, 34 + (i * 23) % 46, 2, 2, "#c89a40"); });
 	done("m_anko", (x) => { base(x, "#fffaf0"); x.beginPath(); x.moveTo(16, 60); x.quadraticCurveTo(60, 20, 104, 60); x.lineTo(104, 74); x.quadraticCurveTo(60, 50, 16, 74); x.closePath(); x.fillStyle = "#6a2a3a"; x.fill(); });
 	done("m_kusa", (x) => { base(x, "#8ac870"); });
@@ -310,6 +407,116 @@ function build() {
 		const [c, x] = mk(220, 120);
 		for (let i = 0; i < 9; i++) { const a = Math.PI + i / 8 * Math.PI; ell(x, 110 + Math.cos(a) * 80, 100 + Math.sin(a) * 70, 14, 9, "#ffffff", OL, 3, a); }
 		save("splash", c);
+	}
+	// ======== 俯瞰(上から見た)の絵 ========
+	const GROUND = {
+		asa: ["#e8d8c0", "#dcc8ac", "stone"], yuki: ["#eef4ff", "#dfe8f8", "snow"], ume: ["#ecead8", "#d8d4bc", "gravel"],
+		yuu: ["#e8cfb0", "#d8bc98", "stone"], takara: ["#c8382a", "#b02a20", "carpet"]
+	};
+	Object.keys(GROUND).forEach((k) => {
+		const [base, line, kind] = GROUND[k];
+		const [c, x] = mk(1280, 720);
+		x.fillStyle = base; x.fillRect(0, 0, 1280, 720);
+		if (kind === "stone") for (let r = 0; r < 14; r++) for (let q = 0; q < 12; q++) rr(x, q * 116 + (r % 2) * 58 - 40, r * 54, 110, 50, 8, null, line, 3);
+		if (kind === "gravel") for (let r = 0; r < 20; r++) { x.strokeStyle = line; x.lineWidth = 3; x.beginPath(); x.ellipse(640, 440, 220 + r * 40, 140 + r * 26, 0, 0, Math.PI * 2); x.stroke(); }
+		if (kind === "snow") { seed = 7; for (let i = 0; i < 120; i++) ell(x, rnd() * 1280, rnd() * 720, 6 + rnd() * 10, 3 + rnd() * 5, line); }
+		if (kind === "carpet") { x.strokeStyle = "#ffd040"; x.lineWidth = 10; x.strokeRect(150, 120, 980, 640); }
+		// 紅白の幕(画面のふち)
+		for (let i = 0; i < 32; i++) { x.fillStyle = i % 2 ? "#ff4a5a" : "#ffffff"; x.fillRect(i * 40, 0, 40, 26); }
+		save("ov_" + k, c);
+	});
+	// 上から見た観客(画面のふちをぐるりと囲む) 2コマ
+	seed = 55;
+	const ring = [];
+	for (let i = 0; i < 26; i++) ring.push({ x: 30 + i * 48.8, y: 250 + (i % 2) * 10, side: "top" });
+	for (let i = 0; i < 9; i++) { ring.push({ x: 40 + (i % 2) * 14, y: 320 + i * 46 }); ring.push({ x: 1240 - (i % 2) * 14, y: 320 + i * 46 }); }
+	for (let i = 0; i < 26; i++) ring.push({ x: 30 + i * 48.8, y: 700 - (i % 2) * 10 });
+	ring.forEach((p) => { p.col = FURS[Math.floor(rnd() * FURS.length)]; p.kc = KIMONO[Math.floor(rnd() * KIMONO.length)]; p.k = ["cat", "bear", "bunny", "round"][Math.floor(rnd() * 4)]; p.ph = rnd(); });
+	[0, 1].forEach((frame) => {
+		const [c, x] = mk(1280, 720);
+		ring.forEach((p) => {
+			const up = (p.ph < 0.5) === (frame === 1);
+			ell(x, p.x, p.y, 26, 20, p.kc, OL, 3); // かた
+			if (up) [-1, 1].forEach((s) => ell(x, p.x + s * 26, p.y - 18, 9, 9, p.col, OL, 2)); // ばんざいの手
+			if (p.k === "bunny") [-1, 1].forEach((s) => ell(x, p.x + s * 8, p.y - 26, 6, 16, p.col, OL, 2));
+			if (p.k === "cat") [-1, 1].forEach((s) => poly(x, [[p.x + s * 16, p.y - 6], [p.x + s * 14, p.y - 28], [p.x + s * 4, p.y - 14]], p.col, OL, 2));
+			if (p.k === "bear") [-1, 1].forEach((s) => ell(x, p.x + s * 14, p.y - 14, 7, 7, p.col, OL, 2));
+			ell(x, p.x, p.y - 4, 18, 16, p.col, OL, 3); // あたま
+		});
+		save("ov_crowd" + frame, c);
+	});
+	{
+		// 臼(上から) 400x400
+		const [c, x] = mk(400, 400);
+		const g = x.createRadialGradient(200, 200, 120, 200, 200, 190); g.addColorStop(0, "#c8884a"); g.addColorStop(1, "#9a5a2a");
+		ell(x, 200, 200, 190, 190, null); x.fillStyle = g; x.fill(); x.lineWidth = 8; x.strokeStyle = OL; x.stroke();
+		for (let k = 0; k < 3; k++) ell(x, 200, 200, 182 - k * 8, 182 - k * 8, null, "rgba(90,40,10,0.3)", 3);
+		ell(x, 200, 200, 150, 150, "#5a2a14", OL, 5);
+		save("ov_usu", c);
+	}
+	{
+		// もち(上から) 300x300
+		const [c, x] = mk(300, 300);
+		ell(x, 150, 150, 140, 136, "#fffaf0", OL, 6);
+		ell(x, 110, 108, 50, 28, "rgba(255,255,255,0.95)", null, 0, -0.5);
+		ell(x, 170, 180, 70, 46, "rgba(230,220,210,0.5)");
+		save("ov_mochi", c);
+	}
+	{
+		// うさぎ(上から。右を向く) 240x260
+		const [c, x] = mk(240, 260);
+		ell(x, 110, 130, 76, 96, "#3a6ae8", OL, 6); // はっぴのかた
+		x.strokeStyle = "#ffffff"; x.lineWidth = 7; x.beginPath(); x.moveTo(110, 40); x.lineTo(110, 220); x.stroke();
+		ell(x, 130, 130, 56, 56, "#ffffff", OL, 6); // あたま
+		[-1, 1].forEach((s) => { ell(x, 70, 130 + s * 30, 58, 18, "#ffffff", OL, 5, s * 0.25); ell(x, 70, 130 + s * 30, 42, 8, "#ffb0c8", null, 0, s * 0.25); }); // 耳(うしろへねる)
+		rr(x, 100, 112, 70, 36, 18, null, "#ff4a5a", 6); // はちまき
+		ell(x, 182, 116, 6, 7, OL); ell(x, 182, 144, 6, 7, OL); // 目
+		ell(x, 190, 130, 6, 5, "#ff7090");
+		save("ov_usagi", c);
+	}
+	{
+		// 杵(上から。柄の手もとが左) 300x110
+		const [c, x] = mk(300, 110);
+		rr(x, 10, 46, 220, 18, 8, "#d8a868", OL, 5);
+		rr(x, 220, 8, 70, 94, 18, "#c8884a", OL, 6);
+		rr(x, 232, 8, 10, 94, 3, "#9a5a2a"); rr(x, 268, 8, 10, 94, 3, "#9a5a2a");
+		save("ov_kine", c);
+	}
+	{
+		// たぬき(上から。左を向く) 260x280
+		const [c, x] = mk(260, 280);
+		ell(x, 200, 140, 40, 26, "#7a5236", OL, 5, 0.3); // しっぽ
+		ell(x, 140, 140, 86, 100, "#9a6a46", OL, 6); // せなか
+		ell(x, 110, 140, 62, 60, "#9a6a46", OL, 6); // あたま
+		[-1, 1].forEach((s) => ell(x, 132, 140 + s * 48, 18, 16, "#7a5236", OL, 4)); // 耳
+		rr(x, 70, 120, 80, 40, 18, null, "#ff4a5a", 6); // はちまき
+		[-1, 1].forEach((s) => ell(x, 72, 140 + s * 22, 14, 11, "#4a3020"));
+		ell(x, 52, 140, 12, 16, "#f0dcc0", OL, 3); ell(x, 44, 140, 6, 5, OL); // はな
+		save("ov_tanuki", c);
+	}
+	{
+		// たぬきのうで(上から。手先が左) 240x70
+		const [c, x] = mk(240, 70);
+		rr(x, 30, 20, 210, 30, 15, "#9a6a46", OL, 5);
+		ell(x, 30, 35, 26, 22, "#f0dcc0", OL, 4);
+		[[-14, -14], [-20, 0], [-14, 14]].forEach(([dx, dy]) => ell(x, 30 + dx, 35 + dy, 7, 6, "#f0dcc0", OL, 2));
+		save("ov_arm", c);
+	}
+	// ======== おもち完成の光 ========
+	{
+		const [c, x] = mk(600, 600);
+		const g = x.createRadialGradient(300, 300, 20, 300, 300, 300); g.addColorStop(0, "rgba(255,250,200,1)"); g.addColorStop(0.4, "rgba(255,220,120,0.7)"); g.addColorStop(1, "rgba(255,200,80,0)");
+		x.fillStyle = g; x.fillRect(0, 0, 600, 600);
+		save("glow", c);
+	}
+	{
+		const [c, x] = mk(800, 800);
+		for (let i = 0; i < 16; i++) {
+			const a = i / 16 * Math.PI * 2;
+			const g = x.createRadialGradient(400, 400, 30, 400, 400, 400); g.addColorStop(0, "rgba(255,240,160,0.9)"); g.addColorStop(1, "rgba(255,240,160,0)");
+			x.fillStyle = g; x.beginPath(); x.moveTo(400, 400); x.arc(400, 400, 400, a, a + Math.PI / 20); x.closePath(); x.fill();
+		}
+		save("rays", c);
 	}
 	return out;
 }
