@@ -7,12 +7,16 @@ const INTRO_SEC = 5;
 const END_SEC = 3;
 const FIRST_SEC = 1.2; // スタートしてから最初の印までの秒
 const LEAD = 1.6; // 印がレーンの右はしから判定の輪までくる秒
-const PERFECT_W = 0.075; // ぴったりの幅(秒)
-const GOOD_W = 0.15; // まあまあの幅(秒)
+// 判定: S=完璧 A=ほんの少しずれ B=ずれ F=完全にずれ(ミス)。数字はずれてよい幅(秒)
+const S_W = 0.045;
+const A_W = 0.09;
+const B_W = 0.15;
+const F_W = 0.22; // ここまでずれて押すとF。これより遠いと「スカッ」
 const HAND_PRE = 0.12; // たぬきの手が臼に入っているあいだ(手の印の前後、秒)
 const HAND_POST = 0.16;
-const PERFECT_PT = 100;
-const GOOD_PT = 50;
+const S_PT = 100;
+const A_PT = 70;
+const B_PT = 40;
 const OUCH_PT = 300; // 手をついたときに引かれる点
 const PER_MOCHI = 16; // これだけつくと、おもちが1つ完成
 const MOCHI_PT = 500; // おもち完成のボーナス(+ ぴったり1回ごとに 50)
@@ -194,7 +198,8 @@ export function main(param: GameMainParameterObject): void {
 		let combo = 0;
 		let maxCombo = 0;
 		let hits = 0; // いまのおもちを何回ついたか
-		let perfectsInMochi = 0;
+		let perfectsInMochi = 0; // S は1、A は0.5 として数える(おもちの豪華さ)
+		const ranks: { [k: string]: number } = { S: 0, A: 0, B: 0, F: 0 };
 		const made: number[] = []; // 完成したおもちの種類
 		let slotIdx = 0;
 		let lastBeat = -9;
@@ -230,7 +235,7 @@ export function main(param: GameMainParameterObject): void {
 			return null;
 		};
 		const nextT = (): Ev | null => {
-			for (let i = 0; i < evs.length; i++) if (!evs[i].done && evs[i].kind === "T" && evs[i].t > now - GOOD_W) return evs[i];
+			for (let i = 0; i < evs.length; i++) if (!evs[i].done && evs[i].kind === "T" && evs[i].t > now - F_W) return evs[i];
 			return null;
 		};
 		// たぬきの手が臼に入っていれば、その手の印までの近さ(秒)。入っていなければ -1
@@ -553,7 +558,7 @@ export function main(param: GameMainParameterObject): void {
 		};
 		const scoreLabel = label(fontW, 44, 20, 18, "0てん");
 		const timeLabel = label(fontW, 44, W - 24, 18, "", "right");
-		const comboLabel = label(fontY, 40, 20, 210, "");
+		const comboLabel = label(fontY, 36, 20, 300, "");
 		const mochiLabel = label(fontY, 32, W - 24, 70, "", "right");
 		const todLabel = label(fontC, 30, W - 24, 108, "", "right");
 		const pops: Pop[] = [];
@@ -637,6 +642,21 @@ export function main(param: GameMainParameterObject): void {
 			popText("+" + bonus, fontW, 44, MOCHI_X, 370, 1.3);
 		};
 
+		// 判定の文字(判定の輪の下に大きく出す)
+		const rankFonts: { [k: string]: g.Font } = {
+			S: font("#ffe040", "#ff4a8a", 10), A: font("#ff8ad8", "#3a1e2a"), B: font("#70c8ff", "#3a1e2a"), F: font("#a8a0b0", "#3a1e2a")
+		};
+		let rankLabel: g.Label | null = null;
+		const showRank = (k: string): void => {
+			if (rankLabel) rankLabel.destroy();
+			const sz = k === "S" ? 96 : k === "F" ? 70 : 82;
+			rankLabel = label(rankFonts[k], sz, JUDGE_X, LANE_Y + 54, k, "center");
+			rankLabel.anchorX = 0.5;
+			rankLabel.anchorY = 0.5;
+			rankLabel.x = JUDGE_X;
+			rankLabel.y = LANE_Y + 54 + sz / 2;
+			pops.push({ l: rankLabel, life: 0.55, vy: -20, scale: k === "S" ? 1.8 : 1.4 });
+		};
 		// ======== 判定 ========
 		const breakCombo = (): void => {
 			if (combo >= 10) popText("コンボがとぎれた…", fontR, 32, W / 2, 250);
@@ -688,7 +708,7 @@ export function main(param: GameMainParameterObject): void {
 				if (e.t > now + 1) break;
 			}
 			const hn = handNear();
-			if (hn >= 0 && !(best && bd <= GOOD_W && bd < hn)) {
+			if (hn >= 0 && !(best && bd <= F_W && bd < hn)) {
 				// たぬきの手をついてしまった
 				ouchT = 0.5;
 				shake = 0.35;
@@ -702,26 +722,31 @@ export function main(param: GameMainParameterObject): void {
 			squash = 1;
 			const mx = MOCHI_X, my = MOCHI_Y - 90;
 			parts.push({ x: mx, y: my, vx: 0, vy: 0, g: 0, life: 0.25, max: 0.25, size: 260, col: "", img: "splash", spin: 0 });
-			if (best && bd <= GOOD_W) {
+			if (best && bd <= B_W) {
 				best.done = true;
-				const perfect = bd <= PERFECT_W;
-				best.res = perfect ? "perfect" : "good";
+				const rank = bd <= S_W ? "S" : bd <= A_W ? "A" : "B";
+				best.res = rank;
+				ranks[rank]++;
+				showRank(rank);
 				combo++;
 				maxCombo = Math.max(maxCombo, combo);
-				const pts = Math.round((perfect ? PERFECT_PT : GOOD_PT) * comboMul() * (best.rush ? 2 : 1));
+				const pts = Math.round((rank === "S" ? S_PT : rank === "A" ? A_PT : B_PT) * comboMul() * (best.rush ? 2 : 1));
 				score += pts;
 				hits++;
-				if (perfect) perfectsInMochi++;
-				shake = perfect ? 0.18 : 0.1;
-				if (perfect) {
+				perfectsInMochi += rank === "S" ? 1 : rank === "A" ? 0.5 : 0;
+				shake = rank === "S" ? 0.18 : 0.1;
+				if (rank === "S") {
 					se("perfect", 0.35);
 					sparkle(mx, my, 8);
 					popText(combo % 8 === 0 ? "よいしょー！" : "ペッタン！", fontY, 52, sx(mx - 170), sy(my - 110), 0.6);
+				} else if (rank === "A") {
+					se("good", 0.4);
+					popText("ペッタン", fontW, 46, sx(mx - 170), sy(my - 110), 0.5);
 				} else {
-					se("good", 0.35);
-					popText("ペタッ", fontW, 42, sx(mx - 170), sy(my - 110), 0.5);
+					se("good", 0.3);
+					popText("ペタッ", fontC, 40, sx(mx - 170), sy(my - 110), 0.5);
 				}
-				burst(mx, my, perfect ? 14 : 8, 420, ["#ffffff", "#fff4d0", "#ffe0f0"]);
+				burst(mx, my, rank === "S" ? 14 : 8, 420, ["#ffffff", "#fff4d0", "#ffe0f0"]);
 				popText("+" + pts, fontW, 34, sx(mx + 150), sy(my - 60), 0.5);
 				if (combo > 0 && combo % 10 === 0) {
 					se("cheer", 0.45);
@@ -730,6 +755,15 @@ export function main(param: GameMainParameterObject): void {
 					popText(combo + "コンボ！", fontP, 64, W / 2, 250, 1.0);
 				}
 				if (hits >= PER_MOCHI) completeMochi();
+			} else if (best && bd <= F_W) {
+				// 完全にずれた: F(ミス)
+				best.done = true;
+				best.res = "F";
+				ranks.F++;
+				showRank("F");
+				se("miss", 0.45);
+				breakCombo();
+				popText("ベチャッ…", fontC, 40, sx(mx - 170), sy(my - 110), 0.5);
 			} else {
 				// 何もないところでついた
 				breakCombo();
@@ -750,10 +784,11 @@ export function main(param: GameMainParameterObject): void {
 			scene.append(over);
 			label(fontY, 100, W / 2, 140, "おしまい！", "center");
 			label(fontW, 76, W / 2, 270, score + "てん", "center");
-			label(fontC, 40, W / 2, 380, "完成したおもち " + made.length + "こ　さいだい " + maxCombo + "コンボ", "center");
+			label(fontC, 36, W / 2, 370, "完成したおもち " + made.length + "こ　さいだい " + maxCombo + "コンボ", "center");
+			label(fontY, 36, W / 2, 416, "S " + ranks.S + "　A " + ranks.A + "　B " + ranks.B + "　F " + ranks.F, "center");
 			made.slice(0, 12).forEach((m, i) => {
 				const n = Math.min(12, made.length);
-				const sp = new g.Sprite({ scene, src: img(MOCHI_TYPES[m]), x: W / 2 - n * 50 + i * 100, y: 450 });
+				const sp = new g.Sprite({ scene, src: img(MOCHI_TYPES[m]), x: W / 2 - n * 50 + i * 100, y: 470 });
 				scene.append(sp);
 			});
 		};
@@ -836,9 +871,11 @@ export function main(param: GameMainParameterObject): void {
 					if (e.kind === "h" && now >= e.t) {
 						e.done = true;
 						se("hai", 0.35);
-					} else if (e.kind === "T" && now > e.t + GOOD_W) {
+					} else if (e.kind === "T" && now > e.t + F_W) {
 						e.done = true;
-						e.res = "miss";
+						e.res = "F";
+						ranks.F++;
+						showRank("F");
 						se("miss", 0.35);
 						breakCombo();
 						popText("ミス", fontR, 40, sx(MOCHI_X - 170), sy(MOCHI_Y - 200), 0.5);
