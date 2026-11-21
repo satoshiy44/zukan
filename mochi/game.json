@@ -828,6 +828,36 @@
 			"path": "image/note_renda.png",
 			"width": 100,
 			"height": 100
+		},
+		"medal_a": {
+			"type": "image",
+			"path": "image/medal_a.png",
+			"width": 200,
+			"height": 240
+		},
+		"medal_b": {
+			"type": "image",
+			"path": "image/medal_b.png",
+			"width": 200,
+			"height": 240
+		},
+		"medal_f": {
+			"type": "image",
+			"path": "image/medal_f.png",
+			"width": 200,
+			"height": 240
+		},
+		"medal_s": {
+			"type": "image",
+			"path": "image/medal_s.png",
+			"width": 200,
+			"height": 240
+		},
+		"title_ribbon": {
+			"type": "image",
+			"path": "image/title_ribbon.png",
+			"width": 900,
+			"height": 150
 		}
 	},
 	"environment": {

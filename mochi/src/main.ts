@@ -91,6 +91,12 @@ const TIMES: TimeOfDay[] = [
 ];
 const SHOT_SEC = 10; // カメラを切りかえる間かく(秒)
 const UP_ZOOM = 1.75; // アップのときの大きさ
+// 点数でもらえる称号(上から順に見て、点数がこえていればそれ)
+const TITLES: [number, string][] = [
+	[55000, "神の餅つき師"], [48000, "伝説のペッタン名人"], [42000, "餅つき横綱"], [36000, "杵さばきの達人"],
+	[30000, "もち屋の看板うさぎ"], [24000, "町内の餅つき番長"], [18000, "見習い餅つき職人"], [12000, "ペッタン一年生"],
+	[6000, "きなこまみれの新人"], [0, "臼のまわりの見物人"]
+];
 const MOCHI_TYPES = ["m_kin", "m_kouhaku", "m_kinako", "m_anko", "m_kusa"];
 const MOCHI_NAMES = ["金ぱくもち", "紅白もち", "きなこもち", "あんこもち", "草もち"];
 
@@ -113,7 +119,7 @@ class View extends g.E {
 
 export function main(param: GameMainParameterObject): void {
 	const imageIds = [
-		"note_renda",
+		"note_renda", "medal_s", "medal_a", "medal_b", "medal_f", "title_ribbon",
 		"crowd0", "crowd1", "kadomatsu", "glow", "rays",
 
 		"ov_crowd0", "ov_crowd1", "ov_usu", "ov_mochi", "ov_usagi", "ov_kine", "ov_tanuki", "ov_arm",
@@ -771,25 +777,96 @@ export function main(param: GameMainParameterObject): void {
 			}
 		});
 
-		// ======== おしまい ========
+		// ======== おしまい: 称号・点数・判定のメダルを、順番にポンッと出す ========
 		let finished = false;
+		interface EndItem { e: g.E; at: number; s: number; done: boolean; }
+		const endItems: EndItem[] = [];
+		let endT = 0;
+		const pop = (e: g.E, at: number, s = 1): void => {
+			e.scaleX = e.scaleY = 0;
+			e.modified();
+			endItems.push({ e, at, s, done: false });
+		};
+		const centered = (l: g.Label): g.Label => {
+			l.anchorX = 0.5;
+			l.anchorY = 0.5;
+			l.x += 620;
+			l.y += l.fontSize / 2;
+			return l;
+		};
 		const finish = (): void => {
 			if (finished) return;
 			finished = true;
 			phase = "end";
 			g.game.vars.gameState.score = score;
 			se("finish", 0.7);
-			se("cheer", 0.5);
-			const over = new g.FilledRect({ scene, cssColor: "rgba(40,16,30,0.6)", width: W, height: H });
+			const over = new g.FilledRect({ scene, cssColor: "rgba(40,16,30,0.72)", width: W, height: H });
 			scene.append(over);
-			label(fontY, 100, W / 2, 140, "おしまい！", "center");
-			label(fontW, 76, W / 2, 270, score + "てん", "center");
-			label(fontC, 36, W / 2, 370, "完成したおもち " + made.length + "こ　さいだい " + maxCombo + "コンボ", "center");
-			label(fontY, 36, W / 2, 416, "S " + ranks.S + "　A " + ranks.A + "　B " + ranks.B + "　F " + ranks.F, "center");
-			made.slice(0, 12).forEach((m, i) => {
-				const n = Math.min(12, made.length);
-				const sp = new g.Sprite({ scene, src: img(MOCHI_TYPES[m]), x: W / 2 - n * 50 + i * 100, y: 470 });
+			// 紙ふぶきは、暗くした幕の上にも出す
+			const fx = new View({ scene, width: W, height: H });
+			fx.draw = (r: g.Renderer): void => drawParts(r);
+			fx.onUpdate.add(() => fx.modified());
+			scene.append(fx);
+			pop(centered(label(fontY, 56, W / 2, 6, "おしまい！", "center")), 0);
+			// 称号
+			let ti = TITLES.length - 1;
+			for (let i = 0; i < TITLES.length; i++) {
+				if (score >= TITLES[i][0]) {
+					ti = i; break;
+				}
+			}
+			const rb = new g.Sprite({ scene, src: img("title_ribbon"), x: W / 2, y: 172, anchorX: 0.5, anchorY: 0.5 });
+			scene.append(rb);
+			pop(rb, 1.15, 0.9);
+			const tf = ti <= 2 ? font("#fff27a", "#3a1e2a", 10) : font("#ffffff", "#3a1e2a", 8);
+			pop(centered(label(fontC, 24, W / 2, 74, "あなたの称号は…", "center")), 1.05);
+			pop(centered(label(tf, ti <= 2 ? 56 : 50, W / 2, ti <= 2 ? 140 : 143, TITLES[ti][1], "center")), 1.2);
+			// 点数
+			pop(centered(label(fontW, 60, W / 2, 238, score + "てん", "center")), 0.15);
+			// 判定のメダル
+			const RK = [
+				["S", "medal_s", "かんぺき", "#ffe040"], ["A", "medal_a", "おしい", "#ff8ad8"],
+				["B", "medal_b", "ずれた", "#70c8ff"], ["F", "medal_f", "ミス", "#b8b0c0"]
+			];
+			RK.forEach((q, i) => {
+				const cx = 295 + i * 230;
+				const m = new g.Sprite({ scene, src: img(q[1]), x: cx, y: 400, anchorX: 0.5, anchorY: 0.5 });
+				scene.append(m);
+				pop(m, 0.3 + i * 0.12, q[0] === "S" ? 0.82 : 0.72);
+				const cf = font(q[3], "#3a1e2a", 8);
+				const n = ranks[q[0]];
+				pop(centered(label(cf, q[0] === "S" ? 58 : 50, cx, 492, n + "回", "center")), 0.35 + i * 0.12);
+				pop(centered(label(fontW, 24, cx, 552, q[2], "center")), 0.35 + i * 0.12);
+			});
+			// 完成したおもち
+			const n = Math.min(10, made.length);
+			made.slice(0, 10).forEach((m, i) => {
+				const mx = W / 2 - (n - 1) * 40 + i * 80;
+				const sp = new g.Sprite({ scene, src: img(MOCHI_TYPES[m]), x: mx, y: 622, anchorX: 0.5, anchorY: 0.5 });
 				scene.append(sp);
+				pop(sp, 0.8 + i * 0.03, 0.62);
+			});
+			pop(centered(label(fontY, 26, W / 2, 664, "完成したおもち " + made.length + "こ　　さいだい " + maxCombo + "コンボ", "center")), 0.85);
+		};
+		const updateEnd = (): void => {
+			endT += dt;
+			endItems.forEach((it) => {
+				const t = (endT - it.at) / 0.25;
+				if (t <= 0 || it.done) return;
+				// ちょっと大きくなってから元の大きさに(ポンッ)
+				const k = t >= 1 ? 1 : 1 + 2.7 * Math.pow(t - 1, 3) + 1.7 * Math.pow(t - 1, 2);
+				it.e.scaleX = it.e.scaleY = it.s * k;
+				it.e.modified();
+				if (t >= 1) {
+					it.done = true;
+					if (it.at >= 1.2) {
+						// 称号が出たら、歓声と紙ふぶき
+						se("complete", 0.6);
+						se("cheer", 0.6);
+						confetti(50);
+						sparkle(W / 2, 170, 14);
+					}
+				}
 			});
 		};
 
@@ -896,6 +973,7 @@ export function main(param: GameMainParameterObject): void {
 			}
 			if (ouchT > 0) ouchT -= dt;
 			if (glowT > 0) glowT -= dt;
+			if (phase === "end") updateEnd();
 			if (phase === "play") {
 				// 10秒ごとにカメラを切りかえる(いつもの→アップ→俯瞰)
 				const ns = Math.floor(now / SHOT_SEC) % 3;

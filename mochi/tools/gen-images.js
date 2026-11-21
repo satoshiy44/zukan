@@ -527,6 +527,41 @@ function build() {
 		x.lineWidth = 8; x.strokeStyle = OL; x.strokeText("連", 50, 52); x.fillStyle = "#ff5a2a"; x.fillText("連", 50, 52);
 		save("note_renda", c);
 	}
+	// ======== おわりの画面: 判定のメダルと称号のリボン ========
+	const medal = (name, letter, c0, c1, ribbon) => {
+		const [c, x] = mk(200, 240);
+		// リボン
+		poly(x, [[64, 150], [40, 236], [74, 214], [96, 236], [100, 150]], ribbon, OL, 4);
+		poly(x, [[136, 150], [160, 236], [126, 214], [104, 236], [100, 150]], ribbon, OL, 4);
+		// ギザギザのふち
+		const p = [];
+		for (let k = 0; k < 32; k++) { const a = k / 32 * Math.PI * 2, q = k % 2 ? 84 : 94; p.push([100 + Math.cos(a) * q, 100 + Math.sin(a) * q]); }
+		poly(x, p, c1, OL, 5);
+		const g = x.createRadialGradient(80, 70, 10, 100, 100, 80); g.addColorStop(0, "#ffffff"); g.addColorStop(0.35, c0); g.addColorStop(1, c1);
+		ell(x, 100, 100, 74, 74, null); x.fillStyle = g; x.fill(); x.lineWidth = 5; x.strokeStyle = OL; x.stroke();
+		ell(x, 100, 100, 62, 62, null, "rgba(255,255,255,0.7)", 4);
+		x.font = "bold 96px IPAGothic"; x.textAlign = "center"; x.textBaseline = "middle";
+		x.lineWidth = 16; x.strokeStyle = OL; x.strokeText(letter, 100, 106);
+		x.fillStyle = "#ffffff"; x.fillText(letter, 100, 106);
+		ell(x, 72, 64, 18, 10, "rgba(255,255,255,0.8)", null, 0, -0.6);
+		save(name, c);
+	};
+	medal("medal_s", "S", "#ffe860", "#ffa020", "#ff4a5a");
+	medal("medal_a", "A", "#ffb0e0", "#ff5ab0", "#9a6aff");
+	medal("medal_b", "B", "#a8e0ff", "#3a8ae8", "#40c870");
+	medal("medal_f", "F", "#d8d0e0", "#8a8098", "#6a6070");
+	{
+		// 称号のリボン 900x150
+		const [c, x] = mk(900, 150);
+		poly(x, [[10, 40], [100, 40], [100, 120], [10, 120], [50, 80]], "#c0302a", OL, 5);
+		poly(x, [[890, 40], [800, 40], [800, 120], [890, 120], [850, 80]], "#c0302a", OL, 5);
+		const g = x.createLinearGradient(0, 14, 0, 136); g.addColorStop(0, "#ff7a5a"); g.addColorStop(1, "#d83a2a");
+		x.beginPath(); x.moveTo(80, 20); x.quadraticCurveTo(450, 0, 820, 20); x.lineTo(820, 130); x.quadraticCurveTo(450, 110, 80, 130); x.closePath();
+		x.fillStyle = g; x.fill(); x.lineWidth = 6; x.strokeStyle = OL; x.stroke();
+		x.strokeStyle = "#ffd040"; x.lineWidth = 4; x.beginPath(); x.moveTo(96, 34); x.quadraticCurveTo(450, 16, 804, 34); x.stroke();
+		x.beginPath(); x.moveTo(96, 116); x.quadraticCurveTo(450, 98, 804, 116); x.stroke();
+		save("title_ribbon", c);
+	}
 	return out;
 }
 
