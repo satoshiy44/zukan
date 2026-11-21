@@ -20,6 +20,8 @@ const B_PT = 40;
 const OUCH_PT = 300; // 手をついたときに引かれる点
 const PER_MOCHI = 16; // これだけつくと、おもちが1つ完成
 const MOCHI_PT = 500; // おもち完成のボーナス(+ ぴったり1回ごとに 50)
+const MUSIC_VOL = 1.7; // 曲の音の大きさ(倍)
+const SE_VOL = 0.7; // 効果音の大きさ(倍)
 const RENDA_SEC = 0.09; // 連打パートで長押ししているとき、うさぎがつく間かく(秒)
 const RENDA_PT = 30; // 連打1回の点
 const JUDGE_X = 200; // 判定の輪の位置
@@ -179,8 +181,12 @@ export function main(param: GameMainParameterObject): void {
 		imageIds.forEach((id) => {
 			surf[id] = g.SurfaceUtil.asSurface(img(id))!;
 		});
+		// 効果音は少し小さく、曲(太鼓・かね・メロディ)は大きく
 		const se = (id: string, vol = 0.6): void => {
-			scene.asset.getAudioById("se_" + id).play().changeVolume(vol);
+			scene.asset.getAudioById("se_" + id).play().changeVolume(vol * SE_VOL);
+		};
+		const music = (id: string, vol: number): void => {
+			scene.asset.getAudioById("se_" + id).play().changeVolume(Math.min(1, vol * MUSIC_VOL));
 		};
 		const playSec = Math.max(30, time - INTRO_SEC - END_SEC);
 
@@ -1136,12 +1142,12 @@ export function main(param: GameMainParameterObject): void {
 				while (slotIdx < slots.length && slots[slotIdx].t <= now) {
 					const s = slots[slotIdx];
 					const dr = song.drum.charAt(s.idx % 8);
-					if (dr === "D" || dr === "d") se("don", dr === "D" ? 0.55 : 0.38);
-					else if (dr === "k") se("ka", 0.3);
+					if (dr === "D" || dr === "d") music("don", dr === "D" ? 0.55 : 0.38);
+					else if (dr === "k") music("ka", 0.3);
 					if (s.beat) lastBeat = s.t;
 					const m = song.mel[s.idx % song.mel.length];
 					const ins = song.inst.charAt(Math.floor(s.idx / 8) % song.inst.length);
-					if (m >= 0) se(ins + m, (s.rush ? 0.42 : 0.32) * (ins === "f" ? 1.1 : 1));
+					if (m >= 0) music(ins + m, (s.rush ? 0.42 : 0.32) * (ins === "f" ? 1.1 : 1));
 					slotIdx++;
 				}
 				// 合図: おもちの印が輪にかさなる1拍前に「カッ」
@@ -1163,7 +1169,7 @@ export function main(param: GameMainParameterObject): void {
 					rollT -= dt;
 					rollTick -= dt;
 					if (rollTick <= 0) {
-						se("don", 0.45); rollTick = 0.06;
+						music("don", 0.45); rollTick = 0.06;
 					}
 				}
 				// 連打パート
