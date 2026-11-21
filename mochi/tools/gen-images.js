@@ -562,6 +562,60 @@ function build() {
 		x.beginPath(); x.moveTo(96, 116); x.quadraticCurveTo(450, 98, 804, 116); x.stroke();
 		save("title_ribbon", c);
 	}
+	// ======== おわりの画面: 正面を向いて喜ぶ / しょんぼりする うさぎ・たぬき 300x380 ========
+	const front = (name, who, mood) => {
+		const [c, x] = mk(300, 404);
+		x.translate(0, 24);
+		const cx = 150, joy = mood === "joy";
+		const body = who === "usagi" ? "#3a6ae8" : "#9a6a46", fur = who === "usagi" ? "#ffffff" : "#9a6a46";
+		// 足
+		[-1, 1].forEach((s) => rr(x, cx + s * 30 - 18, 310, 36, 66, 14, who === "usagi" ? "#ffffff" : "#7a5236", OL, 5));
+		// うで
+		[-1, 1].forEach((s) => {
+			const hx = cx + s * (joy ? 110 : 70), hy = joy ? 150 : 300;
+			x.strokeStyle = OL; x.lineWidth = 26; x.beginPath(); x.moveTo(cx + s * 50, 250); x.lineTo(hx, hy); x.stroke();
+			x.strokeStyle = body; x.lineWidth = 18; x.stroke();
+			ell(x, hx, hy, 18, 18, who === "usagi" ? "#ffffff" : "#f0dcc0", OL, 4);
+		});
+		// からだ
+		if (who === "usagi") {
+			x.beginPath(); x.moveTo(cx - 70, 330); x.lineTo(cx - 56, 220); x.quadraticCurveTo(cx, 204, cx + 56, 220); x.lineTo(cx + 70, 330); x.closePath();
+			x.fillStyle = body; x.fill(); x.lineWidth = 6; x.strokeStyle = OL; x.stroke();
+			x.strokeStyle = "#ffffff"; x.lineWidth = 8; x.beginPath(); x.moveTo(cx - 28, 220); x.lineTo(cx - 8, 330); x.moveTo(cx + 28, 220); x.lineTo(cx + 8, 330); x.stroke();
+		} else {
+			ell(x, cx, 270, 80, 74, body, OL, 6); ell(x, cx, 284, 52, 50, "#f0dcc0");
+		}
+		// 頭
+		if (who === "usagi") {
+			[-1, 1].forEach((s) => {
+				const tilt = joy ? s * 0.12 : s * 0.9;
+				x.save(); x.translate(cx + s * 26, 104); x.rotate(tilt);
+				ell(x, 0, -50, 22, 58, "#ffffff", OL, 5); ell(x, 0, -46, 10, 40, "#ffb0c8");
+				x.restore();
+			});
+		} else {
+			[-1, 1].forEach((s) => ell(x, cx + s * 54, 84, 22, 20, "#7a5236", OL, 5));
+		}
+		ell(x, cx, 140, 74, 66, fur, OL, 6);
+		if (who === "tanuki") { [-1, 1].forEach((s) => ell(x, cx + s * 30, 136, 26, 20, "#4a3020", null, 0, s * 0.3)); ell(x, cx, 172, 36, 26, "#f0dcc0"); }
+		rr(x, cx - 76, 92, 152, 18, 8, "#ffffff", "#ff4a5a", 5);
+		// 顔
+		if (joy) {
+			[-1, 1].forEach((s) => { x.strokeStyle = who === "tanuki" ? "#ffffff" : OL; x.lineWidth = 6; x.beginPath(); x.arc(cx + s * 28, 140, 10, Math.PI + 0.3, -0.3); x.stroke(); });
+			ell(x, cx, 176, 22, 18, "#ff5a7a", OL, 4);
+			ell(x, cx, 182, 12, 8, "#ffa0b0");
+		} else {
+			[-1, 1].forEach((s) => { ell(x, cx + s * 28, 140, 7, 8, who === "tanuki" ? "#ffffff" : OL); x.strokeStyle = OL; x.lineWidth = 4; x.beginPath(); x.moveTo(cx + s * 40, 120); x.lineTo(cx + s * 16, 128); x.stroke(); });
+			x.strokeStyle = OL; x.lineWidth = 4; x.beginPath(); x.arc(cx, 190, 12, Math.PI + 0.3, -0.3); x.stroke();
+			ell(x, cx + 44, 158, 7, 12, "#7ac8ff", OL, 2); // なみだ
+		}
+		[-1, 1].forEach((s) => ell(x, cx + s * 50, 168, 13, 8, "rgba(255,110,150,0.6)"));
+		if (who === "usagi") ell(x, cx, 164, 7, 5, "#ff7090"); else ell(x, cx, 162, 10, 7, OL);
+		if (joy) [[cx - 120, 60], [cx + 120, 50], [cx + 100, 260]].forEach(([sx2, sy2]) => star(x, sx2, sy2, 16, "#ffe040", OL, 3));
+		save(name, c);
+	};
+	front("usagi_joy", "usagi", "joy"); front("usagi_sad", "usagi", "sad");
+	front("tanuki_joy", "tanuki", "joy"); front("tanuki_sad", "tanuki", "sad");
 	return out;
 }
 

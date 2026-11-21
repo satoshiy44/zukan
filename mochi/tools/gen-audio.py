@@ -211,3 +211,9 @@ def fue(freq, dur, vol=0.25):
 for i, n in enumerate((62, 64, 67, 69, 71, 74, 76, 79, 81, 83)):
     save("se_s%d" % i, shamisen(note(n - 12), 0.35, 0.32))
     save("se_f%d" % i, fue(note(n + 12), 0.32, 0.22))
+
+
+# ---- 合図の「カッ」(おもちの印が輪にかさなる1拍前) ----
+def _cue():
+    return mix(tone(2400, 0.07, "sin", 0.22, 0.001, 0.07), tone(3600, 0.05, "sin", 0.08, 0.001, 0.05))
+save("se_cue", _cue())

@@ -41,7 +41,7 @@ const SECTIONS: Section[] = [
 		name: "大もちラッシュ！ 点数2ばい", rush: true
 	}
 ];
-// 曲は5つ。ゲームの時計で8分音符ごとに鳴らす。inst: k=琴 s=三味線 f=笛 / mel: 陽音階の 0〜9 番(-1 は休み)
+// 曲は10こ。ゲームの時計で8分音符ごとに鳴らす。inst: k=琴 s=三味線 f=笛(2文字以上なら1小節ごとに楽器をかえる) / mel: 陽音階の 0〜9 番(-1 は休み)
 // drum: 8分音符8つぶんの太鼓。D=太鼓(強) d=太鼓 k=かね .=なし
 interface Song { name: string; inst: string; drum: string; mel: number[]; }
 const SONGS: Song[] = [
@@ -74,6 +74,36 @@ const SONGS: Song[] = [
 			9, -1, 8, -1, 7, -1, 5, -1, 7, -1, 8, 9, 8, -1, -1, -1, 7, -1, 5, -1, 4, -1, 5, -1, 7, -1, -1, -1, -1, -1, -1, -1,
 			4, 5, 7, -1, 8, -1, 7, -1, 5, -1, 4, -1, 5, -1, 7, -1, 8, -1, 7, -1, 5, -1, 4, -1, 5, -1, -1, -1, -1, -1, -1, -1
 		]
+	},
+	{
+		name: "初夢しゃみせん", inst: "sk", drum: "DkDkdkDk", mel: [
+			4, -1, 5, 7, 5, -1, 4, 2, 0, -1, 2, -1, 4, -1, -1, -1, 5, -1, 7, 8, 9, -1, 8, 7, 5, -1, 7, -1, 5, -1, -1, -1,
+			4, 4, 5, -1, 7, 7, 8, -1, 9, -1, 8, 7, 5, -1, 4, -1, 2, -1, 4, 5, 4, -1, 2, -1, 0, -1, -1, -1, -1, -1, -1, -1
+		]
+	},
+	{
+		name: "鶴と亀の笛", inst: "fk", drum: "Dk.kDkdk", mel: [
+			7, -1, -1, 8, 9, -1, -1, -1, 8, -1, 7, -1, 5, -1, -1, -1, 4, -1, 5, -1, 7, -1, 5, -1, 4, -1, -1, -1, -1, -1, -1, -1,
+			9, -1, -1, 8, 7, -1, -1, -1, 5, -1, 7, -1, 8, -1, -1, -1, 7, -1, 5, -1, 4, -1, 2, -1, 4, -1, -1, -1, -1, -1, -1, -1
+		]
+	},
+	{
+		name: "門松ロック", inst: "s", drum: "DdkdDdkd", mel: [
+			0, 0, 4, 0, 5, 0, 4, 2, 0, 0, 4, 0, 7, 5, 4, 2, 0, 0, 4, 0, 5, 0, 7, 8, 9, 8, 7, 5, 4, -1, 2, -1,
+			5, 5, 7, 5, 8, 5, 7, 5, 4, 4, 5, 4, 7, 4, 5, 4, 2, 2, 4, 2, 5, 4, 2, 0, 2, -1, 4, -1, 0, -1, -1, -1
+		]
+	},
+	{
+		name: "雪見の音頭", inst: "kkf", drum: "DkdkDkkk", mel: [
+			2, -1, 4, -1, 5, -1, 4, 2, 4, -1, 5, -1, 7, -1, -1, -1, 8, -1, 7, -1, 5, -1, 7, 8, 7, -1, 5, -1, 4, -1, -1, -1,
+			2, -1, 4, -1, 5, -1, 7, 8, 9, -1, 8, -1, 7, -1, 5, -1, 4, -1, 5, 7, 5, -1, 4, -1, 2, -1, -1, -1, -1, -1, -1, -1
+		]
+	},
+	{
+		name: "ぽんぽこ大福", inst: "sf", drum: "DkkdDkkd", mel: [
+			5, 4, 5, -1, 7, -1, 5, -1, 4, 2, 4, -1, 5, -1, -1, -1, 7, 8, 7, -1, 5, -1, 4, -1, 5, 4, 2, -1, 0, -1, -1, -1,
+			5, 4, 5, -1, 7, -1, 8, -1, 9, 8, 9, -1, 8, -1, 7, -1, 5, 7, 8, -1, 7, -1, 5, -1, 4, 2, 4, -1, 5, -1, -1, -1
+		]
 	}
 ];
 // 背景は5つ(空はゲームが時間帯ごとに描く)
@@ -101,7 +131,7 @@ const MOCHI_TYPES = ["m_kin", "m_kouhaku", "m_kinako", "m_anko", "m_kusa"];
 const MOCHI_NAMES = ["金ぱくもち", "紅白もち", "きなこもち", "あんこもち", "草もち"];
 
 // T=つく h=たぬきの手 R=連打(t から t2 まで)
-interface Ev { t: number; t2: number; kind: "T" | "h" | "R"; done: boolean; res: string; rush: boolean; }
+interface Ev { t: number; t2: number; kind: "T" | "h" | "R"; done: boolean; res: string; rush: boolean; cued?: boolean; }
 interface Slot { t: number; idx: number; beat: boolean; rush: boolean; }
 interface Part {
 	x: number; y: number; vx: number; vy: number; g: number; life: number; max: number;
@@ -119,7 +149,7 @@ class View extends g.E {
 
 export function main(param: GameMainParameterObject): void {
 	const imageIds = [
-		"note_renda", "medal_s", "medal_a", "medal_b", "medal_f", "title_ribbon",
+		"note_renda", "usagi_joy", "usagi_sad", "tanuki_joy", "tanuki_sad", "medal_s", "medal_a", "medal_b", "medal_f", "title_ribbon",
 		"crowd0", "crowd1", "kadomatsu", "glow", "rays",
 
 		"ov_crowd0", "ov_crowd1", "ov_usu", "ov_mochi", "ov_usagi", "ov_kine", "ov_tanuki", "ov_arm",
@@ -127,7 +157,7 @@ export function main(param: GameMainParameterObject): void {
 		"tanuki_idle", "tanuki_hand", "tanuki_ouch", "note_tsuki", "note_te", "judge", "ring", "tray", "spark", "star", "splash", "logo"
 	].concat(MOCHI_TYPES, THEMES.map((t) => "bg_" + t.id), THEMES.map((t) => "ov_" + t.id));
 	const audioIds = [
-		"don", "ka", "pettan", "perfect", "good", "miss", "ouch", "hai", "complete", "count", "go", "finish", "rush", "cheer"
+		"don", "ka", "cue", "pettan", "perfect", "good", "miss", "ouch", "hai", "complete", "count", "go", "finish", "rush", "cheer"
 	];
 	for (let i = 0; i < 10; i++) audioIds.push("k" + i, "s" + i, "f" + i);
 	const scene = new g.Scene({ game: g.game, assetIds: imageIds.concat(audioIds.map((a) => "se_" + a)) });
@@ -219,6 +249,9 @@ export function main(param: GameMainParameterObject): void {
 		let cheer = 0;
 		let sectionName = "";
 		let glowT = 0; // おもち完成の光
+		let lastTen = false;
+		let rollT = 0;
+		let rollTick = 0;
 		let held = false; // 画面を押しているか
 		let heldFromRenda = false; // 連打のときから押しっぱなし
 		let rendaTimer = 0;
@@ -581,6 +614,13 @@ export function main(param: GameMainParameterObject): void {
 				r.fillRect(0, 0, W, H, flashCol);
 				r.restore();
 			}
+			if (phase === "play" && now >= playSec - 10 && Math.floor(now * 4) % 2 === 0) {
+				r.save();
+				r.opacity(0.75);
+				r.fillRect(0, 0, W, 14, "#ff3a3a"); r.fillRect(0, H - 14, W, 14, "#ff3a3a");
+				r.fillRect(0, 0, 14, H, "#ff3a3a"); r.fillRect(W - 14, 0, 14, H, "#ff3a3a");
+				r.restore();
+			}
 		};
 
 		// ======== 文字 ========
@@ -625,12 +665,69 @@ export function main(param: GameMainParameterObject): void {
 		scene.append(intro);
 		intro.append(new g.FilledRect({ scene, cssColor: "rgba(40,16,30,0.62)", width: W, height: H }));
 		intro.append(new g.Sprite({ scene, src: img("logo"), x: W / 2, y: 140, anchorX: 0.5, anchorY: 0.5, scaleX: 0.52, scaleY: 0.52 }));
-		label(fontW, 34, W / 2, 300, "上のレーンの「おもち」が輪にかさなったら、タップでペッタン！", "center", intro);
-		label(fontC, 34, W / 2, 352, "「たぬきの手」のときは押しちゃダメ！ 手をついちゃうよ", "center", intro);
-		label(fontY, 34, W / 2, 404, "16回つくと おもち完成！ ぴったりが多いほど豪華なおもちに", "center", intro);
-		label(fontP, 34, W / 2, 456, "黄色い帯は長押しで連打！ 最後は大もちラッシュ（点数2ばい）！", "center", intro);
-		label(fontW, 30, W / 2, 510, "ステージ：" + theme.name + "　　曲：" + song.name, "center", intro);
-		const countLabel = label(fontY, 100, W / 2, 560, "", "center", intro);
+		label(fontW, 30, W / 2, 262, "上のレーンの「おもち」が輪にかさなったら、タップでペッタン！", "center", intro);
+		label(fontC, 30, W / 2, 304, "「たぬきの手」のときは押しちゃダメ！ 手をついちゃうよ", "center", intro);
+		label(fontY, 30, W / 2, 346, "16回つくと おもち完成！ Sが多いほど豪華なおもちに", "center", intro);
+		label(fontP, 30, W / 2, 388, "黄色い帯は長押しで連打！ 最後は大もちラッシュ（点数2ばい）！", "center", intro);
+		label(fontW, 26, W / 2, 432, "ステージ：" + theme.name + "　　曲：" + song.name, "center", intro);
+		const countLabel = label(fontY, 80, 1190, 600, "", "center", intro);
+		// れんしゅう: 説明のあいだに、点数の入らない印を流す
+		const PR_Y = 640;
+		const practice: { t: number; k: string; done: boolean }[] = [
+			{ t: 1.9, k: "T", done: false }, { t: 2.5, k: "T", done: false }, { t: 3.1, k: "h", done: false },
+			{ t: 3.7, k: "T", done: false }, { t: 4.3, k: "T", done: false }
+		];
+		const introT = (): number => INTRO_SEC - introLeft;
+		label(fontY, 26, W / 2, 526, "▼ れんしゅう（点数は入りません）タップしてみよう！", "center", intro);
+		const pv = new View({ scene, width: W, height: H });
+		pv.draw = (r: g.Renderer): void => {
+			r.save();
+			r.opacity(0.85);
+			r.fillRect(110, PR_Y - 48, 980, 96, "#3a1e2a");
+			r.restore();
+			r.fillRect(110, PR_Y - 48, 980, 4, "#ffd040");
+			r.fillRect(110, PR_Y + 44, 980, 4, "#ffd040");
+			const jd = img("judge");
+			drawImg(r, "judge", JUDGE_X - jd.width / 2, PR_Y - jd.height / 2);
+			const pt = introT();
+			for (let i = practice.length - 1; i >= 0; i--) {
+				const e = practice[i];
+				const d = e.t - pt;
+				if (d > LEAD || d < -0.3 || (e.k === "T" && e.done)) continue;
+				const x = JUDGE_X + d / LEAD * (1090 - JUDGE_X);
+				if (x > 1090) continue;
+				const id = e.k === "T" ? "note_tsuki" : "note_te";
+				const s2 = e.k === "T" ? 0.9 : 0.72;
+				const a = img(id);
+				drawImg(r, id, x - a.width * s2 / 2, PR_Y - a.height * s2 / 2, s2, s2, d < 0 ? Math.max(0, 1 + d * 3) : 1);
+			}
+		};
+		pv.onUpdate.add(() => pv.modified());
+		intro.append(pv);
+		const practiceTap = (): void => {
+			const pt = introT();
+			let best: { t: number; k: string; done: boolean } | null = null;
+			let bd = 9;
+			practice.forEach((e) => {
+				if (e.done) return;
+				const d = Math.abs(e.t - pt);
+				if (d < bd) {
+					bd = d; best = e;
+				}
+			});
+			if (!best || bd > F_W) return;
+			const e = best as { t: number; k: string; done: boolean };
+			e.done = true;
+			if (e.k === "h") {
+				se("ouch", 0.5);
+				popText("いたっ！ 手のときは押さない！", fontR, 40, W / 2, PR_Y - 120, 0.9);
+				return;
+			}
+			const k = bd <= S_W ? "S" : bd <= A_W ? "A" : bd <= B_W ? "B" : "F";
+			se(k === "F" ? "miss" : "pettan", 0.5);
+			if (k === "S") se("perfect", 0.3);
+			popText(k, rankFonts[k], 64, JUDGE_X, PR_Y + 10, 0.4);
+		};
 
 		// ======== エフェクト ========
 		const burst = (x: number, y: number, n: number, sp: number, cols: string[]): void => {
@@ -646,7 +743,7 @@ export function main(param: GameMainParameterObject): void {
 			for (let k = 0; k < n; k++) {
 				const a = k / n * Math.PI * 2;
 				const vx = Math.cos(a) * 500, vy = Math.sin(a) * 500;
-				parts.push({ x, y, vx, vy, g: 0, life: 0.45, max: 0.45, size: 36, col: "", img: "spark", spin: 0 });
+				parts.push({ x, y, vx, vy, g: 0, life: 0.3, max: 0.3, size: 30, col: "", img: "spark", spin: 0 });
 			}
 		};
 		const confetti = (n: number): void => {
@@ -702,40 +799,39 @@ export function main(param: GameMainParameterObject): void {
 		};
 		const rankFx = (k: string): void => {
 			const cols = RANK_COLS[k];
-			const n = k === "S" ? 22 : k === "A" ? 14 : k === "B" ? 8 : 0;
+			const n = k === "S" ? 10 : k === "A" ? 7 : k === "B" ? 4 : 0;
 			for (let i = 0; i < n; i++) {
-				const a = rand() * Math.PI * 2, v = (k === "S" ? 520 : 380) * (0.5 + rand() * 0.7);
+				const a = rand() * Math.PI * 2, v = (k === "S" ? 340 : 260) * (0.5 + rand() * 0.7);
 				const bx = Math.cos(a) * v, by = Math.sin(a) * v;
 				const col = cols[i % cols.length];
-				fxs.push({ kind: "bit", x: JUDGE_X, y: LANE_Y, vx: bx, vy: by, life: 0.5, max: 0.5, size: 7 + rand() * 7, col });
+				fxs.push({ kind: "bit", x: JUDGE_X, y: LANE_Y, vx: bx, vy: by, life: 0.22, max: 0.22, size: 5 + rand() * 5, col });
 			}
 			if (k === "S") {
-				fxs.push({ kind: "rays", x: JUDGE_X, y: LANE_Y, vx: 0, vy: 0, life: 0.4, max: 0.4, size: 360, col: "" });
-				fxs.push({ kind: "ring", x: JUDGE_X, y: LANE_Y, vx: 0, vy: 0, life: 0.35, max: 0.35, size: 260, col: "" });
-				fxs.push({ kind: "ring", x: JUDGE_X, y: LANE_Y, vx: 0, vy: 0, life: 0.5, max: 0.5, size: 380, col: "" });
-				punch = 1;
+				fxs.push({ kind: "rays", x: JUDGE_X, y: LANE_Y, vx: 0, vy: 0, life: 0.18, max: 0.18, size: 220, col: "" });
+				fxs.push({ kind: "ring", x: JUDGE_X, y: LANE_Y, vx: 0, vy: 0, life: 0.18, max: 0.18, size: 190, col: "" });
+				punch = 0.5;
 				sStreak++;
 				if (sStreak % 5 === 0) {
 					popText("S×" + sStreak + " れんぞく！", rankFonts.S, 44, JUDGE_X + 290, LANE_Y + 74, 0.8);
 					se("perfect", 0.5);
 				}
 			} else if (k === "A") {
-				fxs.push({ kind: "ring", x: JUDGE_X, y: LANE_Y, vx: 0, vy: 0, life: 0.3, max: 0.3, size: 220, col: "" });
-				punch = 0.4;
+				fxs.push({ kind: "ring", x: JUDGE_X, y: LANE_Y, vx: 0, vy: 0, life: 0.16, max: 0.16, size: 160, col: "" });
+				punch = 0.2;
 				sStreak = 0;
 			} else if (k === "B") {
-				fxs.push({ kind: "ring", x: JUDGE_X, y: LANE_Y, vx: 0, vy: 0, life: 0.25, max: 0.25, size: 160, col: "" });
+				fxs.push({ kind: "ring", x: JUDGE_X, y: LANE_Y, vx: 0, vy: 0, life: 0.14, max: 0.14, size: 130, col: "" });
 				sStreak = 0;
 			} else {
 				// F: 灰色のけむりがもくもく、判定の輪がぶるっ
-				for (let i = 0; i < 6; i++) {
+				for (let i = 0; i < 3; i++) {
 					fxs.push({
 						kind: "smoke", x: JUDGE_X + (rand() - 0.5) * 60,
 						y: LANE_Y + (rand() - 0.5) * 40, vx: (rand() - 0.5) * 80, vy: -40 - rand() * 60,
-						life: 0.6, max: 0.6, size: 60 + rand() * 40, col: cols[i % 2]
+						life: 0.3, max: 0.3, size: 36 + rand() * 20, col: cols[i % 2]
 					});
 				}
-				judgeShake = 0.35;
+				judgeShake = 0.2;
 				sStreak = 0;
 			}
 		};
@@ -747,14 +843,13 @@ export function main(param: GameMainParameterObject): void {
 				});
 			}
 			rankFx(k);
-			const sz = k === "S" ? 96 : k === "F" ? 70 : 82;
+			const sz = k === "S" ? 74 : k === "F" ? 56 : 64;
 			rankLabel = label(rankFonts[k], sz, JUDGE_X, LANE_Y + 54, k, "center");
 			rankLabel.anchorX = 0.5;
 			rankLabel.anchorY = 0.5;
 			rankLabel.x = JUDGE_X;
 			rankLabel.y = LANE_Y + 54 + sz / 2;
-			pops.push({ l: rankLabel, life: k === "S" ? 0.65 : 0.55,
-				vy: k === "F" ? 50 : -30, scale: k === "S" ? 2.2 : k === "F" ? 1.0 : 1.5 });
+			pops.push({ l: rankLabel, life: 0.32, vy: k === "F" ? 40 : -20, scale: k === "S" ? 1.5 : 1.2 });
 		};
 		// ======== 判定 ========
 		const breakCombo = (): void => {
@@ -783,6 +878,10 @@ export function main(param: GameMainParameterObject): void {
 			heldFromRenda = false;
 		});
 		scene.onPointDownCapture.add(() => {
+			if (phase === "intro") {
+				practiceTap();
+				return;
+			}
 			if (phase !== "play") return;
 			held = true;
 			const rd = rendaNow();
@@ -836,8 +935,8 @@ export function main(param: GameMainParameterObject): void {
 				shake = rank === "S" ? 0.18 : 0.1;
 				if (rank === "S") {
 					se("perfect", 0.35);
-					sparkle(mx, my, 10);
-					burst(mx, my, 10, 560, ["#ffe040", "#fff6a0", "#ffb020"]);
+					sparkle(mx, my, 6);
+					burst(mx, my, 6, 420, ["#ffe040", "#fff6a0", "#ffb020"]);
 					cheer = Math.min(1, cheer + 0.15);
 					popText(combo % 8 === 0 ? "よいしょー！" : "ペッタン！", fontY, 52, sx(mx - 170), sy(my - 110), 0.6);
 				} else if (rank === "A") {
@@ -878,6 +977,8 @@ export function main(param: GameMainParameterObject): void {
 		interface EndItem { e: g.E; at: number; s: number; done: boolean; }
 		const endItems: EndItem[] = [];
 		let endT = 0;
+		let happy = false;
+		const chars: g.Sprite[] = [];
 		const pop = (e: g.E, at: number, s = 1): void => {
 			e.scaleX = e.scaleY = 0;
 			e.modified();
@@ -938,14 +1039,31 @@ export function main(param: GameMainParameterObject): void {
 			const n = Math.min(10, made.length);
 			made.slice(0, 10).forEach((m, i) => {
 				const mx = W / 2 - (n - 1) * 40 + i * 80;
-				const sp = new g.Sprite({ scene, src: img(MOCHI_TYPES[m]), x: mx, y: 622, anchorX: 0.5, anchorY: 0.5 });
+				const sp = new g.Sprite({ scene, src: img(MOCHI_TYPES[m]), x: mx, y: 604, anchorX: 0.5, anchorY: 0.5 });
 				scene.append(sp);
 				pop(sp, 0.8 + i * 0.03, 0.62);
 			});
-			pop(centered(label(fontY, 26, W / 2, 664, "完成したおもち " + made.length + "こ　　さいだい " + maxCombo + "コンボ", "center")), 0.85);
+			pop(centered(label(fontY, 26, W / 2, 640, "完成したおもち " + made.length + "こ　　さいだい " + maxCombo + "コンボ", "center")), 0.85);
+			pop(centered(label(fontW, 22, W / 2, 680, "舞台：" + theme.name + " × 曲：" + song.name, "center")), 0.9);
+			// うさぎとたぬきが正面を向いて、喜ぶ(またはしょんぼり)
+			happy = score >= 18000;
+			const mood = happy ? "joy" : "sad";
+			[["usagi_" + mood, 112], ["tanuki_" + mood, 1168]].forEach((q) => {
+				const ch = new g.Sprite({ scene, src: img(q[0] as string), x: q[1] as number, y: 430, anchorX: 0.5, anchorY: 0.5 });
+				scene.append(ch);
+				pop(ch, 1.3, 0.72);
+				chars.push(ch);
+			});
 		};
 		const updateEnd = (): void => {
 			endT += dt;
+			if (endT > 1.6) {
+				// 喜んでいたらぴょんぴょん、しょんぼりならゆらゆら
+				chars.forEach((c, i) => {
+					c.y = 430 + (happy ? -Math.abs(Math.sin(endT * 7 + i)) * 26 : Math.sin(endT * 2 + i) * 4);
+					c.modified();
+				});
+			}
 			endItems.forEach((it) => {
 				const t = (endT - it.at) / 0.25;
 				if (t <= 0 || it.done) return;
@@ -996,8 +1114,31 @@ export function main(param: GameMainParameterObject): void {
 					else if (dr === "k") se("ka", 0.3);
 					if (s.beat) lastBeat = s.t;
 					const m = song.mel[s.idx % song.mel.length];
-					if (m >= 0) se(song.inst + m, (s.rush ? 0.42 : 0.32) * (song.inst === "f" ? 1.1 : 1));
+					const ins = song.inst.charAt(Math.floor(s.idx / 8) % song.inst.length);
+					if (m >= 0) se(ins + m, (s.rush ? 0.42 : 0.32) * (ins === "f" ? 1.1 : 1));
 					slotIdx++;
+				}
+				// 合図: おもちの印が輪にかさなる1拍前に「カッ」
+				for (let i = 0; i < evs.length; i++) {
+					const e = evs[i];
+					if (e.t > now + 1.5) break;
+					if (e.kind === "T" && !e.cued && now >= e.t - slotLen() * 2) {
+						e.cued = true;
+						se("cue", 0.3);
+					}
+				}
+				// ラスト10秒: 太鼓のロールと、画面のふちが赤く点めつ
+				if (!lastTen && now >= playSec - 10) {
+					lastTen = true;
+					rollT = 0.7;
+					popText("あと10秒！", fontR, 80, W / 2, 300, 1.3);
+				}
+				if (rollT > 0) {
+					rollT -= dt;
+					rollTick -= dt;
+					if (rollTick <= 0) {
+						se("don", 0.45); rollTick = 0.06;
+					}
 				}
 				// 連打パート
 				const rd = rendaNow();

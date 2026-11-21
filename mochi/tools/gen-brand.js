@@ -78,7 +78,7 @@ const data = (p) => "data:image/png;base64," + fs.readFileSync(path.join(ROOT, p
 			txt(t, cx, 672, 24, "#ffffff", "center");
 		};
 		chip(200, "黄色い帯は長押しで連打！", "#ff9a20");
-		chip(505, "曲5つ×背景5つ", "#e8402a");
+		chip(505, "曲10こ×背景5つ", "#e8402a");
 		chip(765, "朝→昼→夕方→夜", "#8a5ae8");
 		chip(1078, "10秒ごとにカメラ切りかえ", "#2a9a6a");
 		return { icon, promo: c.toDataURL("image/png") };

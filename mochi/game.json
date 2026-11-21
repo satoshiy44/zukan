@@ -858,6 +858,42 @@
 			"path": "image/title_ribbon.png",
 			"width": 900,
 			"height": 150
+		},
+		"se_cue": {
+			"type": "audio",
+			"path": "audio/se_cue",
+			"systemId": "sound",
+			"duration": 70,
+			"hint": {
+				"extensions": [
+					".aac",
+					".ogg"
+				]
+			}
+		},
+		"tanuki_joy": {
+			"type": "image",
+			"path": "image/tanuki_joy.png",
+			"width": 300,
+			"height": 404
+		},
+		"tanuki_sad": {
+			"type": "image",
+			"path": "image/tanuki_sad.png",
+			"width": 300,
+			"height": 404
+		},
+		"usagi_joy": {
+			"type": "image",
+			"path": "image/usagi_joy.png",
+			"width": 300,
+			"height": 404
+		},
+		"usagi_sad": {
+			"type": "image",
+			"path": "image/usagi_sad.png",
+			"width": 300,
+			"height": 404
 		}
 	},
 	"environment": {
