@@ -73,13 +73,14 @@ const data = (p) => "data:image/png;base64," + fs.readFileSync(path.join(ROOT, p
 		}, "たぬきの手の印のときは", "押すと手をついて -300点…");
 		// 下: いろいろ変わる
 		const chip = (cx, t, col) => {
-			y.font = "bold 26px IPAGothic"; const w = y.measureText(t).width + 50;
+			y.font = "bold 24px IPAGothic"; const w = y.measureText(t).width + 40;
 			y.fillStyle = col; y.beginPath(); y.roundRect(cx - w / 2, 646, w, 50, 25); y.fill(); y.lineWidth = 4; y.strokeStyle = OL; y.stroke();
-			txt(t, cx, 672, 26, "#ffffff", "center");
+			txt(t, cx, 672, 24, "#ffffff", "center");
 		};
-		chip(250, "曲5つ×背景5つがランダム", "#e8402a");
-		chip(660, "朝→昼→夕方→夜", "#8a5ae8");
-		chip(1040, "10秒ごとにカメラ切りかえ", "#2a9a6a");
+		chip(200, "黄色い帯は長押しで連打！", "#ff9a20");
+		chip(505, "曲5つ×背景5つ", "#e8402a");
+		chip(765, "朝→昼→夕方→夜", "#8a5ae8");
+		chip(1078, "10秒ごとにカメラ切りかえ", "#2a9a6a");
 		return { icon, promo: c.toDataURL("image/png") };
 	}, imgs);
 	await b.close();

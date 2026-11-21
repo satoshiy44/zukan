@@ -16,6 +16,8 @@ const GOOD_PT = 50;
 const OUCH_PT = 300; // 手をついたときに引かれる点
 const PER_MOCHI = 16; // これだけつくと、おもちが1つ完成
 const MOCHI_PT = 500; // おもち完成のボーナス(+ ぴったり1回ごとに 50)
+const RENDA_SEC = 0.09; // 連打パートで長押ししているとき、うさぎがつく間かく(秒)
+const RENDA_PT = 30; // 連打1回の点
 const JUDGE_X = 200; // 判定の輪の位置
 const LANE_END = 1240;
 const LANE_Y = 150;
@@ -26,11 +28,14 @@ const STAGE_S = 0.85; // 舞台の大きさ
 // 区間ごとのテンポと、出てくる並び(8分音符8つで1小節。T=つく h=たぬきの手 .=休み)
 interface Section { t: number; bpm: number; pats: string[]; name: string; rush: boolean; }
 const SECTIONS: Section[] = [
-	{ t: 0, bpm: 96, pats: ["ThThThTh"], name: "", rush: false },
-	{ t: 12, bpm: 108, pats: ["ThThThTh", "ThT.ThTT", "ThThTh.h"], name: "テンポアップ！", rush: false },
-	{ t: 24, bpm: 120, pats: ["ThThThTh", "ThT.ThTT", "Th.hThTh", "ThThh.Th"], name: "もっと速く！", rush: false },
-	{ t: 36, bpm: 132, pats: ["ThThThTh", "TTTTThTh", "Th.hThTh", "ThTh..Th", "ThT.ThTT"], name: "れんだも来るよ！", rush: false },
-	{ t: 48, bpm: 146, pats: ["TTTTThTh", "Th.hThTh", "ThT.ThTT", "ThThThTh", "TTThTTTh"], name: "大もちラッシュ！ 点数2ばい", rush: true }
+	{ t: 0, bpm: 100, pats: ["ThThThTh"], name: "", rush: false },
+	{ t: 12, bpm: 116, pats: ["ThThThTh", "ThT.ThTT", "ThThTh.h", "RRRRRR.h"], name: "テンポアップ！", rush: false },
+	{ t: 24, bpm: 132, pats: ["ThThThTh", "ThT.ThTT", "Th.hThTh", "ThThh.Th", "RRRRRRRh"], name: "もっと速く！", rush: false },
+	{ t: 36, bpm: 148, pats: ["ThThThTh", "TTTTThTh", "Th.hThTh", "ThTh..Th", "ThT.ThTT", "RRRRR.hT"], name: "れんだも来るよ！", rush: false },
+	{
+		t: 48, bpm: 164, pats: ["TTTTThTh", "Th.hThTh", "ThT.ThTT", "ThThThTh", "TTThTTTh", "RRRRRR.h"],
+		name: "大もちラッシュ！ 点数2ばい", rush: true
+	}
 ];
 // 曲は5つ。ゲームの時計で8分音符ごとに鳴らす。inst: k=琴 s=三味線 f=笛 / mel: 陽音階の 0〜9 番(-1 は休み)
 // drum: 8分音符8つぶんの太鼓。D=太鼓(強) d=太鼓 k=かね .=なし
@@ -85,7 +90,8 @@ const UP_ZOOM = 1.75; // アップのときの大きさ
 const MOCHI_TYPES = ["m_kin", "m_kouhaku", "m_kinako", "m_anko", "m_kusa"];
 const MOCHI_NAMES = ["金ぱくもち", "紅白もち", "きなこもち", "あんこもち", "草もち"];
 
-interface Ev { t: number; kind: "T" | "h"; done: boolean; res: string; rush: boolean; }
+// T=つく h=たぬきの手 R=連打(t から t2 まで)
+interface Ev { t: number; t2: number; kind: "T" | "h" | "R"; done: boolean; res: string; rush: boolean; }
 interface Slot { t: number; idx: number; beat: boolean; rush: boolean; }
 interface Part {
 	x: number; y: number; vx: number; vy: number; g: number; life: number; max: number;
@@ -103,6 +109,7 @@ class View extends g.E {
 
 export function main(param: GameMainParameterObject): void {
 	const imageIds = [
+		"note_renda",
 		"crowd0", "crowd1", "kadomatsu", "glow", "rays",
 
 		"ov_crowd0", "ov_crowd1", "ov_usu", "ov_mochi", "ov_usagi", "ov_kine", "ov_tanuki", "ov_arm",
@@ -146,13 +153,28 @@ export function main(param: GameMainParameterObject): void {
 			let t = FIRST_SEC;
 			let idx = 0;
 			let bar = 0;
+			let lastSec = -1;
+			let barInSec = 0;
 			while (t < playSec - 0.8) {
 				const sec = sectionAt(t);
 				const slot = 60 / sec.bpm / 2;
-				const pat = bar < 2 ? sec.pats[0] : sec.pats[Math.floor(rand() * sec.pats.length)];
+				// 区間に入って3小節めは、かならず連打(連打のある区間だけ)
+				const si = SECTIONS.indexOf(sec);
+				if (si !== lastSec) {
+					lastSec = si; barInSec = 0;
+				}
+				const renda = sec.pats.filter((q) => q.charAt(0) === "R");
+				let pat = bar < 2 ? sec.pats[0] : sec.pats[Math.floor(rand() * sec.pats.length)];
+				if (barInSec === 2 && renda.length > 0) pat = renda[0];
+				barInSec++;
 				for (let k = 0; k < 8 && t < playSec - 0.8; k++) {
 					const c = pat.charAt(k);
-					if (c === "T" || c === "h") evs.push({ t, kind: c, done: false, res: "", rush: sec.rush });
+					if (c === "T" || c === "h") evs.push({ t, t2: t, kind: c, done: false, res: "", rush: sec.rush });
+					if (c === "R" && (k === 0 || pat.charAt(k - 1) !== "R")) {
+						let n = 0;
+						while (pat.charAt(k + n) === "R") n++;
+						evs.push({ t, t2: t + slot * n, kind: "R", done: false, res: "", rush: sec.rush });
+					}
 					slots.push({ t, idx: idx++, beat: k % 2 === 0, rush: sec.rush });
 					t += slot;
 				}
@@ -186,6 +208,11 @@ export function main(param: GameMainParameterObject): void {
 		let cheer = 0;
 		let sectionName = "";
 		let glowT = 0; // おもち完成の光
+		let held = false; // 画面を押しているか
+		let heldFromRenda = false; // 連打のときから押しっぱなし
+		let rendaTimer = 0;
+		let rendaCount = 0;
+		let rendaPts = 0;
 		let shot = 0; // 0=いつもの 1=アップ 2=俯瞰
 		let todIdx = 0;
 		const parts: Part[] = [];
@@ -193,6 +220,15 @@ export function main(param: GameMainParameterObject): void {
 		// ======== 絵 ========
 		const view = new View({ scene, width: W, height: H });
 		scene.append(view);
+		// いま連打パートの中なら、その印
+		const rendaNow = (): Ev | null => {
+			for (let i = 0; i < evs.length; i++) {
+				const e = evs[i];
+				if (e.kind === "R" && now >= e.t - 0.05 && now <= e.t2) return e;
+				if (e.t > now + 1) break;
+			}
+			return null;
+		};
 		const nextT = (): Ev | null => {
 			for (let i = 0; i < evs.length; i++) if (!evs[i].done && evs[i].kind === "T" && evs[i].t > now - GOOD_W) return evs[i];
 			return null;
@@ -368,7 +404,7 @@ export function main(param: GameMainParameterObject): void {
 		};
 		const rabbitPose = (): string => {
 			const n = nextT();
-			if (now - lastHit < 0.12) return "usagi_down";
+			if (now - lastHit < (rendaNow() ? 0.05 : 0.12)) return "usagi_down";
 			if (phase === "play" && n && n.t - now < slotLen() * 1.1) return "usagi_up";
 			return "usagi_mid";
 		};
@@ -463,9 +499,23 @@ export function main(param: GameMainParameterObject): void {
 			for (let i = evs.length - 1; i >= 0; i--) {
 				const e = evs[i];
 				const dtt = e.t - now;
-				if (dtt > LEAD || dtt < -0.4) continue;
+				if (dtt > LEAD || (e.kind === "R" ? e.t2 - now < -0.1 : dtt < -0.4)) continue;
 				if (e.kind === "T" && e.done) continue;
 				const x = JUDGE_X + dtt / LEAD * (LANE_END - JUDGE_X);
+				if (e.kind === "R") {
+					// 連打の帯: 先頭の印から終わりまで
+					const x1 = Math.max(JUDGE_X, x), x2 = Math.min(LANE_END, JUDGE_X + (e.t2 - now) / LEAD * (LANE_END - JUDGE_X));
+					if (x2 > x1) {
+						r.fillRect(x1, LANE_Y - 30, x2 - x1, 60, "#3a1e2a");
+						r.fillRect(x1, LANE_Y - 24, x2 - x1, 48, "#ffb020");
+						r.fillRect(x1, LANE_Y - 18, x2 - x1, 12, "#fff27a");
+						const re = img("note_renda");
+						drawImg(r, "note_renda", x2 - re.width * 0.5, LANE_Y - re.height * 0.4, 0.8, 0.8);
+					}
+					const re = img("note_renda");
+					drawImg(r, "note_renda", x1 - re.width * 0.45, LANE_Y - re.height * 0.45, 0.9, 0.9);
+					continue;
+				}
 				const id = e.kind === "T" ? "note_tsuki" : "note_te";
 				const s = e.kind === "T" ? 0.9 : 0.72;
 				const a = img(id);
@@ -524,7 +574,7 @@ export function main(param: GameMainParameterObject): void {
 		label(fontW, 34, W / 2, 300, "上のレーンの「おもち」が輪にかさなったら、タップでペッタン！", "center", intro);
 		label(fontC, 34, W / 2, 352, "「たぬきの手」のときは押しちゃダメ！ 手をついちゃうよ", "center", intro);
 		label(fontY, 34, W / 2, 404, "16回つくと おもち完成！ ぴったりが多いほど豪華なおもちに", "center", intro);
-		label(fontP, 34, W / 2, 456, "だんだん速くなって、最後は大もちラッシュ（点数2ばい）！", "center", intro);
+		label(fontP, 34, W / 2, 456, "黄色い帯は長押しで連打！ 最後は大もちラッシュ（点数2ばい）！", "center", intro);
 		label(fontW, 30, W / 2, 510, "ステージ：" + theme.name + "　　曲：" + song.name, "center", intro);
 		const countLabel = label(fontY, 100, W / 2, 560, "", "center", intro);
 
@@ -592,8 +642,38 @@ export function main(param: GameMainParameterObject): void {
 			if (combo >= 10) popText("コンボがとぎれた…", fontR, 32, W / 2, 250);
 			combo = 0;
 		};
+		// 連打で1回つく
+		const rendaPound = (e: Ev): void => {
+			lastHit = now;
+			se("pettan", 0.5);
+			squash = 0.8;
+			const pts = Math.round(RENDA_PT * comboMul() * (e.rush ? 2 : 1));
+			score += pts;
+			rendaPts += pts;
+			rendaCount++;
+			hits++;
+			perfectsInMochi++;
+			shake = 0.08;
+			const mx = MOCHI_X, my = MOCHI_Y - 90;
+			burst(mx, my, 5, 380, ["#ffffff", "#fff4d0", "#ffe060"]);
+			if (rendaCount % 4 === 0) popText(rendaCount + "回！", fontY, 44, sx(mx + 170), sy(my - 120), 0.4);
+			if (hits >= PER_MOCHI) completeMochi();
+		};
+		scene.onPointUpCapture.add(() => {
+			held = false;
+			heldFromRenda = false;
+		});
 		scene.onPointDownCapture.add(() => {
 			if (phase !== "play") return;
+			held = true;
+			const rd = rendaNow();
+			if (rd) {
+				// 連打パートでは、押すたびにつく(押しっぱなしでも自動でつく)
+				heldFromRenda = true;
+				rendaTimer = RENDA_SEC;
+				rendaPound(rd);
+				return;
+			}
 			lastHit = now;
 			// いちばん近い「つく」印
 			let best: Ev | null = null;
@@ -710,6 +790,43 @@ export function main(param: GameMainParameterObject): void {
 					const m = song.mel[s.idx % song.mel.length];
 					if (m >= 0) se(song.inst + m, (s.rush ? 0.42 : 0.32) * (song.inst === "f" ? 1.1 : 1));
 					slotIdx++;
+				}
+				// 連打パート
+				const rd = rendaNow();
+				if (rd && held && now >= rd.t) {
+					rendaTimer -= dt;
+					if (rendaTimer <= 0) {
+						rendaPound(rd);
+						rendaTimer = RENDA_SEC;
+					}
+				}
+				for (let i = 0; i < evs.length; i++) {
+					const e = evs[i];
+					if (e.t > now + 1.2) break;
+					if (e.kind !== "R") continue;
+					if (e.res === "" && e.t - now < 0.9) {
+						e.res = "warned";
+						popText("長押しで連打！", fontY, 64, W / 2, 330, 1.0);
+					}
+					if (!e.done && now > e.t2) {
+						e.done = true;
+						if (rendaCount > 0) {
+							se("good", 0.5);
+							popText("連打 " + rendaCount + "回！ +" + rendaPts, fontP, 50, W / 2, 330, 1.0);
+						}
+						rendaCount = 0;
+						rendaPts = 0;
+					}
+				}
+				// 連打のあとも押しっぱなしで、たぬきの手が来たら手をつく
+				if (held && heldFromRenda && !rendaNow() && handIn()) {
+					heldFromRenda = false;
+					ouchT = 0.5;
+					shake = 0.35;
+					se("ouch", 0.7);
+					score = Math.max(0, score - OUCH_PT);
+					breakCombo();
+					popText("はなすのがおそい！ -" + OUCH_PT, fontR, 50, sx(860), sy(330), 0.9);
 				}
 				// たぬきの「はいっ」と、のがした「つく」
 				for (let i = 0; i < evs.length; i++) {

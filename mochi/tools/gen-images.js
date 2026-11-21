@@ -518,6 +518,15 @@ function build() {
 		}
 		save("rays", c);
 	}
+	{
+		// 連打の印(帯の先頭) 100x100
+		const [c, x] = mk(100, 100);
+		ell(x, 50, 50, 44, 44, "#ffb020", OL, 5);
+		ell(x, 50, 50, 32, 32, "#fff27a", OL, 3);
+		x.font = "bold 40px IPAGothic"; x.textAlign = "center"; x.textBaseline = "middle";
+		x.lineWidth = 8; x.strokeStyle = OL; x.strokeText("連", 50, 52); x.fillStyle = "#ff5a2a"; x.fillText("連", 50, 52);
+		save("note_renda", c);
+	}
 	return out;
 }
 

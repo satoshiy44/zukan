@@ -822,6 +822,12 @@
 			"path": "image/rays.png",
 			"width": 800,
 			"height": 800
+		},
+		"note_renda": {
+			"type": "image",
+			"path": "image/note_renda.png",
+			"width": 100,
+			"height": 100
 		}
 	},
 	"environment": {
