@@ -182,22 +182,27 @@ function build(D) {
 		const inner = i >= 14 ? "#1a1430" : i >= 8 ? "#fff8f0" : "#ffffff";
 		rr(x, 12, 12, 156, 228, 9, inner);
 		// 絵のまど(背景)
-		x.save(); x.beginPath(); x.roundRect(16, 44, 148, 120, 6); x.clip();
-		if (i >= 16) { const sg = x.createLinearGradient(0, 44, 0, 164); sg.addColorStop(0, "#1a0a4a"); sg.addColorStop(1, "#4a2aa8"); x.fillStyle = sg; x.fillRect(16, 44, 148, 120); seed = i * 13; for (let k = 0; k < 40; k++) ell(x, 16 + rnd() * 148, 44 + rnd() * 120, 1 + rnd() * 1.5, 1 + rnd() * 1.5, "#ffffff"); }
-		else if (c0 === "rainbow" || i === 4 || i === 11 || i === 12) { x.fillStyle = rainbowG(x, 16, 44, 164, 164); x.globalAlpha = 0.45; x.fillRect(16, 44, 148, 120); x.globalAlpha = 1; }
-		else { const sg = x.createRadialGradient(90, 100, 10, 90, 104, 100); sg.addColorStop(0, "#ffffff"); sg.addColorStop(1, shade(c0 === "rainbow" ? "#ffe0a0" : c0, 0.2)); x.fillStyle = sg; x.fillRect(16, 44, 148, 120); }
-		if (i >= 5 && i <= 7) { seed = i; for (let k = 0; k < 14; k++) star(x, 20 + rnd() * 140, 48 + rnd() * 110, 3 + rnd() * 4, "rgba(255,255,255,0.9)"); }
+		x.save(); x.beginPath(); x.roundRect(16, 40, 148, 94, 6); x.clip();
+		if (i >= 16) { const sg = x.createLinearGradient(0, 40, 0, 134); sg.addColorStop(0, "#1a0a4a"); sg.addColorStop(1, "#4a2aa8"); x.fillStyle = sg; x.fillRect(16, 40, 148, 94); seed = i * 13; for (let k = 0; k < 40; k++) ell(x, 16 + rnd() * 148, 40 + rnd() * 94, 1 + rnd() * 1.5, 1 + rnd() * 1.5, "#ffffff"); }
+		else if (c0 === "rainbow" || i === 4 || i === 11 || i === 12) { x.fillStyle = rainbowG(x, 16, 40, 164, 134); x.globalAlpha = 0.45; x.fillRect(16, 40, 148, 94); x.globalAlpha = 1; }
+		else { const sg = x.createRadialGradient(90, 84, 10, 90, 88, 90); sg.addColorStop(0, "#ffffff"); sg.addColorStop(1, shade(c0 === "rainbow" ? "#ffe0a0" : c0, 0.2)); x.fillStyle = sg; x.fillRect(16, 40, 148, 94); }
+		if (i >= 5 && i <= 7) { seed = i; for (let k = 0; k < 14; k++) star(x, 20 + rnd() * 140, 44 + rnd() * 86, 3 + rnd() * 4, "rgba(255,255,255,0.9)"); }
 		x.restore();
-		rr(x, 16, 44, 148, 120, 6, null, OL, 3);
+		rr(x, 16, 40, 148, 94, 6, null, OL, 3);
 		// 名前の帯(上)・説明の帯(下)
-		rr(x, 16, 16, 148, 24, 6, i >= 14 ? "#2a2050" : shade(c0 === "rainbow" ? "#ffe0a0" : c0, 0.4), OL, 2);
-		rr(x, 16, 170, 148, 50, 6, i >= 14 ? "#241c40" : "#f4f0f8", OL, 2);
+		rr(x, 16, 16, 148, 21, 6, i >= 14 ? "#2a2050" : shade(c0 === "rainbow" ? "#ffe0a0" : c0, 0.4), OL, 2);
+		rr(x, 16, 138, 148, 78, 6, i >= 14 ? "#241c40" : "#f8f4fc", OL, 2);
+		// ワザの欄の区切り線
+		x.strokeStyle = i >= 14 ? "rgba(255,255,255,0.2)" : "rgba(40,20,50,0.18)"; x.lineWidth = 1;
+		[166, 183, 200].forEach((ly) => { x.beginPath(); x.moveTo(22, ly); x.lineTo(158, ly); x.stroke(); });
+		// レアリティの帯
+		rr(x, 16, 220, 148, 18, 6, c0 === "rainbow" ? rainbowG(x, 16, 0, 164, 0) : c1 || c0, OL, 2);
 		// レアリティ名
 		const rc = i >= 14 ? "#ffe060" : OL;
-		fitText(x, r[0], 90, 196, 136, 20, rc, i >= 14 ? OL : null, 4);
+		fitText(x, r[0], 76, 229, 104, 12, "#ffffff", OL, 3);
 		// 右下のマーク
-		rr(x, 124, 224, 44, 20, 8, c0 === "rainbow" ? rainbowG(x, 124, 0, 168, 0) : c1 || c0, OL, 2);
-		text(x, r[1], 146, 234, 13, "#ffffff", OL, 3);
+		rr(x, 132, 222, 30, 14, 6, "#ffffff", OL, 1.5);
+		text(x, r[1], 147, 229, 10, OL);
 		// 高レアは外わくに飾り
 		if (i >= 13) [[12, 12], [168, 12], [12, 240], [168, 240]].forEach(([a, b]) => star(x, a, b, 9, "#ffe060", OL, 2));
 		save("frame" + i, c);
@@ -475,8 +480,8 @@ function build(D) {
 		for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2; x.fillStyle = i % 2 ? "rgba(255,220,80,0.6)" : "rgba(255,120,80,0.5)"; x.beginPath(); x.moveTo(240, 250); x.arc(240, 250, 260, a, a + Math.PI / 16); x.closePath(); x.fill(); }
 		// お札とカード
 		[[-0.4, 60, 300], [0.3, 300, 320], [-0.15, 160, 360]].forEach(([r, bx, by]) => { x.save(); x.translate(bx, by); x.rotate(r); x.drawImage(bill, -88, -42, 176, 84); x.restore(); });
-		x.save(); x.translate(160, 230); x.rotate(-0.2); x.drawImage(f, -80, -112, 160, 224); x.drawImage(m1, -66, -80, 132, 132); x.restore();
-		x.save(); x.translate(330, 220); x.rotate(0.18); x.drawImage(f, -80, -112, 160, 224); x.drawImage(m2, -66, -80, 132, 132); x.restore();
+		x.save(); x.translate(160, 230); x.rotate(-0.2); x.drawImage(f, -80, -112, 160, 224); x.drawImage(m1, -42, -80, 84, 84); x.restore();
+		x.save(); x.translate(330, 220); x.rotate(0.18); x.drawImage(f, -80, -112, 160, 224); x.drawImage(m2, -42, -80, 84, 84); x.restore();
 		const word = (t, cx, cy, size, c0, c1, rot) => {
 			x.save(); x.translate(cx, cy); x.rotate(rot || 0);
 			x.font = "bold " + size + "px IPAGothic"; x.textAlign = "center"; x.textBaseline = "middle";

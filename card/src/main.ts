@@ -1,4 +1,4 @@
-import { BOXES, Item, MONSTER_NAMES, PACKS, RARITY_NAMES, RARITY_VALUES, RARITY_WEIGHTS } from "./data";
+import { BOXES, Item, MON_INFO, MONSTER_NAMES, PACKS, RARITY_NAMES, RARITY_VALUES, RARITY_WEIGHTS } from "./data";
 import { GameMainParameterObject } from "./parameterObject";
 
 // ======== 調整用パラメータ ========
@@ -17,7 +17,8 @@ const PICK_PACKS = 5;
 const PICK_BOXES = 3;
 const CARDS_PER_PACK = 5;
 const CARDS_PER_BOX = 25;
-const SHOW_TOP = 16; // 開封で大きく見せる枚数
+const SHOW_TOP = 16;
+const BIG_S = 1.9; // 大きく見せるカードの大きさ // 開封で大きく見せる枚数
 const FOIL_RATE = 0.12; // ホイルカードになる確率
 const FOIL_MUL = 1.35;
 const ERR_BASE = 0.0002; // エラーカードの出やすさ(とてもまれ)
@@ -27,7 +28,10 @@ const CHAOS_K = 0.18; // chaos が上位レアをどれだけ出やすくする�
 // モンスターごとの人気(買取額の倍率)
 const MON_POP = [1.1, 1.0, 0.95, 1.15, 0.9, 1.0, 1.0, 1.1, 1.3, 0.9, 1.0, 0.95, 0.9, 1.05, 1.1, 1.05, 0.95, 1.2, 1.0, 1.5];
 
-interface Card { mon: number; rar: number; foil: boolean; error: number; value: number; }
+interface Card {
+	mon: number; rar: number; foil: boolean; error: number; value: number;
+	name: string; hp: number; atk: number; def: number; dmg: number[]; no: string;
+}
 interface Part { x: number; y: number; vx: number; vy: number; g: number;
 	life: number; max: number; size: number; col: string; img: string; }
 interface Pop { l: g.Label; life: number; vy: number; scale: number; }
@@ -327,7 +331,6 @@ export function main(param: GameMainParameterObject): void {
 		const cardView = new View({ scene, width: W, height: H });
 		openL.append(cardView);
 		const totalL = label(fontG, 50, W / 2, 8, "", "center", openL);
-		const bigName = label(fontW, 34, W / 2, 0, "", "center", openL);
 		const bigInfo = label(fontY, 30, W / 2, 0, "", "center", openL);
 		const bigValue = label(fontG, 50, W / 2, 0, "", "center", openL);
 
@@ -357,7 +360,23 @@ export function main(param: GameMainParameterObject): void {
 			let value = RARITY_VALUES[rar] * (0.75 + rand() * 0.5) * MON_POP[mon];
 			if (foil) value *= FOIL_MUL;
 			if (error > 0) value *= error;
-			return { mon, rar, foil, error, value: Math.round(value / 10) * 10 };
+			// カードの名前と強さ(レアリティが高いほど豪華で強い)
+			const info = MON_INFO[mon], base = MONSTER_NAMES[mon];
+			const pick = (a: string[]): string => a[Math.floor(rand() * a.length)];
+			let name = base;
+			if (rar >= 19) name = "神域の" + pick(info.epic) + base + "・オメガ";
+			else if (rar >= 18) name = "伝説の" + pick(info.epic) + base + "EX";
+			else if (rar >= 16) name = pick(info.epic) + base + "・" + pick(info.form);
+			else if (rar >= 12) name = pick(info.title) + pick(info.epic) + base;
+			else if (rar >= 8) name = pick(info.title) + base;
+			else if (rar >= 4) name = pick(info.adj) + base;
+			const hp = Math.round((info.hp + rar * 10) / 10) * 10;
+			const atk = Math.round(info.atk * (1 + rar * 0.09) / 50) * 50;
+			const def = Math.round(atk * (0.6 + rand() * 0.3) / 50) * 50;
+			const dmg = info.moves.map((m) => Math.round(m[2] * (1 + rar * 0.08) / 10) * 10);
+			const n = mon * 20 + rar + 1;
+			const no = "No." + (n < 10 ? "00" : n < 100 ? "0" : "") + n + "/400";
+			return { mon, rar, foil, error, value: Math.round(value / 10) * 10, name, hp, atk, def, dmg, no };
 		};
 		// 100万円を使い切るまで、選んだ商品を安い順に1つずつ、均等に買っていく
 		const packCnt: number[] = [];
@@ -471,18 +490,18 @@ export function main(param: GameMainParameterObject): void {
 				return;
 			}
 			r.drawImage(surf["frame" + c.rar], 0, 0, fw, fh, -fw / 2, -fh / 2);
-			const m = img("mon" + c.mon), ms = 118 / m.width;
+			const m = img("mon" + c.mon), ms = 92 / m.width;
 			const ox = c.error > 0 ? 10 : 0;
 			r.save();
 			if (c.error > 0) {
 				// エラーカード: 絵がずれて二重に印刷
 				r.save();
 				r.opacity(0.5);
-				r.transform([ms, 0, 0, ms, -59 - 8, -86 - 4]);
+				r.transform([ms, 0, 0, ms, -46 - 8, -85 - 4]);
 				r.drawImage(surf["mon" + c.mon], 0, 0, m.width, m.height, 0, 0);
 				r.restore();
 			}
-			r.transform([ms, 0, 0, ms, -59 + ox, -86 + (c.error > 0 ? 6 : 0)]);
+			r.transform([ms, 0, 0, ms, -46 + ox, -85 + (c.error > 0 ? 6 : 0)]);
 			r.drawImage(surf["mon" + c.mon], 0, 0, m.width, m.height, 0, 0);
 			r.restore();
 			if (c.foil) {
@@ -552,21 +571,78 @@ export function main(param: GameMainParameterObject): void {
 			// いま見せているカード(大きく)
 			const c = cards[order[reveal]];
 			const k = Math.min(1, revealT / 0.22);
-			const s = 1.55 + (1 - k) * 0.6;
+			const s = BIG_S + (1 - k) * 0.6;
 			drawCardAt(r, c, W / 2, 360, s, Math.min(1, revealT / 0.16));
 		};
 		const tierOf = (c: Card): number => c.error > 0 ? 5 : c.rar >= 18 ? 4 : c.rar >= 16 ? 3 : c.rar >= 12 ? 2 : c.rar >= 8 ? 1 : 0;
+		// カードの文字(名前・HP・特性・ワザ・ATK/DEF・番号)をカードの上にのせる
+		const fontInk = font("#2a1a30", "#ffffff", 0);
+		const fontLight = font("#ffffff", "#2a1a30", 0);
+		const fontRed = font("#d82a3a", "#ffffff", 0);
+		const fontGold = font("#ffd040", "#2a1a30", 0);
+		const fontType = font("#ffffff", "#2a1a30", 3);
+		const dots = (n: number): string => {
+			let t = "";
+			for (let i = 0; i < n; i++) t += "●";
+			return t;
+		};
+		const cardText = (c: Card, cx: number, cy: number, s: number, parent: g.E): g.E => {
+			const e = new g.E({ scene });
+			parent.append(e);
+			const info = MON_INFO[c.mon];
+			const dark = c.rar >= 14;
+			const ink = dark ? fontLight : fontInk;
+			const put = (f: g.Font, size: number, x: number, y: number, t: string, al: Align): void => {
+				const w = 300;
+				const l = new g.Label({
+					scene, font: f, fontSize: size * s, text: t, width: w * s, textAlign: al, widthAutoAdjust: false, y: cy + y * s
+				});
+				l.x = al === "left" ? cx + x * s : al === "right" ? cx + x * s - w * s : cx + x * s - w * s / 2;
+				e.append(l);
+			};
+			// 名前の帯(長い名前は文字を小さく)
+			const nsize = Math.min(11, 104 / Math.max(1, c.name.length));
+			put(dark ? fontLight : fontInk, nsize, -76, -108 + (11 - nsize) / 2, c.name, "left");
+			put(fontRed, 11, 77, -108, "HP" + c.hp, "right");
+			// タイプのしるし(絵の左上)
+			put(fontType, 9, -72, -82, info.type + "タイプ", "left");
+			// 特性(スーパー以上)か、説明文
+			if (c.rar >= 8) {
+				put(dark ? fontGold : fontRed, 8.5, -74, 15, "特性【" + info.ability[0] + "】", "left");
+				put(ink, 7.5, -74, 28, info.ability[1], "left");
+			} else {
+				const f = info.flavor;
+				const half = Math.ceil(f.length / 2);
+				put(ink, 7.5, -74, 15, f.slice(0, half), "left");
+				put(ink, 7.5, -74, 27, f.slice(half), "left");
+			}
+			// ワザ2つ
+			info.moves.forEach((m, i) => {
+				const y = 43 + i * 17;
+				put(dark ? fontGold : fontRed, 8, -74, y + 1, dots(m[1]), "left");
+				const room = 118 - 8 * m[1];
+				const ms2 = Math.min(9, room / m[0].length);
+				put(ink, ms2, -74 + 8 * m[1] + 3, y + (9 - ms2) / 2, m[0], "left");
+				put(ink, 11, 76, y - 1, String(c.dmg[i]), "right");
+			});
+			put(ink, 7.5, -74, 77, "ATK " + c.atk + " / DEF " + c.def, "left");
+			put(ink, 6.5, 76, 78, c.no, "right");
+			return e;
+		};
+		let bigText: g.E | null = null;
 		const showReveal = (k: number): void => {
 			reveal = k;
 			revealT = 0;
 			const c = cards[order[k]];
 			shown += c.value;
-			setText(bigName, MONSTER_NAMES[c.mon] + "　" + RARITY_NAMES[c.rar]);
-			const extra = (c.foil ? "  ホイル×1.35" : "") + (c.error > 0 ? "  エラー×" + c.error.toFixed(1) : "");
+			if (bigText) bigText.destroy();
+			bigText = cardText(c, W / 2, 360, BIG_S, openL);
+			bigText.hide();
+			const extra = RARITY_NAMES[c.rar] + (c.foil ? "  ホイル×1.35" : "") + (c.error > 0 ? "  エラー×" + c.error.toFixed(1) : "");
 			setText(bigInfo, extra);
 			setText(bigValue, "買取 " + yen(c.value));
-			bigName.y = 560; bigInfo.y = 604; bigValue.y = 640;
-			[bigName, bigInfo, bigValue].forEach((l) => l.modified());
+			bigInfo.y = 604; bigValue.y = 640;
+			[bigInfo, bigValue].forEach((l) => l.modified());
 			const tier = tierOf(c);
 			se("flip", 0.5);
 			if (tier === 1) {
@@ -607,11 +683,12 @@ export function main(param: GameMainParameterObject): void {
 			});
 			const bc = cards[best];
 			const v = new View({ scene, width: W, height: H });
-			v.draw = (r: g.Renderer): void => drawCardAt(r, bc, 300, 480, 1.0, 1);
+			v.draw = (r: g.Renderer): void => drawCardAt(r, bc, 330, 460, 1.22, 1);
 			v.onUpdate.add(() => v.modified());
 			finalL.append(v);
-			label(fontY, 28, 300, 618, "いちばん高い1枚", "center", finalL);
-			label(fontW, 26, 300, 652, MONSTER_NAMES[bc.mon] + " " + yen(bc.value), "center", finalL);
+			cardText(bc, 330, 460, 1.22, finalL);
+			label(fontY, 24, 140, 300, "いちばん高い1枚▶", "center", finalL);
+			label(fontG, 30, 330, 622, "買取 " + yen(bc.value), "center", finalL);
 			// レアリティの内訳(上位)
 			const cnt: number[] = [];
 			for (let i = 0; i < 20; i++) cnt.push(0);
@@ -838,11 +915,14 @@ export function main(param: GameMainParameterObject): void {
 					const k = Math.min(SHOW_TOP - 1, Math.floor((phaseT - STEP_A) / STEP_T));
 					if (k !== reveal) showReveal(k);
 					revealT += dt;
+					if (bigText && revealT >= 0.22 && !bigText.visible()) bigText.show();
 				}
 				setText(totalL, "買取額 " + yen(shown));
 				cardView.modified();
 				if (phaseT >= OPEN_SEC) {
-					setText(bigName, ""); setText(bigInfo, ""); setText(bigValue, "");
+					if (bigText) bigText.destroy();
+					bigText = null;
+					setText(bigInfo, ""); setText(bigValue, "");
 					go("appraisal");
 				}
 			}

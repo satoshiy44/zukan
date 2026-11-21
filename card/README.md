@@ -5,6 +5,7 @@ ATMで100万円をおろし、架空のカードショップでパック5種(30�
 - 流れ: atm(2.8秒) → front(2.8秒) → packs(最大20秒) → boxes(最大14秒) → cart(2.8秒) → black(1.3秒) → opening(12秒) → appraisal。制限時間の5秒前に止める
 - データ(モンスター20体・レアリティ20段階・パック30種・ボックス8種)は `tools/data.js`。`node tools/make-data.js` で `src/data.ts` を作り、`npx eslint src --fix` で整える
 - 確率: レアリティの重み × exp(luck × `LUCK_K` × 段)、ミラクル以上はさらに × exp(chaos × `CHAOS_K` × (段-11))。ホイル12%で×1.35、エラーは `ERR_BASE`+chaos×`ERR_CHAOS`(0.0002+chaos×0.0002、1プレイに出るのは5〜9%くらい)で ×8〜12
+- カードごとに名前(レアリティで「形容→称号→異名→フォーム→伝説の…EX→神域の…オメガ」と豪華に)・タイプ・HP・ワザ2つ・特性・ATK/DEF・説明文・カード番号。設定は `tools/data.js` の `MON_INFO`
 - 実在のカードゲーム・お店・ロゴ・キャラクターは使っていない。モンスターは `tools/gen-images.js` で描いたオリジナル
 
 ## 作り直し

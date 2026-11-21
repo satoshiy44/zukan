@@ -25,8 +25,24 @@ const lines = [
 	"export const RARITY_SHORT: string[] = " + j(d.RARITIES.map((r) => r[1])) + ";",
 	"export const RARITY_WEIGHTS: number[] = " + j(d.RARITIES.map((r) => r[2])) + ";",
 	"export const RARITY_VALUES: number[] = " + j(d.RARITIES.map((r) => r[3])) + ";",
+	"export interface MonInfo {",
+	"\ttype: string; hp: number; atk: number; adj: string[]; title: string[]; epic: string[]; form: string[];",
+	"\tmoves: [string, number, number][]; ability: string[]; flavor: string;",
+	"}",
+	"export const MON_INFO: MonInfo[] = ["
+].concat(d.MON_INFO.map((m) => [
+	"\t{",
+	"\t\ttype: " + JSON.stringify(m[0]) + ", hp: " + m[1] + ", atk: " + m[2] + ",",
+	"\t\tadj: " + JSON.stringify(m[3]) + ", title: " + JSON.stringify(m[4]) + ",",
+	"\t\tepic: " + JSON.stringify(m[5]) + ", form: " + JSON.stringify(m[6]) + ",",
+	"\t\tmoves: " + JSON.stringify(m[7]) + ",",
+	"\t\tability: " + JSON.stringify(m[8]) + ",",
+	"\t\tflavor: " + JSON.stringify(m[9]),
+	"\t},"
+].join("\n"))).concat([
+	"];",
 	"export const PACKS: Item[] = ["
 ].concat(d.PACKS.map((p) => "\t" + j(p) + ",")).concat(["];", "export const BOXES: Item[] = ["])
-	.concat(d.BOXES.map((p) => "\t" + j(p) + ",")).concat(["];", ""]);
+	.concat(d.BOXES.map((p) => "\t" + j(p) + ",")).concat(["];", ""]));
 fs.writeFileSync(path.join(__dirname, "..", "src", "data.ts"), lines.join("\n").replace(/"(\w+)":/g, "$1: ").replace(/,(\w+): /g, ", $1: ").replace(/\{(\w+): /g, "{ $1: ").replace(/([^\t])\}/g, "$1 }").replace(/\[ \}/g, "[}"));
 console.log("wrote src/data.ts");
