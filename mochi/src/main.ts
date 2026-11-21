@@ -122,6 +122,11 @@ const TIMES: TimeOfDay[] = [
 const SHOT_SEC = 10; // カメラを切りかえる間かく(秒)
 const UP_ZOOM = 1.75; // アップのときの大きさ
 // 点数でもらえる称号(上から順に見て、点数がこえていればそれ)
+// 称号の前半「〇〇な」。遊び方で当てはまるものから選ぶ(なければ GENERIC から)
+const GENERIC_PRE = [
+	"ほかほかの", "のびのびの", "あつあつの", "きなこ味の", "お正月ボケの", "ふわふわの", "やる気まんまんの",
+	"おもちほっぺの", "こたつから出てきた", "おぞうに3杯目の", "たぬきに好かれる", "初夢に出てきた"
+];
 const TITLES: [number, string][] = [
 	[55000, "神の餅つき師"], [48000, "伝説のペッタン名人"], [42000, "餅つき横綱"], [36000, "杵さばきの達人"],
 	[30000, "もち屋の看板うさぎ"], [24000, "町内の餅つき番長"], [18000, "見習い餅つき職人"], [12000, "ペッタン一年生"],
@@ -249,6 +254,8 @@ export function main(param: GameMainParameterObject): void {
 		let cheer = 0;
 		let sectionName = "";
 		let glowT = 0; // おもち完成の光
+		let ouchCount = 0;
+		let rendaTotal = 0;
 		let lastTen = false;
 		let rollT = 0;
 		let rollTick = 0;
@@ -865,6 +872,7 @@ export function main(param: GameMainParameterObject): void {
 			score += pts;
 			rendaPts += pts;
 			rendaCount++;
+			rendaTotal++;
 			hits++;
 			perfectsInMochi++;
 			shake = 0.08;
@@ -909,6 +917,7 @@ export function main(param: GameMainParameterObject): void {
 			if (hn >= 0 && !(best && bd <= F_W && bd < hn)) {
 				// たぬきの手をついてしまった
 				ouchT = 0.5;
+				ouchCount++;
 				shake = 0.35;
 				se("ouch", 0.7);
 				score = Math.max(0, score - OUCH_PT);
@@ -1015,9 +1024,26 @@ export function main(param: GameMainParameterObject): void {
 			const rb = new g.Sprite({ scene, src: img("title_ribbon"), x: W / 2, y: 172, anchorX: 0.5, anchorY: 0.5 });
 			scene.append(rb);
 			pop(rb, 1.15, 0.9);
+			// 前半「〇〇な」を遊び方から選ぶ
+			const taps = ranks.S + ranks.A + ranks.B + ranks.F;
+			const sRate = taps > 0 ? ranks.S / taps : 0;
+			const pre: string[] = [];
+			if (sRate >= 0.9) pre.push("大天才な", "神ってる", "まばたきしない");
+			else if (sRate >= 0.75) pre.push("リズム感バツグンの", "杵が手になじんだ");
+			if (maxCombo >= 80) pre.push("止まらない", "ノンストップな");
+			if (rendaTotal >= 100) pre.push("連打マシーンな", "うでがパンパンの");
+			if (ouchCount >= 3) pre.push("たぬきに怒られた", "手がジンジンする");
+			if (ranks.F >= 15) pre.push("ベチャベチャな", "うっかりさんな");
+			if (made.length >= 14) pre.push("おもち量産型の", "おもちを食べすぎた");
+			if (ranks.F === 0 && ouchCount === 0 && taps > 30) pre.push("ノーミスの", "かんぺき主義な");
+			const list = pre.length > 0 ? pre : GENERIC_PRE;
+			const prefix = list[Math.floor(rand() * list.length)];
 			const tf = ti <= 2 ? font("#fff27a", "#3a1e2a", 10) : font("#ffffff", "#3a1e2a", 8);
+			const pf = font("#ffe860", "#3a1e2a", 7);
 			pop(centered(label(fontC, 24, W / 2, 74, "あなたの称号は…", "center")), 1.05);
-			pop(centered(label(tf, ti <= 2 ? 56 : 50, W / 2, ti <= 2 ? 140 : 143, TITLES[ti][1], "center")), 1.2);
+			pop(centered(label(pf, prefix.length > 9 ? 26 : 30, W / 2, 118, prefix, "center")), 1.15);
+			const main = TITLES[ti][1];
+			pop(centered(label(tf, Math.min(ti <= 2 ? 52 : 48, Math.floor(640 / main.length)), W / 2, 152, main, "center")), 1.25);
 			// 点数
 			pop(centered(label(fontW, 60, W / 2, 238, score + "てん", "center")), 0.15);
 			// 判定のメダル
@@ -1171,6 +1197,7 @@ export function main(param: GameMainParameterObject): void {
 				if (held && heldFromRenda && !rendaNow() && handIn()) {
 					heldFromRenda = false;
 					ouchT = 0.5;
+					ouchCount++;
 					shake = 0.35;
 					se("ouch", 0.7);
 					score = Math.max(0, score - OUCH_PT);
