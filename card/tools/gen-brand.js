@@ -38,14 +38,14 @@ const data = (p) => "data:image/png;base64," + fs.readFileSync(path.join(ROOT, p
 		};
 		y.drawImage(im.logo, 10, 6, 300, 300);
 		txt("100万円で、カードを爆買い！", 330, 70, 50, "#ffe860");
-		txt("100枚いっせい開封 → 買取総額がスコア！", 330, 134, 36, "#ffffff");
-		txt("エラーカードは買取8〜12倍!?", 330, 188, 30, "#ff8a8a");
+		txt("まとめ買い → ぜんぶいっせい開封 → 買取総額がスコア！", 330, 134, 32, "#ffffff");
+		txt("超レアなエラーカードは買取8〜12倍!?", 330, 188, 30, "#ff8a8a");
 		// 20段階レアリティ
 		y.fillStyle = "rgba(255,255,255,0.12)"; y.beginPath(); y.roundRect(330, 222, 920, 78, 16); y.fill();
 		txt("レアリティ20段階！ 最高は「シークレットゴッド」", 350, 260, 26, "#ffffff");
 		im.frames.forEach((f, i) => { const fx = 1100 - i * 46, fy = 230; y.drawImage(f, fx, fy, 44, 62); y.drawImage(im.mons[i], fx + 4, fy + 10, 36, 36); });
 		// 4枚の画面(手順)
-		const steps = [[im.atm, "① ATMで100万円おろす"], [im.packs, "② パック5種＋ボックス3個"], [im.open, "③ 100枚いっせい開封！"], [im.reveal, "④ 高レアを大きく査定！"]];
+		const steps = [[im.atm, "① ATMで100万円おろす"], [im.packs, "② 100万円ぶん爆買い"], [im.open, "③ ぜんぶ一斉開封！"], [im.reveal, "④ 高レアを大きく査定！"]];
 		steps.forEach(([shot, cap], i) => {
 			const tx = 22 + i * 312, ty = 340, w = 300, h = 169;
 			y.fillStyle = "#ffd040"; y.beginPath(); y.roundRect(tx - 6, ty - 6, w + 12, h + 12, 14); y.fill();

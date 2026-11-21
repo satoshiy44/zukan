@@ -20,6 +20,8 @@ const CARDS_PER_BOX = 25;
 const SHOW_TOP = 16; // 開封で大きく見せる枚数
 const FOIL_RATE = 0.12; // ホイルカードになる確率
 const FOIL_MUL = 1.35;
+const ERR_BASE = 0.0002; // エラーカードの出やすさ(とてもまれ)
+const ERR_CHAOS = 0.0002;
 const LUCK_K = 0.14; // luck が高レアをどれだけ出やすくするか
 const CHAOS_K = 0.18; // chaos が上位レアをどれだけ出やすくするか(ミラクル以上)
 // モンスターごとの人気(買取額の倍率)
@@ -350,19 +352,46 @@ export function main(param: GameMainParameterObject): void {
 			const rar = drawRarity(it);
 			const mon = rand() < 0.45 ? it.mon : Math.floor(rand() * 20);
 			const foil = rand() < FOIL_RATE;
-			const errRate = 0.002 + it.chaos * 0.0018;
+			const errRate = ERR_BASE + it.chaos * ERR_CHAOS;
 			const error = rand() < errRate ? 8 + rand() * 4 : 0;
 			let value = RARITY_VALUES[rar] * (0.75 + rand() * 0.5) * MON_POP[mon];
 			if (foil) value *= FOIL_MUL;
 			if (error > 0) value *= error;
 			return { mon, rar, foil, error, value: Math.round(value / 10) * 10 };
 		};
+		// 100万円を使い切るまで、選んだ商品を安い順に1つずつ、均等に買っていく
+		const packCnt: number[] = [];
+		const boxCnt: number[] = [];
+		let spent = 0;
+		let bought = false;
+		const buyAll = (): void => {
+			if (bought) return;
+			bought = true;
+			const list: { box: boolean; i: number; price: number }[] = [];
+			pickedPacks.forEach((i) => list.push({ box: false, i, price: PACKS[i].price }));
+			pickedBoxes.forEach((i) => list.push({ box: true, i, price: BOXES[i].price }));
+			list.sort((a, b) => a.price - b.price);
+			pickedPacks.forEach(() => packCnt.push(0));
+			pickedBoxes.forEach(() => boxCnt.push(0));
+			let any = true;
+			while (any) {
+				any = false;
+				list.forEach((it) => {
+					if (spent + it.price > BUDGET) return;
+					spent += it.price;
+					any = true;
+					if (it.box) boxCnt[pickedBoxes.indexOf(it.i)]++;
+					else packCnt[pickedPacks.indexOf(it.i)]++;
+				});
+			}
+		};
 		const openAll = (): void => {
-			pickedPacks.forEach((i) => {
-				for (let k = 0; k < CARDS_PER_PACK; k++) cards.push(drawCard(PACKS[i]));
+			buyAll();
+			pickedPacks.forEach((i, n) => {
+				for (let k = 0; k < CARDS_PER_PACK * packCnt[n]; k++) cards.push(drawCard(PACKS[i]));
 			});
-			pickedBoxes.forEach((i) => {
-				for (let k = 0; k < CARDS_PER_BOX; k++) cards.push(drawCard(BOXES[i]));
+			pickedBoxes.forEach((i, n) => {
+				for (let k = 0; k < CARDS_PER_BOX * boxCnt[n]; k++) cards.push(drawCard(BOXES[i]));
 			});
 			appraisal = 0;
 			cards.forEach((c) => {
@@ -476,24 +505,40 @@ export function main(param: GameMainParameterObject): void {
 		let order: number[] = []; // 大きく見せる順(安い→高い)
 		let reveal = -1; // いま大きく見せているカード
 		let revealT = 0;
-		const GRID_C = 20;
-		const gridPos = (i: number): { x: number; y: number } => ({ x: 30 + (i % GRID_C) * 61, y: 150 + Math.floor(i / GRID_C) * 86 });
-		const flipAt = (i: number): number => 0.6 + i * 0.022;
+		// 枚数に合わせてならべる(横1240・縦470に収める)
+		let gridC = 20;
+		let gridS = 0.32;
+		let cellW = 61;
+		let cellH = 86;
+		const layoutGrid = (n: number): void => {
+			gridC = 20;
+			while (gridC < 60) {
+				const rows = Math.ceil(n / gridC);
+				const cw = 1240 / gridC;
+				if (rows * cw * 1.41 <= 470) break;
+				gridC++;
+			}
+			cellW = 1240 / gridC;
+			cellH = cellW * 1.41;
+			gridS = (cellW - 3) / 180;
+		};
+		const gridPos = (i: number): { x: number; y: number } => ({ x: 20 + (i % gridC) * cellW, y: 150 + Math.floor(i / gridC) * cellH });
+		const flipAt = (i: number): number => 0.6 + i * (2.2 / Math.max(1, cards.length));
 		const STEP_A = 3.2; // ここまでで100枚いっせいにめくる
 		const STEP_T = (OPEN_SEC - STEP_A - 0.6) / SHOW_TOP; // 1枚ずつ見せる間かく
 		cardView.draw = (r: g.Renderer): void => {
 			const t = phaseT;
 			const inA = t < STEP_A;
 			const gridAlpha = inA ? 1 : Math.max(0.18, 1 - (t - STEP_A) * 2);
-			// 100枚のグリッド
+			// ぜんぶのカードのグリッド
 			cards.forEach((c, i) => {
 				const p = gridPos(i);
 				const f = Math.max(0, Math.min(1, (t - flipAt(i)) / 0.25));
-				drawCardAt(r, c, p.x + 29, p.y + 40, 0.32, f, gridAlpha);
+				drawCardAt(r, c, p.x + cellW / 2, p.y + cellH / 2, gridS, f, gridAlpha);
 				if (f >= 1 && c.rar >= 12 && gridAlpha >= 1) {
 					r.save();
 					r.opacity(0.35 + Math.sin(total * 8 + i) * 0.2);
-					frameRect(r, p.x, p.y, 58, 81, 3, c.rar >= 16 ? "#ff60f0" : "#ffe040");
+					frameRect(r, p.x, p.y, cellW - 3, cellH - 3, 3, c.rar >= 16 ? "#ff60f0" : "#ffe040");
 					r.restore();
 				}
 			});
@@ -549,7 +594,6 @@ export function main(param: GameMainParameterObject): void {
 			finalL.show();
 			totalL.hide();
 			finalL.append(new g.FilledRect({ scene, cssColor: "rgba(20,10,30,0.82)", width: W, height: H }));
-			const spent = pickedPacks.reduce((a, i) => a + PACKS[i].price, 0) + pickedBoxes.reduce((a, i) => a + BOXES[i].price, 0);
 			const diff = appraisal - spent;
 			label(fontW, 40, W / 2, 30, "査定結果", "center", finalL);
 			label(fontG, 90, W / 2, 84, "買取総額 " + yen(appraisal), "center", finalL);
@@ -579,7 +623,7 @@ export function main(param: GameMainParameterObject): void {
 				if (c.foil) foils++;
 			});
 			let y = 316;
-			label(fontC, 28, 820, y, "100枚の内訳（高いレア）", "center", finalL);
+			label(fontC, 28, 820, y, cards.length + "枚の内訳（高いレア）", "center", finalL);
 			y += 40;
 			let shownN = 0;
 			for (let i = 19; i >= 0 && shownN < 7; i--) {
@@ -653,13 +697,14 @@ export function main(param: GameMainParameterObject): void {
 				openL.show();
 				openAll();
 				order = [];
+				layoutGrid(cards.length);
 				cards.forEach((c, i) => order.push(i));
 				order.sort((a, b) => cards[b].value - cards[a].value);
 				order = order.slice(0, SHOW_TOP).reverse();
 				// グリッドの最初の合計は、大きく見せない残りの84枚
 				shown = 0;
 				g.game.audio.music.play(scene.asset.getAudioById("bgm_open"));
-				popText("100枚 いっせい開封！！", fontG, 70, W / 2, 300, 1.6);
+				popText(cards.length + "枚 いっせい開封！！", fontG, 70, W / 2, 300, 1.6);
 				se("rip", 0.7);
 			} else if (p === "appraisal") {
 				openL.show();
@@ -667,22 +712,27 @@ export function main(param: GameMainParameterObject): void {
 			}
 		};
 		const buildCart = (): void => {
-			const spent = pickedPacks.reduce((a, i) => a + PACKS[i].price, 0) + pickedBoxes.reduce((a, i) => a + BOXES[i].price, 0);
+			buyAll();
+			const nPack = packCnt.reduce((a, c) => a + c, 0), nBox = boxCnt.reduce((a, c) => a + c, 0);
 			setText(cartSum, "お会計 " + yen(spent) + "　（おつり " + yen(BUDGET - spent) + "）");
-			setText(cartSub, "パック5種＋ボックス3個 ＝ カード100枚！");
+			setText(cartSub, "パック" + nPack + "パック＋ボックス" + nBox + "個 ＝ カード" + (nPack * CARDS_PER_PACK + nBox * CARDS_PER_BOX) + "枚！");
 			pickedBoxes.forEach((k, n) => {
 				const sp = new g.Sprite({ scene, src: img("box" + k), x: 380 + n * 170, y: -200, scaleX: 0.75, scaleY: 0.75 });
 				cartItems.append(sp);
 				cartDrops.push({ sp, ty: 380 + 70 - n * 6, delay: n * 0.18 });
+				const l = label(fontY, 30, 470 + n * 170, -200, "×" + boxCnt[n], "center", cartItems);
+				cartDrops.push({ sp: l, ty: 380 + 60 - n * 6, delay: n * 0.18 });
 			});
 			pickedPacks.forEach((k, n) => {
 				const sp = new g.Sprite({ scene, src: img("pack" + k), x: 400 + n * 90,
 					y: -260, scaleX: 0.6, scaleY: 0.6, angle: (n - 2) * 8 });
 				cartItems.append(sp);
 				cartDrops.push({ sp, ty: 300 + (n % 2) * 20, delay: 0.5 + n * 0.12 });
+				const l = label(fontW, 26, 445 + n * 90, -260, "×" + packCnt[n], "center", cartItems);
+				cartDrops.push({ sp: l, ty: 280 + (n % 2) * 20, delay: 0.5 + n * 0.12 });
 			});
 		};
-		const cartDrops: { sp: g.Sprite; ty: number; delay: number }[] = [];
+		const cartDrops: { sp: g.E; ty: number; delay: number }[] = [];
 
 		// ======== 決定ボタン ========
 		okBtn.onPointDown.add(() => {
@@ -732,7 +782,7 @@ export function main(param: GameMainParameterObject): void {
 				const need = isPack ? PICK_PACKS : PICK_BOXES;
 				setText(titleL, isPack ? "パックを5種類えらぼう！ " + n + "/5" : "ボックスを3個えらぼう！ " + n + "/3");
 				const cost = pickedPacks.reduce((a, i) => a + PACKS[i].price, 0) + pickedBoxes.reduce((a, i) => a + BOXES[i].price, 0);
-				setText(subL, "合計 " + yen(cost) + "　予算 " + yen(BUDGET));
+				setText(subL, "1こずつで " + yen(cost) + " → 100万円ぶん均等にまとめ買い！");
 				setText(timeL, "のこり " + Math.ceil(left) + "秒");
 				const ready = n === need;
 				const want = ready ? "btn_ok" : "btn_off";
@@ -772,7 +822,7 @@ export function main(param: GameMainParameterObject): void {
 				if (blackR.opacity > 0) {
 					blackR.opacity = Math.max(0, blackR.opacity - dt * 3); blackR.modified();
 				}
-				// 100枚めくるあいだ、残りの84枚の合計を数えあげる
+				// ぜんぶめくるあいだ、大きく見せない残りのカードの合計を数えあげる
 				if (phaseT < STEP_A) {
 					let sum = 0;
 					const top16: { [i: number]: boolean } = {};
