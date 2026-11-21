@@ -227,6 +227,15 @@ export function main(param: GameMainParameterObject): void {
 		let shot = 0; // 0=いつもの 1=アップ 2=俯瞰
 		let todIdx = 0;
 		const parts: Part[] = [];
+		// 判定の輪のまわりのエフェクト(画面の位置で描く)
+		interface Fx {
+			kind: "ring" | "bit" | "smoke" | "rays"; x: number; y: number; vx: number; vy: number;
+			life: number; max: number; size: number; col: string;
+		}
+		const fxs: Fx[] = [];
+		let punch = 0; // S のときに画面がドンとはずむ
+		let judgeShake = 0; // F のときに判定の輪がぶるっとする
+		let sStreak = 0;
 
 		// ======== 絵 ========
 		const view = new View({ scene, width: W, height: H });
@@ -489,6 +498,10 @@ export function main(param: GameMainParameterObject): void {
 			drawSky(r);
 			r.save();
 			if (shake > 0) r.translate(Math.sin(shake * 70) * shake * 18, Math.cos(shake * 53) * shake * 10);
+			if (punch > 0) {
+				const k = 1 + punch * 0.06;
+				r.transform([k, 0, 0, k, W / 2 * (1 - k), H * 0.62 * (1 - k)]);
+			}
 			if (shot === 2) {
 				drawOver(r);
 			} else {
@@ -506,7 +519,8 @@ export function main(param: GameMainParameterObject): void {
 			r.fillRect(110, LANE_Y + 44, LANE_END - 80, 4, "#ffd040");
 			const jd = img("judge");
 			const pulse = 1 + Math.max(0, 0.15 - (now - lastBeat)) * 1.2; // 太鼓に合わせてふくらむ
-			drawImg(r, "judge", JUDGE_X - jd.width * pulse / 2, LANE_Y - jd.height * pulse / 2, pulse, pulse);
+			const jsx = judgeShake > 0 ? Math.sin(judgeShake * 80) * judgeShake * 30 : 0;
+			drawImg(r, "judge", JUDGE_X - jd.width * pulse / 2 + jsx, LANE_Y - jd.height * pulse / 2, pulse, pulse);
 			for (let i = evs.length - 1; i >= 0; i--) {
 				const e = evs[i];
 				const dtt = e.t - now;
@@ -532,6 +546,35 @@ export function main(param: GameMainParameterObject): void {
 				const a = img(id);
 				drawImg(r, id, x - a.width * s / 2, LANE_Y - a.height * s / 2, s, s, dtt < 0 ? Math.max(0, 1 + dtt * 3) : 1);
 			}
+			fxs.forEach((f) => {
+				const t = 1 - f.life / f.max;
+				r.save();
+				if (f.kind === "ring") {
+					// ひろがる輪
+					const a = img("ring"), sc = (f.size * (0.4 + t * 1.0)) / a.width;
+					r.opacity(Math.max(0, 1 - t) * 0.95);
+					r.setCompositeOperation("lighter");
+					r.transform([sc, 0, 0, sc, f.x - a.width * sc / 2, f.y - a.height * sc / 2]);
+					r.drawImage(surf.ring, 0, 0, a.width, a.height, 0, 0);
+					r.setCompositeOperation("source-over");
+				} else if (f.kind === "rays") {
+					const a = img("rays"), sc = f.size / a.width * (0.6 + t * 0.6), rot = t * 1.2;
+					r.opacity(Math.max(0, 1 - t) * 0.9);
+					r.setCompositeOperation("lighter");
+					const c = Math.cos(rot) * sc, si = Math.sin(rot) * sc;
+					r.transform([c, si, -si, c, f.x, f.y]);
+					r.drawImage(surf.rays, 0, 0, a.width, a.height, -a.width / 2, -a.height / 2);
+					r.setCompositeOperation("source-over");
+				} else if (f.kind === "smoke") {
+					const z = f.size * (0.25 + t * 0.4);
+					r.opacity(Math.max(0, 1 - t) * 0.55);
+					r.fillRect(f.x - z / 2, f.y - z / 2, z, z, f.col);
+				} else {
+					r.opacity(Math.min(1, f.life / f.max * 2));
+					r.fillRect(f.x - f.size / 2, f.y - f.size / 2, f.size, f.size, f.col);
+				}
+				r.restore();
+			});
 			if (flash > 0) {
 				r.save();
 				r.opacity(Math.min(0.5, flash));
@@ -653,15 +696,65 @@ export function main(param: GameMainParameterObject): void {
 			S: font("#ffe040", "#ff4a8a", 10), A: font("#ff8ad8", "#3a1e2a"), B: font("#70c8ff", "#3a1e2a"), F: font("#a8a0b0", "#3a1e2a")
 		};
 		let rankLabel: g.Label | null = null;
+		const RANK_COLS: { [k: string]: string[] } = {
+			S: ["#ffe040", "#fff6a0", "#ffb020", "#ffffff"], A: ["#ff8ad8", "#ffd0f0",
+				"#ffffff"], B: ["#70c8ff", "#c8ecff"], F: ["#8a8098", "#b0a8b8"]
+		};
+		const rankFx = (k: string): void => {
+			const cols = RANK_COLS[k];
+			const n = k === "S" ? 22 : k === "A" ? 14 : k === "B" ? 8 : 0;
+			for (let i = 0; i < n; i++) {
+				const a = rand() * Math.PI * 2, v = (k === "S" ? 520 : 380) * (0.5 + rand() * 0.7);
+				const bx = Math.cos(a) * v, by = Math.sin(a) * v;
+				const col = cols[i % cols.length];
+				fxs.push({ kind: "bit", x: JUDGE_X, y: LANE_Y, vx: bx, vy: by, life: 0.5, max: 0.5, size: 7 + rand() * 7, col });
+			}
+			if (k === "S") {
+				fxs.push({ kind: "rays", x: JUDGE_X, y: LANE_Y, vx: 0, vy: 0, life: 0.4, max: 0.4, size: 360, col: "" });
+				fxs.push({ kind: "ring", x: JUDGE_X, y: LANE_Y, vx: 0, vy: 0, life: 0.35, max: 0.35, size: 260, col: "" });
+				fxs.push({ kind: "ring", x: JUDGE_X, y: LANE_Y, vx: 0, vy: 0, life: 0.5, max: 0.5, size: 380, col: "" });
+				punch = 1;
+				sStreak++;
+				if (sStreak % 5 === 0) {
+					popText("S×" + sStreak + " れんぞく！", rankFonts.S, 44, JUDGE_X + 290, LANE_Y + 74, 0.8);
+					se("perfect", 0.5);
+				}
+			} else if (k === "A") {
+				fxs.push({ kind: "ring", x: JUDGE_X, y: LANE_Y, vx: 0, vy: 0, life: 0.3, max: 0.3, size: 220, col: "" });
+				punch = 0.4;
+				sStreak = 0;
+			} else if (k === "B") {
+				fxs.push({ kind: "ring", x: JUDGE_X, y: LANE_Y, vx: 0, vy: 0, life: 0.25, max: 0.25, size: 160, col: "" });
+				sStreak = 0;
+			} else {
+				// F: 灰色のけむりがもくもく、判定の輪がぶるっ
+				for (let i = 0; i < 6; i++) {
+					fxs.push({
+						kind: "smoke", x: JUDGE_X + (rand() - 0.5) * 60,
+						y: LANE_Y + (rand() - 0.5) * 40, vx: (rand() - 0.5) * 80, vy: -40 - rand() * 60,
+						life: 0.6, max: 0.6, size: 60 + rand() * 40, col: cols[i % 2]
+					});
+				}
+				judgeShake = 0.35;
+				sStreak = 0;
+			}
+		};
 		const showRank = (k: string): void => {
-			if (rankLabel) rankLabel.destroy();
+			if (rankLabel) {
+				const old = rankLabel;
+				pops.forEach((pp) => {
+					if (pp.l === old) pp.life = Math.min(pp.life, 0.01);
+				});
+			}
+			rankFx(k);
 			const sz = k === "S" ? 96 : k === "F" ? 70 : 82;
 			rankLabel = label(rankFonts[k], sz, JUDGE_X, LANE_Y + 54, k, "center");
 			rankLabel.anchorX = 0.5;
 			rankLabel.anchorY = 0.5;
 			rankLabel.x = JUDGE_X;
 			rankLabel.y = LANE_Y + 54 + sz / 2;
-			pops.push({ l: rankLabel, life: 0.55, vy: -20, scale: k === "S" ? 1.8 : 1.4 });
+			pops.push({ l: rankLabel, life: k === "S" ? 0.65 : 0.55,
+				vy: k === "F" ? 50 : -30, scale: k === "S" ? 2.2 : k === "F" ? 1.0 : 1.5 });
 		};
 		// ======== 判定 ========
 		const breakCombo = (): void => {
@@ -743,10 +836,13 @@ export function main(param: GameMainParameterObject): void {
 				shake = rank === "S" ? 0.18 : 0.1;
 				if (rank === "S") {
 					se("perfect", 0.35);
-					sparkle(mx, my, 8);
+					sparkle(mx, my, 10);
+					burst(mx, my, 10, 560, ["#ffe040", "#fff6a0", "#ffb020"]);
+					cheer = Math.min(1, cheer + 0.15);
 					popText(combo % 8 === 0 ? "よいしょー！" : "ペッタン！", fontY, 52, sx(mx - 170), sy(my - 110), 0.6);
 				} else if (rank === "A") {
 					se("good", 0.4);
+					sparkle(mx, my, 5);
 					popText("ペッタン", fontW, 46, sx(mx - 170), sy(my - 110), 0.5);
 				} else {
 					se("good", 0.3);
@@ -996,6 +1092,14 @@ export function main(param: GameMainParameterObject): void {
 			if (flash > 0) flash = Math.max(0, flash - dt * 2);
 			cheer = Math.max(0, cheer - dt * 0.5);
 			crowdT += dt * (1.5 + Math.min(1, combo / 30) * 3 + cheer * 4);
+			for (let i = fxs.length - 1; i >= 0; i--) {
+				const f = fxs[i];
+				f.x += f.vx * dt; f.y += f.vy * dt; f.vx *= 0.92; f.vy *= 0.92;
+				f.life -= dt;
+				if (f.life <= 0) fxs.splice(i, 1);
+			}
+			if (punch > 0) punch = Math.max(0, punch - dt * 7);
+			if (judgeShake > 0) judgeShake = Math.max(0, judgeShake - dt);
 			for (let i = parts.length - 1; i >= 0; i--) {
 				const p = parts[i];
 				p.x += p.vx * dt; p.y += p.vy * dt; p.vy += p.g * dt; p.vx *= 0.96; p.vy *= 0.96;
