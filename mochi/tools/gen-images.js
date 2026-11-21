@@ -40,6 +40,141 @@ function build() {
 	const eyes = (x, cx, cy, gap, r) => [-1, 1].forEach((s) => { ell(x, cx + s * gap, cy, r, r * 1.25, OL); ell(x, cx + s * gap - r * 0.3, cy - r * 0.45, r * 0.42, r * 0.42, "#ffffff"); });
 	const cheeks = (x, cx, cy, gap, r) => [-1, 1].forEach((s) => ell(x, cx + s * gap, cy, r, r * 0.6, "rgba(255,110,150,0.6)"));
 
+	// ======== ぬいぐるみの描き方(ふちが毛羽立つ・フェルトのつぶつぶ・ぬい目・やわらかい影) ========
+	const shadeC = (hex, f) => {
+		const n = parseInt(hex.slice(1), 16);
+		const ch = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => Math.max(0, Math.min(255, Math.round(f > 0 ? v + (255 - v) * f : v * (1 + f)))));
+		return "rgb(" + ch.join(",") + ")";
+	};
+	let pseed = 1;
+	const prnd = () => { pseed = (pseed * 16807) % 2147483647; return (pseed - 1) / 2147483646; };
+	// o: { rot, seam(ぬい目), fuzz(毛羽立ち, 既定 true), shadow(影, 既定 true), flat(つぶつぶなし) }
+	const plush = (x, cx, cy, rx, ry, col, o) => {
+		o = o || {};
+		pseed = Math.floor(cx * 31 + cy * 17 + rx * 7) + 1;
+		x.save(); x.translate(cx, cy); x.rotate(o.rot || 0);
+		const fuzz = o.fuzz !== false;
+		// 毛羽立ち(ふちの外に短い毛)
+		if (fuzz) {
+			const n = Math.floor((rx + ry) * 2.2);
+			x.lineCap = "round";
+			for (let k = 0; k < n; k++) {
+				const a = k / n * Math.PI * 2 + prnd() * 0.05;
+				const ex = Math.cos(a) * rx, ey = Math.sin(a) * ry;
+				const nl = Math.hypot(Math.cos(a) * ry, Math.sin(a) * rx) || 1;
+				const nx = Math.cos(a) * ry / nl, ny = Math.sin(a) * rx / nl;
+				const len = 1.5 + prnd() * Math.min(3.5, (rx + ry) * 0.03);
+				x.strokeStyle = k % 4 === 0 ? shadeC(col, -0.14) : shadeC(col, -0.04);
+				x.lineWidth = 2.4 + prnd() * 1.6;
+				x.beginPath(); x.moveTo(ex - nx * 2, ey - ny * 2); x.lineTo(ex + nx * len + (prnd() - 0.5) * 3, ey + ny * len + (prnd() - 0.5) * 3); x.stroke();
+			}
+		}
+		// 本体(やわらかい影つき、左上が明るい)
+		if (o.shadow !== false) { x.shadowColor = "rgba(80,40,50,0.32)"; x.shadowBlur = Math.max(6, (rx + ry) * 0.08); x.shadowOffsetY = Math.max(2, ry * 0.05); }
+		const g = x.createRadialGradient(-rx * 0.3, -ry * 0.35, Math.min(rx, ry) * 0.1, 0, 0, Math.max(rx, ry) * 1.05);
+		g.addColorStop(0, shadeC(col, 0.32)); g.addColorStop(0.55, col); g.addColorStop(1, shadeC(col, -0.2));
+		x.beginPath(); x.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2); x.fillStyle = g; x.fill();
+		x.shadowColor = "rgba(0,0,0,0)"; x.shadowBlur = 0; x.shadowOffsetY = 0;
+		// フェルトのつぶつぶ
+		if (!o.flat) {
+			x.save(); x.beginPath(); x.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2); x.clip();
+			const m = Math.floor(rx * ry / 18);
+			for (let k = 0; k < m; k++) {
+				const px = (prnd() * 2 - 1) * rx, py = (prnd() * 2 - 1) * ry;
+				x.fillStyle = prnd() < 0.5 ? "rgba(255,255,255,0.16)" : "rgba(90,50,40,0.07)";
+				x.beginPath(); x.arc(px, py, 0.8 + prnd() * 1.3, 0, Math.PI * 2); x.fill();
+			}
+			x.restore();
+		}
+		// ぬい目
+		if (o.seam) {
+			x.setLineDash([6, 5]); x.lineWidth = 2; x.strokeStyle = shadeC(col, -0.35);
+			x.beginPath(); x.ellipse(0, 0, rx * 0.84, ry * 0.84, 0, Math.PI * 1.05, Math.PI * 1.95); x.stroke();
+			x.setLineDash([]);
+		}
+		x.restore();
+	};
+	// 手足(はしが丸い棒)をぬいぐるみで描く
+	const plushLimb = (x, x1, y1, x2, y2, w, col, o) => {
+		const len = Math.hypot(x2 - x1, y2 - y1);
+		plush(x, (x1 + x2) / 2, (y1 + y2) / 2, len / 2 + w / 2, w / 2, col, Object.assign({ rot: Math.atan2(y2 - y1, x2 - x1) }, o || {}));
+	};
+	// ビーズの目
+	const bead = (x, cx, cy, r) => {
+		ell(x, cx, cy + r * 0.15, r * 1.08, r * 1.1, "rgba(60,30,40,0.25)");
+		const g = x.createRadialGradient(cx - r * 0.35, cy - r * 0.4, r * 0.1, cx, cy, r);
+		g.addColorStop(0, "#6a5060"); g.addColorStop(1, "#1a0e16");
+		x.beginPath(); x.arc(cx, cy, r, 0, Math.PI * 2); x.fillStyle = g; x.fill();
+		ell(x, cx - r * 0.35, cy - r * 0.4, r * 0.32, r * 0.26, "rgba(255,255,255,0.95)");
+		ell(x, cx + r * 0.35, cy + r * 0.38, r * 0.12, r * 0.12, "rgba(255,255,255,0.6)");
+	};
+	// 刺しゅう糸の線
+	const thread = (x, fn, col, w) => {
+		x.save(); x.strokeStyle = col || "#5a2a3a"; x.lineWidth = w || 3.5; x.lineCap = "round"; x.lineJoin = "round";
+		x.beginPath(); fn(); x.stroke(); x.restore();
+	};
+	// フェルトのほっぺ
+	const feltCheek = (x, cx, cy, r) => plush(x, cx, cy, r, r * 0.7, "#ffa8c0", { fuzz: false, shadow: false });
+	// はちまき(やわらかい布)
+	const band = (x, cx, cy, w, h, tail) => {
+		x.save();
+		x.shadowColor = "rgba(80,40,50,0.25)"; x.shadowBlur = 4; x.shadowOffsetY = 2;
+		x.beginPath(); x.roundRect(cx - w / 2, cy - h / 2, w, h, h / 2); x.fillStyle = "#ffffff"; x.fill();
+		x.restore();
+		x.save(); x.setLineDash([5, 4]); x.strokeStyle = "#ff6a7a"; x.lineWidth = 2.5;
+		x.beginPath(); x.moveTo(cx - w / 2 + 6, cy); x.lineTo(cx + w / 2 - 6, cy); x.stroke(); x.restore();
+		if (tail) {
+			const t = tail;
+			plush(x, t[0], t[1], 22, 9, "#ff6a7a", { rot: t[2], fuzz: false, flat: true });
+			plush(x, t[0] - 4, t[1] + 12, 20, 8, "#ff6a7a", { rot: t[2] + 0.5, fuzz: false, flat: true });
+		}
+	};
+	const FUR_W = "#fffaf4", HAPPI = "#5a86e8", TAN = "#b8875e", TAN_D = "#8a5a3a", CREAM = "#f6e6cc";
+	// うさぎの顔(正面)
+	const usagiFace = (x, cx, cy, s, mood) => {
+		// mood: normal / joy / sad / focus
+		if (mood === "joy") {
+			[-1, 1].forEach((k) => thread(x, () => x.arc(cx + k * 34 * s, cy + 4 * s, 11 * s, Math.PI + 0.35, -0.35), "#3a1e2a", 4.5 * s));
+		} else {
+			[-1, 1].forEach((k) => bead(x, cx + k * 34 * s, cy + 2 * s, 11 * s));
+			if (mood === "sad") [-1, 1].forEach((k) => thread(x, () => { x.moveTo(cx + k * 48 * s, cy - 18 * s); x.lineTo(cx + k * 22 * s, cy - 12 * s); }, "#3a1e2a", 3.5 * s));
+			if (mood === "focus") [-1, 1].forEach((k) => thread(x, () => { x.moveTo(cx + k * 50 * s, cy - 20 * s); x.lineTo(cx + k * 20 * s, cy - 12 * s); }, "#3a1e2a", 3.5 * s));
+		}
+		[-1, 1].forEach((k) => feltCheek(x, cx + k * 62 * s, cy + 30 * s, 15 * s));
+		// 鼻(ピンクの刺しゅう)と口
+		poly(x, [[cx - 8 * s, cy + 22 * s], [cx + 8 * s, cy + 22 * s], [cx, cy + 31 * s]], "#ff8aa8");
+		thread(x, () => { x.moveTo(cx, cy + 31 * s); x.lineTo(cx, cy + 38 * s); }, "#5a2a3a", 3 * s);
+		if (mood === "joy") {
+			x.beginPath(); x.moveTo(cx - 16 * s, cy + 40 * s); x.quadraticCurveTo(cx, cy + 66 * s, cx + 16 * s, cy + 40 * s); x.closePath(); x.fillStyle = "#e85a7a"; x.fill();
+		} else if (mood === "sad") {
+			thread(x, () => x.arc(cx, cy + 50 * s, 10 * s, Math.PI + 0.4, -0.4), "#5a2a3a", 3 * s);
+			plush(x, cx + 50 * s, cy + 18 * s, 6 * s, 10 * s, "#9ad8ff", { fuzz: false, shadow: false, flat: true });
+		} else {
+			thread(x, () => { x.arc(cx - 7 * s, cy + 38 * s, 7 * s, 0.1, Math.PI - 0.3); }, "#5a2a3a", 3 * s);
+			thread(x, () => { x.arc(cx + 7 * s, cy + 38 * s, 7 * s, 0.3, Math.PI - 0.1); }, "#5a2a3a", 3 * s);
+		}
+	};
+	const tanukiFace = (x, cx, cy, s, mood) => {
+		[-1, 1].forEach((k) => plush(x, cx + k * 36 * s, cy - 2 * s, 33 * s, 25 * s, "#6a4228", { rot: k * 0.35, fuzz: false, shadow: false }));
+		plush(x, cx, cy + 40 * s, 46 * s, 32 * s, CREAM, { fuzz: false, shadow: false });
+		if (mood === "ouch") {
+			[-1, 1].forEach((k) => thread(x, () => { x.moveTo(cx + k * 36 * s - 9 * s, cy - 9 * s); x.lineTo(cx + k * 36 * s + 9 * s, cy + 7 * s); x.moveTo(cx + k * 36 * s + 9 * s, cy - 9 * s); x.lineTo(cx + k * 36 * s - 9 * s, cy + 7 * s); }, "#ffffff", 4 * s));
+		} else if (mood === "joy") {
+			[-1, 1].forEach((k) => thread(x, () => x.arc(cx + k * 36 * s, cy + 2 * s, 10 * s, Math.PI + 0.35, -0.35), "#ffffff", 4.5 * s));
+		} else {
+			[-1, 1].forEach((k) => bead(x, cx + k * 36 * s, cy - 2 * s, 10.5 * s));
+		}
+		// 鼻
+		const ng = x.createRadialGradient(cx - 4 * s, cy + 22 * s, 1, cx, cy + 26 * s, 14 * s); ng.addColorStop(0, "#6a5060"); ng.addColorStop(1, "#1a0e16");
+		x.beginPath(); x.ellipse(cx, cy + 27 * s, 13 * s, 9 * s, 0, 0, Math.PI * 2); x.fillStyle = ng; x.fill();
+		ell(x, cx - 4 * s, cy + 24 * s, 4 * s, 2.5 * s, "rgba(255,255,255,0.8)");
+		if (mood === "ouch") ell(x, cx, cy + 50 * s, 10 * s, 12 * s, "#5a2a3a");
+		else if (mood === "joy") { x.beginPath(); x.moveTo(cx - 16 * s, cy + 42 * s); x.quadraticCurveTo(cx, cy + 66 * s, cx + 16 * s, cy + 42 * s); x.closePath(); x.fillStyle = "#e85a7a"; x.fill(); }
+		else if (mood === "sad") { thread(x, () => x.arc(cx, cy + 54 * s, 10 * s, Math.PI + 0.4, -0.4), "#5a2a3a", 3 * s); plush(x, cx + 56 * s, cy + 16 * s, 6 * s, 10 * s, "#9ad8ff", { fuzz: false, shadow: false, flat: true }); }
+		else thread(x, () => { x.arc(cx, cy + 42 * s, 10 * s, 0.25, Math.PI - 0.25); }, "#5a2a3a", 3 * s);
+		[-1, 1].forEach((k) => feltCheek(x, cx + k * 66 * s, cy + 30 * s, 13 * s));
+	};
+
 	// ======== 背景(1280x720) 5種類。門松は観客の手前に出すので別の絵 ========
 	const groundStones = (x, base, a, b) => {
 		x.fillStyle = base; x.fillRect(0, 420, 1280, 300);
@@ -194,14 +329,14 @@ function build() {
 
 	// ======== 観客(1280x230, 2コマ) ========
 	const head = (x, cx, cy, r, col, kind, up) => {
-		if (up) [-1, 1].forEach((s) => { x.strokeStyle = OL; x.lineWidth = r * 0.5 + 2; x.beginPath(); x.moveTo(cx + s * r * 0.7, cy + r * 0.6); x.lineTo(cx + s * r * 1.15, cy - r * 0.9); x.stroke(); x.strokeStyle = col; x.lineWidth = r * 0.5 - 2; x.stroke(); });
-		if (kind === "cat") [-1, 1].forEach((s) => poly(x, [[cx + s * r * 0.9, cy - r * 0.2], [cx + s * r * 0.75, cy - r * 1.1], [cx + s * r * 0.2, cy - r * 0.8]], col, OL, 3));
-		if (kind === "bear") [-1, 1].forEach((s) => ell(x, cx + s * r * 0.72, cy - r * 0.72, r * 0.36, r * 0.36, col, OL, 3));
-		if (kind === "bunny") [-1, 1].forEach((s) => ell(x, cx + s * r * 0.4, cy - r * 1.2, r * 0.24, r * 0.65, col, OL, 3));
-		ell(x, cx, cy, r, r * 0.92, col, OL, 3);
-		ell(x, cx - r * 0.35, cy - r * 0.05, r * 0.13, r * 0.17, OL); ell(x, cx + r * 0.35, cy - r * 0.05, r * 0.13, r * 0.17, OL);
-		x.strokeStyle = OL; x.lineWidth = 2.5; x.beginPath(); x.arc(cx, cy + r * 0.2, r * (up ? 0.28 : 0.18), 0.1, Math.PI - 0.1); x.stroke();
-		ell(x, cx - r * 0.62, cy + r * 0.25, r * 0.16, r * 0.1, "rgba(255,100,140,0.6)"); ell(x, cx + r * 0.62, cy + r * 0.25, r * 0.16, r * 0.1, "rgba(255,100,140,0.6)");
+		if (up) [-1, 1].forEach((s) => { plushLimb(x, cx + s * r * 0.7, cy + r * 0.7, cx + s * r * 1.15, cy - r * 0.8, r * 0.42, col, { fuzz: false }); plush(x, cx + s * r * 1.15, cy - r * 0.85, r * 0.26, r * 0.26, col, { fuzz: false, flat: true }); });
+		if (kind === "cat") [-1, 1].forEach((s) => plush(x, cx + s * r * 0.62, cy - r * 0.78, r * 0.3, r * 0.36, col, { rot: s * 0.4, fuzz: false, flat: true }));
+		if (kind === "bear") [-1, 1].forEach((s) => plush(x, cx + s * r * 0.72, cy - r * 0.72, r * 0.34, r * 0.34, col, { fuzz: false, flat: true }));
+		if (kind === "bunny") [-1, 1].forEach((s) => plush(x, cx + s * r * 0.4, cy - r * 1.15, r * 0.24, r * 0.62, col, { rot: s * 0.15, fuzz: false, flat: true }));
+		plush(x, cx, cy, r, r * 0.92, col, { flat: true });
+		[-1, 1].forEach((s) => bead(x, cx + s * r * 0.35, cy - r * 0.05, r * 0.14));
+		thread(x, () => x.arc(cx, cy + r * 0.2, r * (up ? 0.26 : 0.16), 0.2, Math.PI - 0.2), "#5a2a3a", 2.2);
+		[-1, 1].forEach((s) => ell(x, cx + s * r * 0.62, cy + r * 0.25, r * 0.17, r * 0.11, "rgba(255,130,160,0.55)"));
 	};
 	const FURS = ["#ffb050", "#ffffff", "#a8743e", "#ffb4c4", "#e0a868", "#70d060", "#ffe050", "#9ad0ff", "#c8a0ff"];
 	const KIMONO = ["#ff5a7a", "#4aa8ff", "#ffb020", "#9a6aff", "#40c870", "#ff8a30"];
@@ -214,8 +349,8 @@ function build() {
 		const [c, x] = mk(1280, 230);
 		people.forEach((p) => {
 			const up = (p.ph < 0.5) === (frame === 1);
-			ell(x, p.x, p.y + p.r * 1.3, p.r * 0.9, p.r * 0.95, p.kc, OL, 3);
-			x.strokeStyle = "#ffffff"; x.lineWidth = 3; x.beginPath(); x.moveTo(p.x - p.r * 0.4, p.y + p.r * 0.6); x.lineTo(p.x, p.y + p.r * 1.2); x.lineTo(p.x + p.r * 0.4, p.y + p.r * 0.6); x.stroke();
+			plush(x, p.x, p.y + p.r * 1.3, p.r * 0.9, p.r * 0.95, p.kc, { fuzz: false, flat: true });
+			thread(x, () => { x.moveTo(p.x - p.r * 0.4, p.y + p.r * 0.6); x.lineTo(p.x, p.y + p.r * 1.2); x.lineTo(p.x + p.r * 0.4, p.y + p.r * 0.6); }, "#ffffff", 3);
 			head(x, p.x, p.y - (up ? p.r * 0.3 : 0), p.r, p.col, p.k, up);
 		});
 		save("crowd" + frame, c);
@@ -268,29 +403,27 @@ function build() {
 		const [c, x] = mk(420, 520);
 		const bx = 160;
 		// 足
-		[-1, 1].forEach((s) => rr(x, bx + s * 24 - 16, 440, 32, 80, 12, "#ffffff", OL, 5));
-		// はっぴ
-		x.beginPath(); x.moveTo(bx - 70, 450); x.lineTo(bx - 56, 300); x.quadraticCurveTo(bx, 280, bx + 56, 300); x.lineTo(bx + 70, 450); x.closePath();
-		x.fillStyle = "#3a6ae8"; x.fill(); x.lineWidth = 6; x.strokeStyle = OL; x.stroke();
-		x.strokeStyle = "#ffffff"; x.lineWidth = 8; x.beginPath(); x.moveTo(bx - 30, 300); x.lineTo(bx - 8, 450); x.moveTo(bx + 30, 300); x.lineTo(bx + 8, 450); x.stroke();
-		x.font = "bold 40px IPAGothic"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillStyle = "#ffffff"; x.fillText("祭", bx, 400);
+		[-1, 1].forEach((s) => plush(x, bx + s * 34, 478, 30, 26, FUR_W, { seam: true }));
+		// からだ(はっぴ)
+		plush(x, bx, 392, 86, 82, HAPPI, { seam: true });
+		thread(x, () => { x.moveTo(bx - 36, 322); x.quadraticCurveTo(bx - 20, 390, bx - 10, 466); x.moveTo(bx + 36, 322); x.quadraticCurveTo(bx + 20, 390, bx + 10, 466); }, "#ffffff", 9);
+		x.font = "bold 40px IPAGothic"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillStyle = "#ffffff"; x.fillText("祭", bx, 412);
+		// 耳
+		[-1, 1].forEach((s) => {
+			plush(x, bx + s * 36, 118, 27, 74, FUR_W, { rot: s * 0.2, seam: true });
+			plush(x, bx + s * 36, 126, 13, 52, "#ffb8cc", { rot: s * 0.2, fuzz: false, shadow: false });
+		});
 		// 頭
-		[-1, 1].forEach((s) => { ell(x, bx + s * 26, 120, 22, 62, "#ffffff", OL, 5, s * 0.15); ell(x, bx + s * 26, 124, 10, 44, "#ffb0c8", null, 0, s * 0.15); });
-		ell(x, bx, 220, 74, 66, "#ffffff", OL, 6);
-		// はちまき
-		rr(x, bx - 76, 172, 152, 20, 8, "#ffffff", "#ff4a5a", 6);
-		poly(x, [[bx - 76, 180], [bx - 110, 160 + (armUp ? -10 : 10)], [bx - 104, 196]], "#ff4a5a", OL, 3);
-		eyes(x, bx, 222, 26, 8); cheeks(x, bx, 244, 46, 12);
-		ell(x, bx, 244, 7, 5, "#ff7090");
-		x.strokeStyle = OL; x.lineWidth = 4; x.beginPath(); x.arc(bx, 252, 12, 0.2, Math.PI - 0.2); x.stroke();
+		plush(x, bx, 228, 100, 90, FUR_W, { seam: true });
+		band(x, bx, 166, 176, 22, [bx - 98, 172 + (armUp ? -6 : 6), -0.6]);
+		usagiFace(x, bx, 226, 1, armUp ? "focus" : "normal");
 		// 杵と腕
 		const pivot = [bx + 70, 330];
 		kine(x, pivot[0], pivot[1], ang);
 		[-1, 1].forEach((s) => {
 			const hx = pivot[0] + Math.cos(ang) * (s < 0 ? 10 : 40), hy = pivot[1] + Math.sin(ang) * (s < 0 ? 10 : 40);
-			x.strokeStyle = OL; x.lineWidth = 22; x.beginPath(); x.moveTo(bx + s * 40, 320); x.lineTo(hx, hy); x.stroke();
-			x.strokeStyle = "#3a6ae8"; x.lineWidth = 14; x.stroke();
-			ell(x, hx, hy, 14, 14, "#ffffff", OL, 4);
+			plushLimb(x, bx + s * 46, 340, hx, hy, 26, HAPPI);
+			plush(x, hx, hy, 17, 17, FUR_W);
 		});
 		save(name, c);
 	};
@@ -302,38 +435,26 @@ function build() {
 	const tanuki = (name, mode) => {
 		const [c, x] = mk(420, 520);
 		const bx = 270;
-		[-1, 1].forEach((s) => rr(x, bx + s * 26 - 18, 440, 36, 80, 14, "#7a5236", OL, 5));
-		// おなか
-		ell(x, bx, 380, 84, 90, "#9a6a46", OL, 6);
-		ell(x, bx, 396, 56, 62, "#f0dcc0");
-		// しっぽ
-		ell(x, bx + 90, 440, 36, 24, "#7a5236", OL, 5, -0.5);
+		// しっぽ(しましま)
+		plush(x, bx + 104, 432, 48, 30, TAN, { rot: -0.5, seam: true });
+		plush(x, bx + 138, 412, 16, 18, "#6a4228", { rot: -0.5, fuzz: false, shadow: false });
+		[-1, 1].forEach((s) => plush(x, bx + s * 36, 482, 32, 26, TAN_D, { seam: true }));
+		// からだ
+		plush(x, bx, 388, 96, 94, TAN, { seam: true });
+		plush(x, bx, 404, 62, 64, CREAM, { fuzz: false, shadow: false, seam: true });
 		// 腕
-		const hand = mode === "hand" ? [60, 390] : mode === "ouch" ? [bx - 40, 200] : [bx - 90, 400];
-		x.strokeStyle = OL; x.lineWidth = 26; x.beginPath(); x.moveTo(bx - 50, 330); x.lineTo(hand[0], hand[1]); x.stroke();
-		x.strokeStyle = "#9a6a46"; x.lineWidth = 18; x.stroke();
-		ell(x, hand[0], hand[1], 22, 18, mode === "ouch" ? "#ff8a8a" : "#f0dcc0", OL, 4);
-		if (mode === "hand") { [0, 1, 2].forEach((k) => ell(x, hand[0] - 14 + k * 10, hand[1] + 16 + (k % 2) * 4, 4, 6, "#9adcff", OL, 2)); }
-		if (mode === "ouch") { x.strokeStyle = "#ff4a4a"; x.lineWidth = 4; [[-30, -20], [0, -34], [30, -20]].forEach(([dx, dy]) => { x.beginPath(); x.moveTo(hand[0] + dx * 0.7, hand[1] + dy * 0.7); x.lineTo(hand[0] + dx * 1.3, hand[1] + dy * 1.3); x.stroke(); }); }
-		x.strokeStyle = OL; x.lineWidth = 26; x.beginPath(); x.moveTo(bx + 60, 330); x.lineTo(bx + 90, 400); x.stroke();
-		x.strokeStyle = "#9a6a46"; x.lineWidth = 18; x.stroke();
-		// 頭
-		[-1, 1].forEach((s) => ell(x, bx + s * 56, 152, 24, 22, "#7a5236", OL, 5));
-		ell(x, bx, 210, 80, 70, "#9a6a46", OL, 6);
-		// 目のまわりの黒
-		[-1, 1].forEach((s) => ell(x, bx + s * 30, 206, 26, 20, "#4a3020", null, 0, s * 0.3));
-		ell(x, bx, 244, 36, 26, "#f0dcc0");
-		if (mode === "ouch") {
-			[-1, 1].forEach((s) => { x.strokeStyle = "#ffffff"; x.lineWidth = 5; x.beginPath(); x.moveTo(bx + s * 30 - 10, 198); x.lineTo(bx + s * 30 + 10, 212); x.moveTo(bx + s * 30 + 10, 198); x.lineTo(bx + s * 30 - 10, 212); x.stroke(); });
-			ell(x, bx, 256, 14, 16, OL);
-		} else {
-			eyes(x, bx, 206, 30, 8);
-			x.strokeStyle = OL; x.lineWidth = 4; x.beginPath(); x.arc(bx, 250, 12, 0.2, Math.PI - 0.2); x.stroke();
-		}
-		ell(x, bx, 236, 10, 7, OL);
-		cheeks(x, bx, 238, 56, 12);
-		// はちまき
-		rr(x, bx - 82, 160, 164, 20, 8, "#ffffff", "#ff4a5a", 6);
+		const hand = mode === "hand" ? [60, 390] : mode === "ouch" ? [bx - 40, 196] : [bx - 92, 408];
+		plushLimb(x, bx - 56, 340, hand[0], hand[1], 30, TAN);
+		plush(x, hand[0], hand[1], 24, 21, mode === "ouch" ? "#ffa0a0" : CREAM);
+		if (mode === "hand") [0, 1, 2].forEach((k) => plush(x, hand[0] - 14 + k * 12, hand[1] + 22 + (k % 2) * 4, 4, 6, "#9adcff", { fuzz: false, shadow: false, flat: true }));
+		if (mode === "ouch") [[-30, -20], [0, -34], [30, -20]].forEach(([dx, dy]) => thread(x, () => { x.moveTo(hand[0] + dx * 0.8, hand[1] + dy * 0.8); x.lineTo(hand[0] + dx * 1.4, hand[1] + dy * 1.4); }, "#ff5a5a", 4));
+		plushLimb(x, bx + 60, 340, bx + 96, 408, 30, TAN);
+		plush(x, bx + 98, 412, 20, 18, CREAM);
+		// 耳と頭
+		[-1, 1].forEach((s) => { plush(x, bx + s * 66, 146, 30, 28, TAN_D); plush(x, bx + s * 66, 150, 15, 13, "#5a3220", { fuzz: false, shadow: false }); });
+		plush(x, bx, 214, 104, 90, TAN, { seam: true });
+		band(x, bx, 156, 184, 22, null);
+		tanukiFace(x, bx, 212, 1, mode === "ouch" ? "ouch" : "normal");
 		save(name, c);
 	};
 	tanuki("tanuki_idle", "idle");
@@ -436,42 +557,25 @@ function build() {
 		const [c, x] = mk(1280, 720);
 		ring.forEach((p) => {
 			const up = (p.ph < 0.5) === (frame === 1);
-			ell(x, p.x, p.y, 26, 20, p.kc, OL, 3); // かた
-			if (up) [-1, 1].forEach((s) => ell(x, p.x + s * 26, p.y - 18, 9, 9, p.col, OL, 2)); // ばんざいの手
-			if (p.k === "bunny") [-1, 1].forEach((s) => ell(x, p.x + s * 8, p.y - 26, 6, 16, p.col, OL, 2));
-			if (p.k === "cat") [-1, 1].forEach((s) => poly(x, [[p.x + s * 16, p.y - 6], [p.x + s * 14, p.y - 28], [p.x + s * 4, p.y - 14]], p.col, OL, 2));
-			if (p.k === "bear") [-1, 1].forEach((s) => ell(x, p.x + s * 14, p.y - 14, 7, 7, p.col, OL, 2));
-			ell(x, p.x, p.y - 4, 18, 16, p.col, OL, 3); // あたま
+			plush(x, p.x, p.y, 26, 20, p.kc, { fuzz: false, flat: true }); // かた
+			if (up) [-1, 1].forEach((s) => plush(x, p.x + s * 26, p.y - 18, 9, 9, p.col, { fuzz: false, flat: true })); // ばんざいの手
+			if (p.k === "bunny") [-1, 1].forEach((s) => plush(x, p.x + s * 8, p.y - 26, 6, 16, p.col, { fuzz: false, flat: true }));
+			if (p.k === "cat") [-1, 1].forEach((s) => plush(x, p.x + s * 12, p.y - 18, 7, 9, p.col, { rot: s * 0.4, fuzz: false, flat: true }));
+			if (p.k === "bear") [-1, 1].forEach((s) => plush(x, p.x + s * 14, p.y - 14, 7, 7, p.col, { fuzz: false, flat: true }));
+			plush(x, p.x, p.y - 4, 18, 16, p.col, { flat: true }); // あたま
 		});
 		save("ov_crowd" + frame, c);
 	});
 	{
-		// 臼(上から) 400x400
-		const [c, x] = mk(400, 400);
-		const g = x.createRadialGradient(200, 200, 120, 200, 200, 190); g.addColorStop(0, "#c8884a"); g.addColorStop(1, "#9a5a2a");
-		ell(x, 200, 200, 190, 190, null); x.fillStyle = g; x.fill(); x.lineWidth = 8; x.strokeStyle = OL; x.stroke();
-		for (let k = 0; k < 3; k++) ell(x, 200, 200, 182 - k * 8, 182 - k * 8, null, "rgba(90,40,10,0.3)", 3);
-		ell(x, 200, 200, 150, 150, "#5a2a14", OL, 5);
-		save("ov_usu", c);
-	}
-	{
-		// もち(上から) 300x300
-		const [c, x] = mk(300, 300);
-		ell(x, 150, 150, 140, 136, "#fffaf0", OL, 6);
-		ell(x, 110, 108, 50, 28, "rgba(255,255,255,0.95)", null, 0, -0.5);
-		ell(x, 170, 180, 70, 46, "rgba(230,220,210,0.5)");
-		save("ov_mochi", c);
-	}
-	{
 		// うさぎ(上から。右を向く) 240x260
 		const [c, x] = mk(240, 260);
-		ell(x, 110, 130, 76, 96, "#3a6ae8", OL, 6); // はっぴのかた
-		x.strokeStyle = "#ffffff"; x.lineWidth = 7; x.beginPath(); x.moveTo(110, 40); x.lineTo(110, 220); x.stroke();
-		ell(x, 130, 130, 56, 56, "#ffffff", OL, 6); // あたま
-		[-1, 1].forEach((s) => { ell(x, 70, 130 + s * 30, 58, 18, "#ffffff", OL, 5, s * 0.25); ell(x, 70, 130 + s * 30, 42, 8, "#ffb0c8", null, 0, s * 0.25); }); // 耳(うしろへねる)
-		rr(x, 100, 112, 70, 36, 18, null, "#ff4a5a", 6); // はちまき
-		ell(x, 182, 116, 6, 7, OL); ell(x, 182, 144, 6, 7, OL); // 目
-		ell(x, 190, 130, 6, 5, "#ff7090");
+		plush(x, 110, 130, 78, 98, HAPPI, { seam: true }); // はっぴのかた
+		thread(x, () => { x.moveTo(110, 42); x.lineTo(110, 218); }, "#ffffff", 7);
+		[-1, 1].forEach((s) => { plush(x, 70, 130 + s * 32, 60, 20, FUR_W, { rot: s * 0.25 }); plush(x, 70, 130 + s * 32, 42, 9, "#ffb8cc", { rot: s * 0.25, fuzz: false, shadow: false }); }); // 耳
+		plush(x, 132, 130, 60, 60, FUR_W, { seam: true }); // あたま
+		x.save(); x.setLineDash([5, 4]); x.strokeStyle = "#ff6a7a"; x.lineWidth = 6; x.beginPath(); x.ellipse(126, 130, 44, 50, 0, -1.2, 1.2); x.stroke(); x.restore(); // はちまき
+		bead(x, 182, 114, 7); bead(x, 182, 146, 7);
+		poly(x, [[192, 124], [192, 136], [200, 130]], "#ff8aa8");
 		save("ov_usagi", c);
 	}
 	{
@@ -485,21 +589,20 @@ function build() {
 	{
 		// たぬき(上から。左を向く) 260x280
 		const [c, x] = mk(260, 280);
-		ell(x, 200, 140, 40, 26, "#7a5236", OL, 5, 0.3); // しっぽ
-		ell(x, 140, 140, 86, 100, "#9a6a46", OL, 6); // せなか
-		ell(x, 110, 140, 62, 60, "#9a6a46", OL, 6); // あたま
-		[-1, 1].forEach((s) => ell(x, 132, 140 + s * 48, 18, 16, "#7a5236", OL, 4)); // 耳
-		rr(x, 70, 120, 80, 40, 18, null, "#ff4a5a", 6); // はちまき
-		[-1, 1].forEach((s) => ell(x, 72, 140 + s * 22, 14, 11, "#4a3020"));
-		ell(x, 52, 140, 12, 16, "#f0dcc0", OL, 3); ell(x, 44, 140, 6, 5, OL); // はな
+		plush(x, 204, 140, 42, 28, TAN, { rot: 0.3 }); // しっぽ
+		plush(x, 140, 140, 88, 102, TAN, { seam: true }); // せなか
+		[-1, 1].forEach((s) => plush(x, 132, 140 + s * 50, 19, 17, TAN_D)); // 耳
+		plush(x, 110, 140, 64, 62, TAN, { seam: true }); // あたま
+		x.save(); x.setLineDash([5, 4]); x.strokeStyle = "#ff6a7a"; x.lineWidth = 6; x.beginPath(); x.ellipse(106, 140, 44, 54, 0, 1.9, 4.4); x.stroke(); x.restore();
+		[-1, 1].forEach((s) => plush(x, 72, 140 + s * 22, 15, 12, "#6a4228", { fuzz: false, shadow: false }));
+		plush(x, 52, 140, 13, 17, CREAM, { fuzz: false }); bead(x, 44, 140, 6);
 		save("ov_tanuki", c);
 	}
 	{
 		// たぬきのうで(上から。手先が左) 240x70
 		const [c, x] = mk(240, 70);
-		rr(x, 30, 20, 210, 30, 15, "#9a6a46", OL, 5);
-		ell(x, 30, 35, 26, 22, "#f0dcc0", OL, 4);
-		[[-14, -14], [-20, 0], [-14, 14]].forEach(([dx, dy]) => ell(x, 30 + dx, 35 + dy, 7, 6, "#f0dcc0", OL, 2));
+		plushLimb(x, 40, 35, 230, 35, 30, TAN);
+		plush(x, 30, 35, 26, 22, CREAM);
 		save("ov_arm", c);
 	}
 	// ======== おもち完成の光 ========
@@ -567,51 +670,31 @@ function build() {
 		const [c, x] = mk(300, 404);
 		x.translate(0, 24);
 		const cx = 150, joy = mood === "joy";
-		const body = who === "usagi" ? "#3a6ae8" : "#9a6a46", fur = who === "usagi" ? "#ffffff" : "#9a6a46";
-		// 足
-		[-1, 1].forEach((s) => rr(x, cx + s * 30 - 18, 310, 36, 66, 14, who === "usagi" ? "#ffffff" : "#7a5236", OL, 5));
+		const body = who === "usagi" ? HAPPI : TAN, fur = who === "usagi" ? FUR_W : TAN;
+		[-1, 1].forEach((s) => plush(x, cx + s * 32, 344, 30, 26, who === "usagi" ? FUR_W : TAN_D));
 		// うで
 		[-1, 1].forEach((s) => {
-			const hx = cx + s * (joy ? 110 : 70), hy = joy ? 150 : 300;
-			x.strokeStyle = OL; x.lineWidth = 26; x.beginPath(); x.moveTo(cx + s * 50, 250); x.lineTo(hx, hy); x.stroke();
-			x.strokeStyle = body; x.lineWidth = 18; x.stroke();
-			ell(x, hx, hy, 18, 18, who === "usagi" ? "#ffffff" : "#f0dcc0", OL, 4);
+			const hx = cx + s * (joy ? 108 : 72), hy = joy ? 150 : 300;
+			plushLimb(x, cx + s * 50, 250, hx, hy, 28, body);
+			plush(x, hx, hy, 18, 18, who === "usagi" ? FUR_W : CREAM);
 		});
-		// からだ
+		plush(x, cx, 270, 80, 76, body, { seam: true });
 		if (who === "usagi") {
-			x.beginPath(); x.moveTo(cx - 70, 330); x.lineTo(cx - 56, 220); x.quadraticCurveTo(cx, 204, cx + 56, 220); x.lineTo(cx + 70, 330); x.closePath();
-			x.fillStyle = body; x.fill(); x.lineWidth = 6; x.strokeStyle = OL; x.stroke();
-			x.strokeStyle = "#ffffff"; x.lineWidth = 8; x.beginPath(); x.moveTo(cx - 28, 220); x.lineTo(cx - 8, 330); x.moveTo(cx + 28, 220); x.lineTo(cx + 8, 330); x.stroke();
-		} else {
-			ell(x, cx, 270, 80, 74, body, OL, 6); ell(x, cx, 284, 52, 50, "#f0dcc0");
-		}
-		// 頭
-		if (who === "usagi") {
+			thread(x, () => { x.moveTo(cx - 30, 206); x.quadraticCurveTo(cx - 18, 270, cx - 8, 336); x.moveTo(cx + 30, 206); x.quadraticCurveTo(cx + 18, 270, cx + 8, 336); }, "#ffffff", 8);
 			[-1, 1].forEach((s) => {
-				const tilt = joy ? s * 0.12 : s * 0.9;
-				x.save(); x.translate(cx + s * 26, 104); x.rotate(tilt);
-				ell(x, 0, -50, 22, 58, "#ffffff", OL, 5); ell(x, 0, -46, 10, 40, "#ffb0c8");
-				x.restore();
+				const tilt = joy ? s * 0.12 : s * 0.95;
+				plush(x, cx + s * 30 + Math.sin(tilt) * 50, 54 + (1 - Math.cos(tilt)) * 46, 24, 62, FUR_W, { rot: tilt });
+				plush(x, cx + s * 30 + Math.sin(tilt) * 50, 60 + (1 - Math.cos(tilt)) * 46, 11, 44, "#ffb8cc", { rot: tilt, fuzz: false, shadow: false });
 			});
 		} else {
-			[-1, 1].forEach((s) => ell(x, cx + s * 54, 84, 22, 20, "#7a5236", OL, 5));
+			plush(x, cx, 282, 52, 52, CREAM, { fuzz: false, shadow: false });
+			[-1, 1].forEach((s) => { plush(x, cx + s * 56, 86, 26, 24, TAN_D); plush(x, cx + s * 56, 90, 13, 11, "#5a3220", { fuzz: false, shadow: false }); });
 		}
-		ell(x, cx, 140, 74, 66, fur, OL, 6);
-		if (who === "tanuki") { [-1, 1].forEach((s) => ell(x, cx + s * 30, 136, 26, 20, "#4a3020", null, 0, s * 0.3)); ell(x, cx, 172, 36, 26, "#f0dcc0"); }
-		rr(x, cx - 76, 92, 152, 18, 8, "#ffffff", "#ff4a5a", 5);
-		// 顔
-		if (joy) {
-			[-1, 1].forEach((s) => { x.strokeStyle = who === "tanuki" ? "#ffffff" : OL; x.lineWidth = 6; x.beginPath(); x.arc(cx + s * 28, 140, 10, Math.PI + 0.3, -0.3); x.stroke(); });
-			ell(x, cx, 176, 22, 18, "#ff5a7a", OL, 4);
-			ell(x, cx, 182, 12, 8, "#ffa0b0");
-		} else {
-			[-1, 1].forEach((s) => { ell(x, cx + s * 28, 140, 7, 8, who === "tanuki" ? "#ffffff" : OL); x.strokeStyle = OL; x.lineWidth = 4; x.beginPath(); x.moveTo(cx + s * 40, 120); x.lineTo(cx + s * 16, 128); x.stroke(); });
-			x.strokeStyle = OL; x.lineWidth = 4; x.beginPath(); x.arc(cx, 190, 12, Math.PI + 0.3, -0.3); x.stroke();
-			ell(x, cx + 44, 158, 7, 12, "#7ac8ff", OL, 2); // なみだ
-		}
-		[-1, 1].forEach((s) => ell(x, cx + s * 50, 168, 13, 8, "rgba(255,110,150,0.6)"));
-		if (who === "usagi") ell(x, cx, 164, 7, 5, "#ff7090"); else ell(x, cx, 162, 10, 7, OL);
-		if (joy) [[cx - 120, 60], [cx + 120, 50], [cx + 100, 260]].forEach(([sx2, sy2]) => star(x, sx2, sy2, 16, "#ffe040", OL, 3));
+		plush(x, cx, 148, 92, 82, fur, { seam: true });
+		band(x, cx, 94, 164, 20, null);
+		if (who === "usagi") usagiFace(x, cx, 146, 0.95, mood);
+		else tanukiFace(x, cx, 140, 0.92, mood);
+		if (joy) [[cx - 122, 60], [cx + 122, 50], [cx + 104, 250]].forEach(([sx2, sy2]) => star(x, sx2, sy2, 16, "#ffe040", OL, 3));
 		save(name, c);
 	};
 	front("usagi_joy", "usagi", "joy"); front("usagi_sad", "usagi", "sad");

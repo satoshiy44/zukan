@@ -63,7 +63,7 @@ const data = (p) => "data:image/png;base64," + fs.readFileSync(path.join(ROOT, p
 			y.drawImage(im.judge, x0 - 130, y0 - 130, 260, 260);
 			y.drawImage(im.tsuki, x0 - 100, y0 - 100, 200, 200);
 		}, "おもちの印が 輪にかさなったら", "完璧ならS！ A・B…ずれるとF(ミス)");
-		card(950, "#3a8ae8", "押しちゃダメ！", im.ouch, [770, 230, 400, 354], (x0, y0) => {
+		card(950, "#3a8ae8", "押しちゃダメ！", im.ouch, [740, 250, 460, 407], (x0, y0) => {
 			y.drawImage(im.te, x0 - 100, y0 - 100, 200, 200);
 			// 大きな ✕
 			y.strokeStyle = "#ff3a3a"; y.lineWidth = 34;
